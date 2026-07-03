@@ -1,0 +1,32 @@
+import { ActivityIndicator, View } from 'react-native';
+import { colors } from '../../theme';
+
+interface LoadingSpinnerProps {
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  color?: string;
+  className?: string;
+}
+
+const SIZE_MAP: Record<NonNullable<LoadingSpinnerProps['size']>, number> = {
+  xs: 14,
+  sm: 20,
+  md: 32,
+  lg: 48,
+};
+
+/**
+ * Brand loading indicator. The web app used an elaborate conic-gradient
+ * orbital ring; on RN we use the platform ActivityIndicator tinted in the
+ * Larderly amber, which reads as native and performant.
+ */
+export default function LoadingSpinner({
+  size = 'md',
+  color = colors.primary,
+  className,
+}: LoadingSpinnerProps) {
+  return (
+    <View className={className}>
+      <ActivityIndicator size={SIZE_MAP[size]} color={color} />
+    </View>
+  );
+}
