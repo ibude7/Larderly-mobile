@@ -1,4 +1,15 @@
 const fs = require('fs');
+const { withEntitlementsPlist } = require('expo/config-plugins');
+
+// Personal/free Apple Developer teams cannot provision push or Sign in with Apple.
+// Strip those entitlements for local device builds; re-enable once on a paid team.
+function withoutPaidTeamEntitlements(config) {
+  return withEntitlementsPlist(config, (config) => {
+    delete config.modResults['aps-environment'];
+    delete config.modResults['com.apple.developer.applesignin'];
+    return config;
+  });
+}
 
 // react-native-firebase reads its config from these native files, which you
 // download from the Firebase console after registering an iOS and an Android
@@ -82,6 +93,7 @@ module.exports = () => ({
       },
     ],
     googleSignInPlugin,
+    withoutPaidTeamEntitlements,
   ],
   extra: {
     // Toggle to skip the auth gate during local UI development.

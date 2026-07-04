@@ -215,7 +215,7 @@ export default function ScannerScreen() {
   );
 
   const handleScannedConfirm = async (item: ScannedItem) => {
-    const locId = locationIdFromName(item.storageLocation) ?? locations[0]?.id ?? null;
+    const locId = locationIdFromName(item.storageLocation, locations) ?? locations[0]?.id ?? null;
     const expiryIso = item.expirationDate
       ? new Date(item.expirationDate).toISOString().slice(0, 10)
       : null;

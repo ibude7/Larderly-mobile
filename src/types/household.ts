@@ -43,6 +43,7 @@ export interface InventoryItem {
   fat?: number;
   carbs?: number;
   addedBy?: string;
+  locationId?: string;
 }
 
 export interface ShoppingListMeta {

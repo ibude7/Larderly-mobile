@@ -14,6 +14,10 @@ Add Firebase native config from the Firebase console (not committed to git):
 - `GoogleService-Info.plist` (iOS)
 - `google-services.json` (Android)
 
+## Shared code with web
+
+Types, Firestore path helpers, and household mappers come from `@larderly/shared` (local path: `../Larderly/packages/shared`). After pulling web repo changes that touch shared code, run `npm install` again in this repo.
+
 ## Run
 
 ```bash

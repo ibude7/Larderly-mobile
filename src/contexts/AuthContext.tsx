@@ -133,13 +133,7 @@ let phoneConfirmation: Awaited<ReturnType<typeof signInWithPhoneNumber>> | null 
 let mfaEnrollmentVerificationId: string | null = null;
 let mfaChallengeVerificationId: string | null = null;
 
-// Default storage locations mirror the old Supabase `handle_new_user` trigger.
-const DEFAULT_STORAGE_LOCATIONS = [
-  { name: 'Fridge', icon: 'thermometer', color: '#3b82f6' },
-  { name: 'Freezer', icon: 'snowflake', color: '#06b6d4' },
-  { name: 'Pantry', icon: 'warehouse', color: '#f59e0b' },
-  { name: 'Cabinet', icon: 'layout-grid', color: '#8b5cf6' },
-];
+import { DEFAULT_STORAGE_LOCATIONS } from '@larderly/shared';
 
 // ── Google Sign-In config ────────────────────────────────────────────────────
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;

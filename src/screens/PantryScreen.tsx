@@ -166,7 +166,7 @@ export default function PantryScreen() {
   };
 
   const handleBulkMove = async (locName: string) => {
-    const locId = locationIdFromName(locName);
+    const locId = locationIdFromName(locName, locations);
     if (!locId) return;
     for (const id of selected) await updateItem(id, { location_id: locId });
     setSelected(new Set());
@@ -185,7 +185,7 @@ export default function PantryScreen() {
         barcode: '',
         unit: parsed.unit,
         quantity: parsed.quantity,
-        location_id: locationIdFromName(parsed.storageLocation),
+        location_id: locationIdFromName(parsed.storageLocation, locations),
         expiry_date: null,
         low_stock_threshold: 1,
         purchase_price: null,
@@ -217,7 +217,7 @@ export default function PantryScreen() {
         barcode: '',
         unit: food.unit,
         quantity: food.quantity,
-        location_id: locationIdFromName(food.storageLocation),
+        location_id: locationIdFromName(food.storageLocation, locations),
         expiry_date: null,
         low_stock_threshold: 1,
         purchase_price: null,

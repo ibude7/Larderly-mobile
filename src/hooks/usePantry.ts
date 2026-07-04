@@ -7,6 +7,8 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  query,
+  orderBy,
 } from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
 import { getDaysUntilDate } from '../lib/date';
@@ -17,9 +19,11 @@ import { bumpCounter } from '../lib/achievements';
 import {
   defaultStorageLocations,
   inventoryToPantryItem,
+  mapFirestoreStorageLocation,
   mapInventoryDoc,
   pantryToInventoryPayload,
 } from '../lib/inventoryMapper';
+import { mapPantryUpdatesToInventory } from '@larderly/shared';
 import { useSync } from '../contexts/SyncContext';
 
 interface ShoppingBridge {
@@ -37,6 +41,11 @@ export function usePantry(shopping?: ShoppingBridge) {
   const [loading, setLoading] = useState(true);
   const canEdit = role !== 'viewer';
 
+  const locationsRef = useRef<StorageLocation[]>([]);
+  useEffect(() => {
+    locationsRef.current = locations;
+  }, [locations]);
+
   const shoppingListRef = useRef<ShoppingListItem[]>([]);
   useEffect(() => {
     shoppingListRef.current = shopping?.shoppingList ?? [];
@@ -51,17 +60,55 @@ export function usePantry(shopping?: ShoppingBridge) {
     }
 
     setLoading(true);
-    setLocations(defaultStorageLocations(user.uid));
-    const locs = defaultStorageLocations(user.uid);
+    let firstLocs = false;
+    let firstItems = false;
+    const maybeDone = () => {
+      if (firstLocs && firstItems) setLoading(false);
+    };
 
-    const unsub = onSnapshot(collection(db, 'households', householdId, 'inventory'), (snap) => {
-      setItems(snap.docs.map((d) => inventoryToPantryItem(mapInventoryDoc(d.id, d.data() ?? {}), user.uid, locs)));
-      setLoading(false);
-      recordSync('synced', 'Inventory updated');
-    }, () => setLoading(false));
+    const fallbackLocs = defaultStorageLocations(user.uid);
 
-    return unsub;
+    const unsubLocs = onSnapshot(
+      query(collection(db, 'households', householdId, 'storageLocations'), orderBy('name')),
+      (snap) => {
+        const mapped = snap.docs.map((d) => mapFirestoreStorageLocation(d.id, d.data() ?? {}, user.uid));
+        const next = mapped.length > 0 ? mapped : fallbackLocs;
+        locationsRef.current = next;
+        setLocations(next);
+        firstLocs = true;
+        maybeDone();
+      },
+      () => {
+        setLocations(fallbackLocs);
+        firstLocs = true;
+        maybeDone();
+      },
+    );
+
+    const unsubItems = onSnapshot(
+      collection(db, 'households', householdId, 'inventory'),
+      (snap) => {
+        const locs = locationsRef.current.length ? locationsRef.current : fallbackLocs;
+        setItems(snap.docs.map((d) => inventoryToPantryItem(mapInventoryDoc(d.id, d.data() ?? {}), user.uid, locs)));
+        firstItems = true;
+        maybeDone();
+        recordSync('synced', 'Inventory updated');
+      },
+      () => {
+        firstItems = true;
+        maybeDone();
+      },
+    );
+
+    return () => {
+      unsubLocs();
+      unsubItems();
+    };
   }, [user, householdId, recordSync]);
+
+  useEffect(() => {
+    locationsRef.current = locations;
+  }, [locations]);
 
   const refetch = useCallback(async () => {}, []);
 
@@ -120,23 +167,14 @@ export function usePantry(shopping?: ShoppingBridge) {
     if (!canEdit) return { data: null, error: new Error('View-only access') };
     try {
       const locs = locations.length ? locations : defaultStorageLocations(user.uid);
-      const patch: Record<string, unknown> = { updatedAt: serverTimestamp() };
-      if (updates.name !== undefined) patch.name = updates.name;
-      if (updates.quantity !== undefined) patch.quantity = updates.quantity;
-      if (updates.unit !== undefined) patch.unit = updates.unit;
-      if (updates.brand !== undefined) patch.brand = updates.brand;
-      if (updates.category !== undefined) patch.category = updates.category;
-      if (updates.barcode !== undefined) patch.barcode = updates.barcode;
-      if (updates.notes !== undefined) patch.notes = updates.notes;
-      if (updates.purchase_price !== undefined) patch.pricePerUnit = updates.purchase_price ?? 0;
-      if (updates.low_stock_threshold !== undefined) patch.lowStockThreshold = updates.low_stock_threshold;
-      if (updates.expiry_date !== undefined) {
-        patch.expirationDate = updates.expiry_date ? new Date(updates.expiry_date).getTime() : null;
-      }
+      const patch: Record<string, unknown> = {
+        ...mapPantryUpdatesToInventory(updates),
+        updatedAt: serverTimestamp(),
+      };
       if (updates.location_id !== undefined) {
         patch.storageLocation = locs.find((l) => l.id === updates.location_id)?.name ?? 'Pantry';
       }
-      if (updates.image_url !== undefined) patch.imageUrl = updates.image_url;
+      if (updates.purchase_price !== undefined) patch.pricePerUnit = updates.purchase_price ?? 0;
 
       await updateDoc(doc(db, 'households', householdId, 'inventory', id), patch);
       const existing = items.find((i) => i.id === id);
