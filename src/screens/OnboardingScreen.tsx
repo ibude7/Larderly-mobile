@@ -1,24 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, Share, Dimensions, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable, Share } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackNavigationProp } from '../navigation/types';
 import { doc, onSnapshot, collection, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import Animated, { 
-  FadeIn, SlideInRight, SlideOutLeft, 
-  useSharedValue, useAnimatedStyle, withTiming, 
-  withRepeat, withSequence, useAnimatedProps
-} from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
-
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import SelectField from '../components/ui/SelectField';
-import { Icon, IconName } from '../components/ui/Icon';
-import Chip from '../components/ui/Chip';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
@@ -26,34 +15,10 @@ import { categoryFromName, STORAGE_LOCATIONS } from '../lib/categories';
 import { searchProductByBarcode } from '../lib/productDb';
 import { requestNotificationPermission } from '../lib/push';
 import { pickProfilePhoto, uploadUserAvatar } from '../lib/avatar';
-import { useAppColors } from '../hooks/useAppColors';
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
-const screenWidth = Dimensions.get('window').width;
 const TOTAL_STEPS = 8;
-
-const DIET_OPTIONS: { name: string; icon: IconName }[] = [
-  { name: 'Vegetarian', icon: 'leaf' },
-  { name: 'Vegan', icon: 'leaf' },
-  { name: 'Gluten-Free', icon: 'nutrition' },
-  { name: 'Keto', icon: 'flame' },
-  { name: 'Paleo', icon: 'flame' },
-  { name: 'Pescatarian', icon: 'seafood' },
-  { name: 'Halal', icon: 'star' },
-  { name: 'Kosher', icon: 'star' }
-];
-
-const STORES: { name: string; icon: IconName }[] = [
-  { name: 'Whole Foods', icon: 'leaf' },
-  { name: 'Trader Joe\'s', icon: 'cart' },
-  { name: 'Costco', icon: 'warehouse' },
-  { name: 'Target', icon: 'location' },
-  { name: 'Walmart', icon: 'cart' },
-  { name: 'Kroger', icon: 'cart' },
-  { name: 'Safeway', icon: 'cart' },
-  { name: 'Publix', icon: 'cart' },
-  { name: 'Aldi', icon: 'cart' }
-];
+const DIET_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Pescatarian', 'Halal', 'Kosher'];
+const STORES = ["Whole Foods", "Trader Joe's", 'Costco', 'Target', 'Walmart', 'Kroger', 'Safeway', 'Publix', 'Aldi'];
 
 const STEP_TITLES = [
   'Your profile',
@@ -75,100 +40,10 @@ interface ScannedItem {
   barcode: string;
 }
 
-function BellHero() {
-  const c = useAppColors();
-  const rotation = useSharedValue(0);
-
-  useEffect(() => {
-    rotation.value = withRepeat(
-      withSequence(
-        withTiming(-15, { duration: 100 }),
-        withTiming(15, { duration: 100 }),
-        withTiming(0, { duration: 100 }),
-        withTiming(0, { duration: 1000 })
-      ),
-      -1,
-      false
-    );
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }]
-  }));
-
-  return (
-    <Animated.View style={animatedStyle} className="mb-8 items-center justify-center h-32">
-      <Icon name="bell" size={80} color={c.primary} />
-    </Animated.View>
-  );
-}
-
-function ScannerHero() {
-  const c = useAppColors();
-  const scanY = useSharedValue(0);
-  
-  useEffect(() => {
-    scanY.value = withRepeat(
-      withSequence(
-        withTiming(100, { duration: 1500 }),
-        withTiming(0, { duration: 0 })
-      ),
-      -1,
-      false
-    );
-  }, []);
-
-  const scanStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: scanY.value }]
-  }));
-
-  return (
-    <View className="mb-8 items-center justify-center h-32">
-      <View style={{ width: 70, height: 110, borderRadius: 12, borderWidth: 4, borderColor: c.primary, opacity: 0.3 }} />
-      <Animated.View style={[{ position: 'absolute', top: 10, width: 100, height: 4 }, scanStyle]}>
-        <LinearGradient colors={['transparent', c.primary, 'transparent']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={{ flex: 1 }} />
-      </Animated.View>
-    </View>
-  );
-}
-
-function CheckmarkHero() {
-  const c = useAppColors();
-  const progress = useSharedValue(0);
-  
-  useEffect(() => {
-    progress.value = withTiming(1, { duration: 800 });
-  }, []);
-
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: 100 * (1 - progress.value)
-  }));
-
-  return (
-    <View className="mb-8 items-center justify-center h-32">
-      <Svg width="100" height="100" viewBox="0 0 100 100">
-        <AnimatedPath
-          d="M 25 50 L 45 70 L 75 30"
-          stroke={c.success}
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          strokeDasharray="100"
-          animatedProps={animatedProps}
-        />
-      </Svg>
-    </View>
-  );
-}
-
 export default function OnboardingScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const c = useAppColors();
-  const insets = useSafeAreaInsets();
   const { user, userProfile, householdId, updateUserProfile, updateUserPreferences } = useAuth();
   const { showToast } = useToast();
-  
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
@@ -186,16 +61,6 @@ export default function OnboardingScreen() {
   const [addedToSync, setAddedToSync] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(userProfile?.profilePictureUrl ?? user?.photoURL ?? '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
-  const progressWidth = useSharedValue(0);
-
-  useEffect(() => {
-    progressWidth.value = withTiming(((step + 1) / TOTAL_STEPS) * screenWidth, { duration: 400 });
-  }, [step]);
-
-  const progressStyle = useAnimatedStyle(() => ({
-    width: progressWidth.value,
-  }));
 
   useEffect(() => {
     if (!householdId) return;
@@ -293,25 +158,36 @@ export default function OnboardingScreen() {
     else await finish();
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 0:
-        return (
-          <View className="flex-1 mt-4">
-            <View className="items-center mb-8">
-              <LinearGradient 
-                colors={[c.primary, c.violetGlow || '#8B5CF6']} 
-                style={{ padding: 4, borderRadius: 64 }}
-              >
-                <View style={{ width: 120, height: 120, borderRadius: 60, overflow: 'hidden', backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' }}>
-                  {photoUrl ? (
-                    <Image source={{ uri: photoUrl }} style={{ width: 120, height: 120 }} />
-                  ) : (
-                    <Icon name="user" size={48} color={c.muted} />
-                  )}
+  return (
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
+        <View className="mb-6 flex-row justify-center gap-1.5">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <View
+              key={i}
+              className={`h-2 rounded-full ${i === step ? 'w-8 bg-primary' : i < step ? 'w-2 bg-primary/40' : 'w-2 bg-line'}`}
+            />
+          ))}
+        </View>
+
+        <Text className="text-sm font-semibold text-primary">Step {step + 1} of {TOTAL_STEPS}</Text>
+        <Text className="mb-1 mt-2 text-2xl font-bold text-ink dark:text-[#F0EEE9]">{STEP_TITLES[step]}</Text>
+
+        {step === 0 && (
+          <View className="mt-4 gap-3">
+            <View className="items-center gap-3">
+              {photoUrl ? (
+                <Image source={{ uri: photoUrl }} className="h-24 w-24 rounded-full border border-line dark:border-[#2A2A35]" />
+              ) : (
+                <View className="h-24 w-24 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+                  <Text className="text-3xl text-muted dark:text-[#6B6878]">?</Text>
                 </View>
-              </LinearGradient>
-              <Pressable 
+              )}
+              <Button
+                label={uploadingPhoto ? 'Uploading…' : 'Choose profile photo'}
+                variant="secondary"
+                size="sm"
+                loading={uploadingPhoto}
                 onPress={async () => {
                   if (!user) return;
                   const uri = await pickProfilePhoto();
@@ -327,80 +203,72 @@ export default function OnboardingScreen() {
                     setUploadingPhoto(false);
                   }
                 }}
-                className="mt-4"
-              >
-                <Text className="text-primary font-bold">{uploadingPhoto ? 'Uploading...' : 'Change Photo'}</Text>
-              </Pressable>
+              />
             </View>
-            <View className="gap-4">
-              <TextField label="First name" value={firstName} onChangeText={setFirstName} />
-              <TextField label="Last name" value={lastName} onChangeText={setLastName} />
-            </View>
+            <TextField label="First name" value={firstName} onChangeText={setFirstName} />
+            <TextField label="Last name" value={lastName} onChangeText={setLastName} />
           </View>
-        );
+        )}
 
-      case 1:
-        return (
-          <View className="flex-1 mt-8 gap-6">
-            <BlurView intensity={c.blurIntensity as number || 60} tint={c.blurTint as any || 'light'} style={{ padding: 32, borderRadius: 24, borderWidth: 1, borderColor: c.lineStrong, alignItems: 'center' }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: c.muted, textTransform: 'uppercase', letterSpacing: 2 }}>Your invite code</Text>
-              <Text style={{ marginTop: 16, fontSize: 36, fontWeight: '900', letterSpacing: 12, color: c.ink, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+        {step === 1 && (
+          <View className="mt-4 gap-4">
+            <View className="items-center rounded-2xl border border-primary/20 bg-primary/5 p-6">
+              <Text className="text-xs font-bold uppercase text-muted dark:text-[#6B6878]">Your invite code</Text>
+              <Text className="mt-2 font-mono text-3xl font-black tracking-widest text-ink dark:text-[#F0EEE9]">
                 {inviteCode || '——'}
               </Text>
-            </BlurView>
-            <Text className="text-center text-[15px] leading-relaxed text-muted dark:text-[#6B6878] px-4">
+              <Button
+                label="Share code"
+                size="sm"
+                variant="secondary"
+                className="mt-3"
+                onPress={() => inviteCode && Share.share({ message: `Join my Larderly household: ${inviteCode}` })}
+              />
+            </View>
+            <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
               Family can join via Settings → Join household. You can invite people later too.
             </Text>
-            <Button
-              label="Share code"
-              variant="secondary"
-              onPress={() => inviteCode && Share.share({ message: `Join my Larderly household: ${inviteCode}` })}
-            />
           </View>
-        );
+        )}
 
-      case 2:
-        return (
-          <ScrollView className="flex-1 mt-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-            <View className="flex-row flex-wrap gap-3">
+        {step === 2 && (
+          <View className="mt-4 gap-4">
+            <View className="flex-row flex-wrap gap-2">
               {DIET_OPTIONS.map((d) => (
-                <Chip
-                  key={d.name}
-                  label={d.name}
-                  icon={d.icon}
-                  active={dietaryPrefs.includes(d.name)}
-                  onPress={() => toggleDiet(d.name)}
-                />
+                <Pressable
+                  key={d}
+                  onPress={() => toggleDiet(d)}
+                  className={`rounded-full px-4 py-2 ${dietaryPrefs.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
+                >
+                  <Text className={dietaryPrefs.includes(d) ? 'font-semibold text-white' : 'text-ink dark:text-[#F0EEE9]'}>{d}</Text>
+                </Pressable>
               ))}
             </View>
-            <View className="mt-6">
-              <TextField label="Allergies" value={allergies} onChangeText={setAllergies} placeholder="e.g. peanuts, shellfish" />
-            </View>
-          </ScrollView>
-        );
+            <TextField label="Allergies" value={allergies} onChangeText={setAllergies} placeholder="e.g. peanuts, shellfish" />
+          </View>
+        )}
 
-      case 3:
-        return (
-          <ScrollView className="flex-1 mt-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-            <View className="flex-row flex-wrap gap-3 mb-6">
+        {step === 3 && (
+          <View className="mt-4 gap-3">
+            <View className="flex-row flex-wrap gap-2">
               {STORES.map((s) => (
-                <Chip
-                  key={s.name}
-                  label={s.name}
-                  icon={s.icon}
-                  active={stores.includes(s.name)}
-                  onPress={() => toggleStore(s.name)}
-                />
+                <Pressable
+                  key={s}
+                  onPress={() => toggleStore(s)}
+                  className={`rounded-full px-4 py-2 ${stores.includes(s) ? 'bg-ink' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
+                >
+                  <Text className={stores.includes(s) ? 'font-semibold text-white' : 'text-ink dark:text-[#F0EEE9]'}>{s}</Text>
+                </Pressable>
               ))}
             </View>
-            <View className="flex-row gap-3 items-end">
+            <View className="flex-row gap-2">
               <View className="flex-1">
                 <TextField value={customStore} onChangeText={setCustomStore} placeholder="Add another store…" />
               </View>
               <Button
                 label="Add"
+                size="sm"
                 variant="secondary"
-                style={{ height: 52 }}
                 onPress={() => {
                   const s = customStore.trim();
                   if (s) {
@@ -410,15 +278,13 @@ export default function OnboardingScreen() {
                 }}
               />
             </View>
-          </ScrollView>
-        );
+          </View>
+        )}
 
-      case 4:
-        return (
-          <View className="flex-1 mt-8 justify-center">
-            <BellHero />
-            <Text className="text-[15px] leading-relaxed text-center text-muted dark:text-[#6B6878] mb-8">
-              Get alerts about expiring items, low stock, and household activity directly to your device.
+        {step === 4 && (
+          <View className="mt-4 gap-3">
+            <Text className="text-sm text-muted dark:text-[#6B6878]">
+              Get alerts about expiring items, low stock, and household activity.
             </Text>
             <Button
               label="Enable notifications"
@@ -427,167 +293,82 @@ export default function OnboardingScreen() {
                 showToast(ok ? 'Notifications enabled' : 'Skipped — enable later in Settings', ok ? 'success' : 'info');
                 setStep(5);
               }}
-              style={{
-                shadowColor: c.primary, shadowOpacity: 0.45, shadowRadius: 20, elevation: 10, shadowOffset: { width: 0, height: 8 }
+            />
+            <Button label="Skip for now" variant="ghost" onPress={() => setStep(5)} />
+          </View>
+        )}
+
+        {step === 5 && (
+          <View className="mt-4 gap-3">
+            <View className="items-center rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6">
+              <Text className="text-4xl">📷</Text>
+              <Text className="mt-3 text-center text-sm text-muted dark:text-[#6B6878]">
+                Scan any food barcode or try a demo product below.
+              </Text>
+            </View>
+            {lookingUp && <Text className="text-center text-sm font-semibold text-primary">Looking up barcode…</Text>}
+            <Button label="Open scanner" onPress={() => navigation.navigate('Main', { screen: 'Scanner', params: { mode: 'add' } })} />
+            <View className="flex-row gap-2">
+              <Button label="Demo: Milk" variant="secondary" className="flex-1" onPress={() => handleScan('5901234123457')} />
+              <Button label="Demo: Cereal" variant="secondary" className="flex-1" onPress={() => handleScan('1234567890128')} />
+            </View>
+            <Button
+              label="Skip this step"
+              variant="ghost"
+              onPress={() => {
+                setScanSkipped(true);
+                setStep(7);
               }}
             />
-            <Button label="Skip for now" variant="ghost" className="mt-4" onPress={() => setStep(5)} />
           </View>
-        );
+        )}
 
-      case 5:
-        return (
-          <View className="flex-1 mt-8 justify-center">
-            <ScannerHero />
-            <Text className="mt-4 mb-8 text-center text-[15px] leading-relaxed text-muted dark:text-[#6B6878]">
-              {lookingUp ? 'Looking up barcode...' : 'Scan any food barcode or try a demo product.'}
-            </Text>
-            <View className="gap-4">
-              <Button label="Open scanner" onPress={() => navigation.navigate('Main', { screen: 'Scanner', params: { mode: 'add' } })} />
-              <View className="flex-row gap-3">
-                <Button label="Demo: Milk" variant="secondary" className="flex-1" onPress={() => handleScan('5901234123457')} />
-                <Button label="Demo: Cereal" variant="secondary" className="flex-1" onPress={() => handleScan('1234567890128')} />
-              </View>
-              <Button
-                label="Skip this step"
-                variant="ghost"
-                onPress={() => {
-                  setScanSkipped(true);
-                  setStep(7);
-                }}
-              />
+        {step === 6 && scannedItem && (
+          <View className="mt-4 gap-3">
+            <View className="rounded-2xl border border-success/30 bg-success/10 p-4">
+              <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{scannedItem.name}</Text>
+              <Text className="font-mono text-xs text-muted dark:text-[#6B6878]">{scannedItem.barcode}</Text>
             </View>
+            <TextField label="Quantity" value={editQty} onChangeText={setEditQty} keyboardType="numeric" />
+            <SelectField
+              label="Storage"
+              value={editLoc}
+              onChange={setEditLoc}
+              options={STORAGE_LOCATIONS.map((l) => ({ label: l, value: l }))}
+            />
+            <Button label="Add to pantry" onPress={handleAddToPantry} loading={saving} />
+            <Button label="Scan a different item" variant="ghost" onPress={() => setStep(5)} />
           </View>
-        );
+        )}
 
-      case 6:
-        return (
-          <View className="flex-1 mt-4 gap-6">
-            <View className="items-center mb-4">
-              <Icon name="box" size={64} color={c.primary} />
-            </View>
-            {scannedItem && (
-              <View className="rounded-2xl border border-success/30 bg-success/10 p-5 items-center">
-                <Text className="text-xl font-bold text-ink dark:text-[#F0EEE9] mb-1 text-center">{scannedItem.name}</Text>
-                <Text className="font-mono text-xs text-muted dark:text-[#6B6878]">{scannedItem.barcode}</Text>
-              </View>
+        {step === 7 && (
+          <View className="mt-4 items-center gap-4">
+            <Text className="text-5xl">{scanSkipped ? '✨' : '☁️'}</Text>
+            {!scanSkipped && addedToSync && scannedItem && (
+              <Text className="rounded-2xl border border-success/30 bg-success/10 px-4 py-3 text-center text-sm text-success">
+                {scannedItem.name} has been added to your pantry and synced.
+              </Text>
             )}
-            <View className="gap-4">
-              <TextField label="Quantity" value={editQty} onChangeText={setEditQty} keyboardType="numeric" />
-              <SelectField
-                label="Storage"
-                value={editLoc}
-                onChange={setEditLoc}
-                options={STORAGE_LOCATIONS.map((l) => ({ label: l, value: l }))}
-              />
-            </View>
-            <View className="mt-4 gap-3">
-              <Button label="Add to pantry" onPress={handleAddToPantry} loading={saving} style={{ shadowColor: c.primary, shadowOpacity: 0.45, shadowRadius: 20, elevation: 10, shadowOffset: { width: 0, height: 8 } }} />
-              <Button label="Scan different item" variant="ghost" onPress={() => setStep(5)} />
-            </View>
-          </View>
-        );
-
-      case 7:
-        return (
-          <View className="flex-1 mt-12 items-center justify-center">
-            {scanSkipped ? <Icon name="sparkles" size={100} color={c.warning} /> : <CheckmarkHero />}
-            <Text className="mt-8 text-center text-[16px] leading-relaxed text-muted dark:text-[#6B6878] px-4">
+            <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
               {scanSkipped
-                ? "You're all set! Add items anytime from the Pantry or Scanner tab."
-                : 'Your item is safely stored! Head to your dashboard to see your new inventory.'}
+                ? "You're all set! Add items anytime from Pantry or Scanner."
+                : 'Your data is safely stored. Head to your dashboard to manage inventory.'}
             </Text>
+            <Button label="Go to my dashboard" onPress={finish} loading={saving} />
           </View>
-        );
+        )}
 
-      default:
-        return null;
-    }
-  };
-
-  // Fixed Bottom Continue Button height
-  const bottomButtonHeight = 52;
-  const bottomMargin = insets.bottom + 24;
-
-  return (
-    <View style={{ flex: 1, backgroundColor: c.canvas }}>
-      {/* Absolute Progress Bar at top */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, backgroundColor: c.line, zIndex: 50 }}>
-        <Animated.View style={[{ height: 4, backgroundColor: c.primary, borderBottomRightRadius: 2, borderTopRightRadius: 2 }, progressStyle]} />
-      </View>
-
-      {/* Header with Back Button */}
-      <View style={{ marginTop: insets.top + 20, paddingHorizontal: 24, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}>
-        {step > 0 && step < 7 ? (
-          <Pressable onPress={() => setStep(s => s - 1)} hitSlop={16} className="mr-4">
-            <Icon name="chevron-left" size={24} color={c.ink} />
-          </Pressable>
-        ) : <View style={{ width: 40 }} />}
-      </View>
-
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <View style={{ flex: 1, overflow: 'hidden' }}>
-          <Animated.View 
-            key={step} 
-            entering={SlideInRight.duration(400)} 
-            exiting={SlideOutLeft.duration(400)} 
-            style={{ position: 'absolute', width: '100%', height: '100%', paddingHorizontal: 24 }}
-          >
-            <View style={{ marginTop: 24 }}>
-              <Text className="text-[13px] font-bold uppercase tracking-widest text-primary mb-2">Step {step + 1} of {TOTAL_STEPS}</Text>
-              <Text className="text-3xl font-black tracking-tight text-ink dark:text-[#F0EEE9]">{STEP_TITLES[step]}</Text>
-            </View>
-            {renderStep()}
-          </Animated.View>
-        </View>
-
-        {/* Fixed Continue Button */}
-        {step < 4 || step === 7 ? (
-          <View style={{ position: 'absolute', bottom: bottomMargin, left: 24, right: 24 }}>
-            {step === 7 ? (
-              <Pressable
-                onPress={finish}
-                disabled={saving}
-                style={{
-                  height: bottomButtonHeight,
-                  borderRadius: 16,
-                  backgroundColor: c.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: c.primary,
-                  shadowOpacity: 0.45,
-                  shadowRadius: 20,
-                  elevation: 10,
-                  shadowOffset: { width: 0, height: 8 },
-                  opacity: saving ? 0.6 : 1,
-                }}
-              >
-                <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>{saving ? 'Finishing...' : 'Go to Dashboard'}</Text>
-              </Pressable>
+        {step < 4 && (
+          <View className="mt-8 gap-2">
+            <Button label="Continue" onPress={next} loading={saving} />
+            {step > 0 ? (
+              <Button label="Back" variant="ghost" onPress={() => setStep((s) => s - 1)} />
             ) : (
-              <Pressable
-                onPress={next}
-                disabled={saving}
-                style={{
-                  height: bottomButtonHeight,
-                  borderRadius: 16,
-                  backgroundColor: c.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: c.primary,
-                  shadowOpacity: 0.45,
-                  shadowRadius: 20,
-                  elevation: 10,
-                  shadowOffset: { width: 0, height: 8 },
-                  opacity: saving ? 0.6 : 1,
-                }}
-              >
-                <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>{saving ? 'Saving...' : 'Continue'}</Text>
-              </Pressable>
+              <Button label="Skip setup" variant="ghost" onPress={finish} />
             )}
           </View>
-        ) : null}
-      </KeyboardAvoidingView>
-    </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

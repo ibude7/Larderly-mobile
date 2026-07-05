@@ -9,7 +9,6 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  style?: import("react-native").ViewStyle;
   variant?: Variant;
   icon?: IconName;
   disabled?: boolean;

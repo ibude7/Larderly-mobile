@@ -1,12 +1,31 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+  Linking,
+  ScrollView,
+} from 'react-native';
 import {
   CameraView,
   useCameraPermissions,
   BarcodeScanningResult,
   BarcodeType,
 } from 'expo-camera';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import type { TabNavigationProp, TabParamList } from '../navigation/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
@@ -14,8 +33,8 @@ import AddItemModal from '../components/pantry/AddItemModal';
 import ScannedProductModal, { ScannedItem } from '../components/pantry/ScannedProductModal';
 import { usePantryStore } from '../contexts/PantryContext';
 import { useToast } from '../contexts/ToastContext';
-import Chip from '../components/ui/Chip';
-import AppHeader from '../components/layout/AppHeader';
+import { useAppColors } from '../hooks/useAppColors';
+import { useTheme } from '../hooks/useTheme';
 import { generateProductNote } from '../lib/productNoteAI';
 import {
   lookupBarcode,
@@ -27,8 +46,6 @@ import { searchProductByBarcode } from '../lib/productDb';
 import type { ProductData } from '../lib/productDb';
 import { locationIdFromName } from '../lib/inventoryMapper';
 import { PantryItem } from '../types';
-import { TabParamList } from '../navigation/types';
-import { colors } from '../theme';
 
 type ScanMode = 'add' | 'consume';
 
@@ -38,6 +55,8 @@ interface ScanHistoryEntry {
   unit: string;
   mode: ScanMode;
 }
+
+const RECENT_SCANS_KEY = 'larderly:recentScans';
 
 const BARCODE_TYPES: BarcodeType[] = [
   'ean13',
@@ -88,8 +107,11 @@ async function productToPrefillWithAI(
 }
 
 export default function ScannerScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<TabNavigationProp>();
   const route = useRoute<RouteProp<TabParamList, 'Scanner'>>();
+  const insets = useSafeAreaInsets();
+  const c = useAppColors();
+  const theme = useTheme();
   const { items, locations, addItem, updateItem, consumeItem } = usePantryStore();
   const { showToast } = useToast();
 
@@ -104,8 +126,36 @@ export default function ScannerScreen() {
   const [productLoading, setProductLoading] = useState(false);
 
   const processingRef = useRef(false);
+  const recentHydratedRef = useRef(false);
 
-  // Sync mode when navigated from the dashboard's add/consume shortcuts.
+  const scanY = useSharedValue(0);
+
+  useEffect(() => {
+    scanY.value = withRepeat(withTiming(104, { duration: 1600 }), -1, true);
+  }, [scanY]);
+
+  const beamStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: scanY.value }],
+  }));
+
+  useEffect(() => {
+    AsyncStorage.getItem(RECENT_SCANS_KEY).then((raw) => {
+      if (raw) {
+        try {
+          setRecentScans(JSON.parse(raw) as ScanHistoryEntry[]);
+        } catch {
+          // ignore corrupt cache
+        }
+      }
+      recentHydratedRef.current = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!recentHydratedRef.current) return;
+    AsyncStorage.setItem(RECENT_SCANS_KEY, JSON.stringify(recentScans)).catch(() => {});
+  }, [recentScans]);
+
   useEffect(() => {
     if (route.params?.mode) {
       setScanMode(route.params.mode);
@@ -113,9 +163,25 @@ export default function ScannerScreen() {
     }
   }, [route.params?.mode, navigation]);
 
+  useEffect(() => {
+    if (permission?.granted) {
+      processingRef.current = false;
+      setCameraActive(true);
+    }
+  }, [permission?.granted]);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
   const pushRecent = useCallback((item: PantryItem, mode: ScanMode) => {
     setRecentScans((prev) =>
-      [{ id: `${item.id}-${Date.now()}`, name: item.name, unit: item.unit, mode }, ...prev].slice(0, 6),
+      [{ id: `${item.id}-${Date.now()}`, name: item.name, unit: item.unit, mode }, ...prev].slice(
+        0,
+        8,
+      ),
     );
   }, []);
 
@@ -125,19 +191,23 @@ export default function ScannerScreen() {
         const { error } = await updateItem(item.id, { quantity: item.quantity + 1 });
         if (error) {
           showToast(error.message || `Failed to add more ${item.name}`, 'error');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           return false;
         }
         pushRecent(item, mode);
         showToast(`Added 1 ${item.unit} to ${item.name}`, 'success');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         return true;
       }
       const result = (await consumeItem(item.id, 1)) as { error?: Error | null };
       if (result?.error) {
         showToast(result.error.message || `Failed to remove ${item.name}`, 'error');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         return false;
       }
       pushRecent(item, mode);
       showToast(`Removed 1 ${item.unit} from ${item.name}`, 'success');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return true;
     },
     [updateItem, consumeItem, showToast, pushRecent],
@@ -154,7 +224,6 @@ export default function ScannerScreen() {
         return { resume: true };
       }
 
-      // Rich product lookup via productDb (OFF + UPC cache)
       setProductLoading(true);
       setScannedProduct(null);
       try {
@@ -175,6 +244,7 @@ export default function ScannerScreen() {
         }
         if (scanMode === 'consume') {
           showToast(`${rich.name} is not currently in your pantry`, 'warning');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           setManualBarcode(barcode);
           return { resume: false };
         }
@@ -191,6 +261,7 @@ export default function ScannerScreen() {
         setManualBarcode(barcode);
         if (scanMode === 'consume') {
           showToast('This barcode does not match an item in your pantry', 'warning');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           return { resume: false };
         }
         setAddPrefill({ barcode });
@@ -205,6 +276,7 @@ export default function ScannerScreen() {
 
       if (scanMode === 'consume') {
         showToast(`${product.name} is not currently in your pantry`, 'warning');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         setManualBarcode(barcode);
         return { resume: false };
       }
@@ -237,11 +309,13 @@ export default function ScannerScreen() {
     });
     if (!res.error) {
       showToast(`${item.name} added to your pantry!`, 'success');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setManualBarcode('');
       setScannedProduct(null);
       setCameraActive(true);
     } else {
       showToast(res.error.message || 'Failed to add item', 'error');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
   };
 
@@ -253,7 +327,6 @@ export default function ScannerScreen() {
       processingRef.current = true;
       setCameraActive(false);
       const { resume } = await handleBarcode(code);
-      // Brief pause so a single physical scan doesn't instantly re-trigger.
       setTimeout(() => {
         processingRef.current = false;
         if (resume) setCameraActive(true);
@@ -262,147 +335,226 @@ export default function ScannerScreen() {
     [handleBarcode],
   );
 
-  const startCamera = async () => {
-    if (!permission?.granted) {
-      const res = await requestPermission();
-      if (!res.granted) {
-        showToast('Camera permission is needed to scan barcodes.', 'error');
-        return;
-      }
-    }
-    processingRef.current = false;
-    setCameraActive(true);
-  };
-
   const handleManualLookup = async () => {
     const code = manualBarcode.trim();
     if (!code || processingRef.current) return;
     processingRef.current = true;
-    await handleBarcode(code);
+    setCameraActive(false);
+    const { resume } = await handleBarcode(code);
     processingRef.current = false;
+    if (resume) setCameraActive(true);
   };
 
+  const topBarHeight = 100 + insets.top;
+  const bottomSheetHeight = 280 + insets.bottom;
+  const permissionDenied = permission && !permission.granted && !permission.canAskAgain;
+
   return (
-    <View className="flex-1 bg-canvas">
-      <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
+    <View className="flex-1 bg-black">
+      {permission?.granted && cameraActive ? (
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: BARCODE_TYPES }}
+          onBarcodeScanned={onBarcodeScanned}
+        />
+      ) : null}
 
-      <View className="flex-1 p-5">
-        <Text className="text-3xl font-bold text-ink">Scanner</Text>
-        <Text className="mt-1 font-medium text-muted">
-          {scanMode === 'add' ? 'Scan to add stock to your pantry.' : 'Scan to use up stock.'}
-        </Text>
-
-        {/* Mode toggle */}
-        <View className="mt-5 flex-row gap-2">
-          {(['add', 'consume'] as const).map((m) => (
-            <Chip
-              key={m}
-              label={m === 'add' ? 'Add stock' : 'Use stock'}
-              icon={m === 'add' ? 'plus' : 'minus'}
-              active={scanMode === m}
-              onPress={() => setScanMode(m)}
-            />
-          ))}
+      {looking ? (
+        <View
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+          className="items-center justify-center bg-black/40"
+        >
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text className="mt-3 text-sm font-semibold text-white">Looking up…</Text>
         </View>
+      ) : null}
 
-        {/* Camera area */}
-        <View className="mt-5 h-72 overflow-hidden rounded-card border border-line bg-ink">
-          {cameraActive ? (
-            <View className="flex-1">
-              <CameraView
-                style={{ flex: 1 }}
-                facing="back"
-                barcodeScannerSettings={{ barcodeTypes: BARCODE_TYPES }}
-                onBarcodeScanned={onBarcodeScanned}
+      {permissionDenied ? (
+        <View style={StyleSheet.absoluteFill} className="items-center justify-center px-8">
+          <BlurView
+            intensity={theme === 'dark' ? 75 : 80}
+            tint={theme}
+            style={{
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: c.line,
+              overflow: 'hidden',
+              padding: 24,
+              width: '100%',
+              maxWidth: 340,
+            }}
+          >
+            <View className="items-center">
+              <Icon name="camera" size={40} color={c.muted} />
+              <Text className="mt-4 text-center text-lg font-bold text-ink dark:text-[#F0EEE9]">Camera access needed</Text>
+              <Text className="mt-2 text-center text-sm text-muted dark:text-[#6B6878]">
+                Larderly needs your camera to scan barcodes. Enable it in Settings to continue.
+              </Text>
+              <Button
+                label="Open Settings"
+                onPress={() => Linking.openSettings()}
+                className="mt-5 w-full"
               />
-              {/* Scan frame overlay */}
-              <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
-                <View className="h-32 w-64 rounded-2xl border-2 border-white/80" />
-                <Text className="mt-4 text-xs font-semibold text-white/90">
-                  Point at a barcode
-                </Text>
-              </View>
+            </View>
+          </BlurView>
+        </View>
+      ) : null}
+
+      <BlurView
+        intensity={theme === 'dark' ? 75 : 80}
+        tint={theme}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: topBarHeight,
+          paddingTop: insets.top + 12,
+          paddingHorizontal: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: c.line,
+        }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/60 p-1">
+            {(['add', 'consume'] as const).map((m) => (
               <Pressable
-                onPress={() => setCameraActive(false)}
-                className="absolute right-3 top-3 h-9 w-9 items-center justify-center rounded-full bg-black/50"
+                key={m}
+                onPress={() => setScanMode(m)}
+                className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${
+                  scanMode === m ? 'bg-surface dark:bg-[#1A1A22]' : ''
+                }`}
               >
-                <Icon name="close" size={18} color="#FFFFFF" />
+                <Icon
+                  name={m === 'add' ? 'plus' : 'minus'}
+                  size={16}
+                  color={scanMode === m ? c.primary : c.muted}
+                />
+                <Text
+                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-[#6B6878]'}`}
+                >
+                  {m === 'add' ? 'Add' : 'Consume'}
+                </Text>
               </Pressable>
-            </View>
-          ) : (
-            <View className="flex-1 items-center justify-center p-6">
-              {looking ? (
-                <>
-                  <ActivityIndicator size={32} color="#FFFFFF" />
-                  <Text className="mt-3 text-sm font-semibold text-white/90">Looking up…</Text>
-                </>
-              ) : (
-                <>
-                  <Icon name="camera" size={40} color="rgba(255,255,255,0.7)" />
-                  <Text className="mt-3 text-center text-sm text-white/70">
-                    {permission?.granted
-                      ? 'Camera is off.'
-                      : 'Camera permission is required to scan.'}
-                  </Text>
-                  <View className="mt-4">
-                    <Button label="Start Camera" icon="scanner" onPress={startCamera} />
-                  </View>
-                </>
-              )}
-            </View>
-          )}
+            ))}
+          </View>
+          <Pressable
+            onPress={() => navigation.navigate('Dashboard')}
+            hitSlop={8}
+            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/80"
+          >
+            <Icon name="close" size={18} color={c.ink} />
+          </Pressable>
         </View>
+      </BlurView>
 
-        {/* Manual entry */}
-        <View className="mt-5">
-          <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">
-            Enter barcode manually
-          </Text>
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <TextField
-                value={manualBarcode}
-                onChangeText={setManualBarcode}
-                placeholder="e.g. 0123456789012"
-                keyboardType="number-pad"
-                icon="search"
-              />
-            </View>
-            <Button
-              label="Look up"
-              onPress={handleManualLookup}
-              disabled={!manualBarcode.trim() || looking}
+      {!permissionDenied ? (
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { top: topBarHeight, bottom: bottomSheetHeight },
+          ]}
+          className="items-center justify-center"
+        >
+          <View
+            style={{
+              width: 256,
+              height: 128,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: 'rgba(255,255,255,0.85)',
+              overflow: 'hidden',
+            }}
+          >
+            <Animated.View
+              style={[
+                beamStyle,
+                {
+                  height: 2,
+                  backgroundColor: c.primary,
+                  borderRadius: 1,
+                  shadowColor: c.primary,
+                  shadowOpacity: 1,
+                  shadowRadius: 8,
+                },
+              ]}
             />
           </View>
+          <Text className="mt-4 text-xs font-semibold text-white/90">Point at a barcode</Text>
+        </View>
+      ) : null}
+
+      <BlurView
+        intensity={theme === 'dark' ? 75 : 80}
+        tint={theme}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: bottomSheetHeight,
+          paddingBottom: insets.bottom + 90,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          borderTopWidth: 1,
+          borderTopColor: c.line,
+        }}
+      >
+        <Text className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+          Enter barcode manually
+        </Text>
+        <View className="flex-row gap-2">
+          <View className="flex-1">
+            <TextField
+              value={manualBarcode}
+              onChangeText={setManualBarcode}
+              placeholder="e.g. 0123456789012"
+              keyboardType="number-pad"
+              icon="search"
+            />
+          </View>
+          <Button
+            label="Look up"
+            onPress={handleManualLookup}
+            disabled={!manualBarcode.trim() || looking}
+          />
         </View>
 
-        {/* Recent scans */}
         {recentScans.length > 0 ? (
-          <View className="mt-6">
-            <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
+          <>
+            <Text className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
               Recent
             </Text>
-            <View className="gap-2">
-              {recentScans.map((s) => (
-                <View
-                  key={s.id}
-                  className="flex-row items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5"
-                >
-                  <Icon
-                    name={s.mode === 'add' ? 'plus' : 'minus'}
-                    size={16}
-                    color={s.mode === 'add' ? colors.success : colors.primary}
-                  />
-                  <Text className="flex-1 text-sm font-semibold text-ink">{s.name}</Text>
-                  <Text className="text-xs text-muted">
-                    {s.mode === 'add' ? '+1' : '-1'} {s.unit}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              className="flex-1"
+              contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+            >
+              <View className="gap-2">
+                {recentScans.map((s) => (
+                  <View
+                    key={s.id}
+                    className="flex-row items-center gap-3 rounded-xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/70 px-3 py-2.5"
+                  >
+                    <Icon
+                      name={s.mode === 'add' ? 'plus' : 'minus'}
+                      size={16}
+                      color={s.mode === 'add' ? c.success : c.primary}
+                    />
+                    <Text className="flex-1 text-sm font-semibold text-ink dark:text-[#F0EEE9]">{s.name}</Text>
+                    <Text className="text-xs text-muted dark:text-[#6B6878]">
+                      {s.mode === 'add' ? '+1' : '-1'} {s.unit}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </>
         ) : null}
-      </View>
+      </BlurView>
 
       <ScannedProductModal
         isOpen={!!scannedProduct || productLoading}
@@ -411,6 +563,7 @@ export default function ScannerScreen() {
         onClose={() => {
           setScannedProduct(null);
           setProductLoading(false);
+          setCameraActive(true);
         }}
         onScanAgain={() => {
           setScannedProduct(null);
@@ -421,14 +574,21 @@ export default function ScannerScreen() {
 
       <AddItemModal
         isOpen={!!addPrefill}
-        onClose={() => setAddPrefill(null)}
+        onClose={() => {
+          setAddPrefill(null);
+          setCameraActive(true);
+        }}
         locations={locations}
         prefill={addPrefill ?? undefined}
         onAdd={async (item) => {
           const res = await addItem(item);
           if (!res.error) {
             showToast(`${item.name} added to your pantry!`, 'success');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setManualBarcode('');
+            setCameraActive(true);
+          } else {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
           return res;
         }}
