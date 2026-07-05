@@ -7,7 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -15,7 +17,8 @@ import AppLogo from '../components/ui/AppLogo';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
-import { colors } from '../theme';
+import { GoogleLogo } from '../components/ui/GoogleLogo';
+import { useAppColors } from '../hooks/useAppColors';
 
 type AuthMode = 'signin' | 'signup' | 'reset' | 'phone';
 
@@ -56,6 +59,8 @@ function friendlyAuthError(message: string, mode: AuthMode): string {
 }
 
 export default function AuthScreen() {
+  const c = useAppColors();
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -249,62 +254,124 @@ export default function AuthScreen() {
           : 'Enter your email and we’ll send you a link to set a new password.';
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <View style={{ flex: 1, backgroundColor: c.canvas }}>
+      {/* Decorative full-screen background elements */}
+      <View
+        style={{
+          width: 400,
+          height: 400,
+          borderRadius: 200,
+          backgroundColor: c.primaryGlow,
+          position: 'absolute',
+          top: -80,
+          alignSelf: 'center',
+        }}
+      />
+      <View
+        style={{
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          backgroundColor: c.violetGlow,
+          position: 'absolute',
+          top: 60,
+          right: -40,
+        }}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ padding: 20, flexGrow: 1, justifyContent: 'center' }}
+          contentContainerStyle={{
+            padding: 24,
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingTop: insets.top + 24,
+            paddingBottom: insets.bottom + 24,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="mb-8 items-center">
+          {/* Logo Section */}
+          <Animated.View
+            entering={FadeInDown.duration(600).withInitialValues({
+              transform: [{ translateY: 30 }],
+            })}
+            style={{ marginBottom: 40, alignItems: 'center' }}
+          >
             <AppLogo size="lg" showWordmark={false} animated />
-            <Text className="mt-4 text-3xl font-bold tracking-tight text-primary">Larderly</Text>
-            <Text className="mt-1 text-sm font-semibold text-muted">Your pantry, organized</Text>
-          </View>
+            <Text
+              style={{
+                fontSize: 40,
+                fontWeight: '900',
+                letterSpacing: -1.5,
+                color: c.ink,
+                marginTop: 16,
+              }}
+            >
+              Larderly
+            </Text>
+            <Text style={{ fontSize: 15, color: c.muted, marginTop: 4, fontWeight: '500' }}>
+              Your pantry, organized
+            </Text>
+          </Animated.View>
 
-          <View className="rounded-card border border-line bg-surface p-6">
+          {/* Form Card (BlurView) */}
+          <BlurView
+            intensity={c.blurIntensity as number}
+            tint={c.blurTint as any}
+            style={{
+              borderRadius: 28,
+              borderWidth: 1,
+              borderColor: c.lineStrong,
+              overflow: 'hidden',
+              padding: 24,
+            }}
+          >
             {mode !== 'reset' ? (
-              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line bg-line/60 p-1.5">
-                {(['signin', 'signup'] as const).map((m) => (
-                  <Pressable
-                    key={m}
-                    onPress={() => setMode(m)}
-                    className={`flex-1 items-center rounded-xl py-2.5 ${
-                      mode === m ? 'bg-surface' : ''
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm font-bold ${mode === m ? 'text-ink' : 'text-muted'}`}
+              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#2A2A35] bg-line/60 p-1.5">
+                {(['signin', 'signup'] as const).map((m) => {
+                  const isActive = mode === m;
+                  return (
+                    <Pressable
+                      key={m}
+                      onPress={() => setMode(m)}
+                      className={`flex-1 items-center rounded-xl py-2.5`}
+                      style={isActive ? { backgroundColor: c.primaryGlow } : undefined}
                     >
-                      {m === 'signin' ? 'Sign In' : 'Create Account'}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        className={`text-sm font-bold`}
+                        style={{ color: isActive ? c.primary : c.muted }}
+                      >
+                        {m === 'signin' ? 'Sign In' : 'Create Account'}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             ) : (
               <Pressable
                 onPress={() => setMode('signin')}
                 className="mb-4 flex-row items-center gap-1.5"
               >
-                <Icon name="chevron-left" size={16} color={colors.muted} />
-                <Text className="text-xs font-semibold text-muted">Back to sign in</Text>
+                <Icon name="chevron-left" size={16} color={c.muted} />
+                <Text className="text-xs font-semibold text-muted dark:text-[#6B6878]">Back to sign in</Text>
               </Pressable>
             )}
 
             <View className="mb-6">
-              <Text className="text-2xl font-bold text-ink">{heading}</Text>
-              <Text className="mt-1 text-sm leading-relaxed text-muted">{subheading}</Text>
+              <Text className="text-2xl font-bold text-ink dark:text-[#F0EEE9]">{heading}</Text>
+              <Text className="mt-1 text-sm leading-relaxed text-muted dark:text-[#6B6878]">{subheading}</Text>
             </View>
 
             {verificationSent && mode === 'signup' ? (
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
-                <Icon name="success" size={22} color={colors.success} />
+                <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink">Check your email</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70">
+                  <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Check your email</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
                     We sent a verification link to {verificationSent}. Tap it to activate your
                     account.
                   </Text>
@@ -314,10 +381,10 @@ export default function AuthScreen() {
 
             {resetSent && mode === 'reset' ? (
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
-                <Icon name="success" size={22} color={colors.success} />
+                <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink">Reset link sent</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70">
+                  <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Reset link sent</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
                     If an account exists for {resetSent}, you’ll receive an email with instructions
                     shortly.
                   </Text>
@@ -354,162 +421,194 @@ export default function AuthScreen() {
               </View>
             ) : (
               <>
-            {mode !== 'reset' && mode !== 'phone' ? (
-              <View className="mb-5 gap-2.5">
-                {googleAvailable ? (
-                  <Pressable
-                    onPress={onGoogle}
-                    className="flex-row items-center justify-center gap-2.5 rounded-2xl border border-line bg-surface py-3"
-                  >
-                    <Icon name="google" size={18} color="#4285F4" />
-                    <Text className="text-sm font-bold text-ink">Continue with Google</Text>
-                  </Pressable>
-                ) : null}
-                {appleAvailable ? (
-                  <AppleAuthentication.AppleAuthenticationButton
-                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                    cornerRadius={16}
-                    style={{ height: 48, width: '100%' }}
-                    onPress={onApple}
-                  />
-                ) : null}
-                {googleAvailable || appleAvailable ? (
-                  <View className="my-1 flex-row items-center gap-3">
-                    <View className="h-px flex-1 bg-line" />
-                    <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                      or
-                    </Text>
-                    <View className="h-px flex-1 bg-line" />
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-
-            <View className="gap-4">
-              {mode === 'phone' ? (
-                !phoneCodeSent ? (
-                  <TextField label="Phone number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" placeholder="+1 555 000 0000" />
-                ) : (
-                  <TextField label="Verification code" value={phoneCode} onChangeText={setPhoneCode} keyboardType="number-pad" placeholder="123456" />
-                )
-              ) : (
-              <>
-              {mode === 'signup' ? (
-                <TextField
-                  label="Full Name"
-                  icon="user"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Jane Smith"
-                  autoComplete="name"
-                  autoCapitalize="words"
-                />
-              ) : null}
-
-              <TextField
-                label="Email Address"
-                icon="mail"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
-                autoComplete="email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-
-              {mode !== 'reset' ? (
-                <View>
-                  <View className="flex-row items-center justify-between">
-                    <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">
-                      Password
-                    </Text>
-                    {mode === 'signin' ? (
-                      <Pressable onPress={() => setMode('reset')}>
-                        <Text className="text-[11px] font-semibold uppercase tracking-wide text-primary">
-                          Forgot?
+                {mode !== 'reset' && mode !== 'phone' ? (
+                  <View className="mb-5 gap-3">
+                    {googleAvailable ? (
+                      <Pressable
+                        onPress={onGoogle}
+                        style={{
+                          backgroundColor: '#FFFFFF',
+                          borderWidth: 1,
+                          borderColor: '#DADCE0',
+                          borderRadius: 16,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          height: 48,
+                          gap: 12,
+                        }}
+                      >
+                        <GoogleLogo size={18} />
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#3C4043' }}>
+                          Continue with Google
                         </Text>
                       </Pressable>
                     ) : null}
+                    {appleAvailable ? (
+                      <AppleAuthentication.AppleAuthenticationButton
+                        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                        cornerRadius={16}
+                        style={{ height: 48, width: '100%' }}
+                        onPress={onApple}
+                      />
+                    ) : null}
+                    {googleAvailable || appleAvailable ? (
+                      <View className="my-2 flex-row items-center gap-3">
+                        <View style={{ height: 1, flex: 1, backgroundColor: c.subtle }} />
+                        <Text style={{ fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5, color: c.muted }}>
+                          or
+                        </Text>
+                        <View style={{ height: 1, flex: 1, backgroundColor: c.subtle }} />
+                      </View>
+                    ) : null}
                   </View>
-                  <TextField
-                    icon="lock"
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
-                    secureTextEntry={!showPassword}
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                    autoCapitalize="none"
-                    rightIcon={showPassword ? 'eye-off' : 'eye'}
-                    onRightIconPress={() => setShowPassword((s) => !s)}
-                    hint={mode === 'signup' ? 'At least 6 characters' : undefined}
-                  />
+                ) : null}
+
+                <View className="gap-4">
+                  {mode === 'phone' ? (
+                    !phoneCodeSent ? (
+                      <TextField label="Phone number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" placeholder="+1 555 000 0000" />
+                    ) : (
+                      <TextField label="Verification code" value={phoneCode} onChangeText={setPhoneCode} keyboardType="number-pad" placeholder="123456" />
+                    )
+                  ) : (
+                    <>
+                      {mode === 'signup' ? (
+                        <TextField
+                          label="Full Name"
+                          icon="user"
+                          value={fullName}
+                          onChangeText={setFullName}
+                          placeholder="Jane Smith"
+                          autoComplete="name"
+                          autoCapitalize="words"
+                        />
+                      ) : null}
+
+                      <TextField
+                        label="Email Address"
+                        icon="mail"
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+
+                      {mode !== 'reset' ? (
+                        <View>
+                          <View className="flex-row items-center justify-between">
+                            <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+                              Password
+                            </Text>
+                            {mode === 'signin' ? (
+                              <Pressable onPress={() => setMode('reset')}>
+                                <Text className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                                  Forgot?
+                                </Text>
+                              </Pressable>
+                            ) : null}
+                          </View>
+                          <TextField
+                            icon="lock"
+                            value={password}
+                            onChangeText={setPassword}
+                            placeholder="••••••••"
+                            secureTextEntry={!showPassword}
+                            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                            autoCapitalize="none"
+                            rightIcon={showPassword ? 'eye-off' : 'eye'}
+                            onRightIconPress={() => setShowPassword((s) => !s)}
+                            hint={mode === 'signup' ? 'At least 6 characters' : undefined}
+                          />
+                        </View>
+                      ) : null}
+
+                      {/* PRIMARY CTA BUTTON */}
+                      <Pressable
+                        onPress={submit}
+                        disabled={loading}
+                        style={{
+                          height: 52,
+                          borderRadius: 16,
+                          backgroundColor: c.primary,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          shadowColor: c.primary,
+                          shadowOpacity: 0.45,
+                          shadowRadius: 20,
+                          elevation: 10,
+                          shadowOffset: { width: 0, height: 8 },
+                          opacity: loading ? 0.6 : 1,
+                          marginTop: 8,
+                        }}
+                      >
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>
+                          {loading
+                            ? 'Please wait...'
+                            : mode === 'signin'
+                              ? 'Sign In'
+                              : mode === 'signup'
+                                ? 'Create Account'
+                                : 'Send Reset Link'}
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
+
+                  {mode === 'phone' ? (
+                    <Pressable
+                      onPress={submit}
+                      disabled={loading}
+                      style={{
+                        height: 52,
+                        borderRadius: 16,
+                        backgroundColor: c.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        shadowColor: c.primary,
+                        shadowOpacity: 0.45,
+                        shadowRadius: 20,
+                        elevation: 10,
+                        shadowOffset: { width: 0, height: 8 },
+                        opacity: loading ? 0.6 : 1,
+                        marginTop: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>
+                        {loading ? 'Please wait...' : phoneCodeSent ? 'Verify code' : 'Send code'}
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </View>
-              ) : null}
 
-              <Button
-                label={
-                  mode === 'signin'
-                    ? 'Sign In'
-                    : mode === 'signup'
-                      ? 'Create Account'
-                      : 'Send Reset Link'
-                }
-                onPress={submit}
-                loading={loading}
-                full
-              />
-              </>
-              )}
+                {mode === 'signin' ? (
+                  <Pressable onPress={() => { setMode('phone'); setPhoneCodeSent(false); }} className="mt-4">
+                    <Text className="text-center text-sm font-semibold text-primary">Sign in with phone</Text>
+                  </Pressable>
+                ) : mode === 'phone' ? (
+                  <Pressable onPress={() => setMode('signin')} className="mt-4">
+                    <Text className="text-center text-sm font-semibold text-muted dark:text-[#6B6878]">Back to email sign in</Text>
+                  </Pressable>
+                ) : null}
 
-              {mode === 'phone' ? (
-                <Button
-                  label={phoneCodeSent ? 'Verify code' : 'Send code'}
-                  onPress={submit}
-                  loading={loading}
-                  full
-                />
-              ) : null}
-            </View>
-
-            {mode === 'signin' ? (
-              <Pressable onPress={() => { setMode('phone'); setPhoneCodeSent(false); }} className="mt-3">
-                <Text className="text-center text-sm font-semibold text-primary">Sign in with phone</Text>
-              </Pressable>
-            ) : mode === 'phone' ? (
-              <Pressable onPress={() => setMode('signin')} className="mt-3">
-                <Text className="text-center text-sm font-semibold text-muted">Back to email sign in</Text>
-              </Pressable>
-            ) : null}
-
-            {mode !== 'reset' && mode !== 'phone' ? (
-              <View className="mt-5">
-                <Button label="Continue without account" onPress={onGuest} variant="secondary" full />
-                <Text className="mt-2 text-center text-[11px] text-muted">
-                  You can create an account later to save your data across devices.
-                </Text>
-              </View>
-            ) : null}
-
-            {mode !== 'reset' && mode !== 'phone' ? (
-              <View className="mt-6 flex-row justify-center">
-                <Text className="text-xs text-muted">
-                  {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-                </Text>
-                <Pressable onPress={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
-                  <Text className="text-xs font-bold text-primary">
-                    {mode === 'signin' ? 'Sign up' : 'Sign in'}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
+                {/* GUEST BUTTON */}
+                {mode !== 'reset' && mode !== 'phone' ? (
+                  <Pressable onPress={onGuest} style={{ marginTop: 24, alignItems: 'center' }} disabled={loading}>
+                    <Text style={{ color: c.muted, fontSize: 13, fontWeight: '500' }}>
+                      Explore without account →
+                    </Text>
+                  </Pressable>
+                ) : null}
 
               </>
             )}
-          </View>
+          </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -9,7 +9,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { generateSlotMeal, type AIMealIdea } from '../../lib/mealAI';
 import { parseStoredDate } from '../../lib/date';
 import { getMealTypeIcon } from '../../lib/appIcons';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 const MEAL_TYPE_LABELS: Record<MealPlan['meal_type'], string> = {
   breakfast: 'Breakfast',
@@ -37,6 +37,7 @@ export default function AddMealModal({
   onClose,
   onAddToShoppingList,
 }: AddMealModalProps) {
+  const c = useAppColors();
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [ingredients, setIngredients] = useState<MealIngredient[]>([]);
@@ -149,17 +150,17 @@ export default function AddMealModal({
   return (
     <Modal isOpen onClose={onClose} title={`Add ${MEAL_TYPE_LABELS[slot.mealType]}`}>
       <View className="gap-5">
-        <View className="rounded-3xl border border-line bg-canvas p-4">
+        <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-4">
           <View className="flex-row items-center gap-3">
             <View className="h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-              <Icon name={getMealTypeIcon(slot.mealType)} size={22} color={colors.primary} />
+              <Icon name={getMealTypeIcon(slot.mealType)} size={22} color={c.primary} />
             </View>
             <View>
-              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                 Meal slot
               </Text>
-              <Text className="text-base font-bold text-ink">{MEAL_TYPE_LABELS[slot.mealType]}</Text>
-              <Text className="text-[13px] font-medium text-muted">{label}</Text>
+              <Text className="text-base font-bold text-ink dark:text-[#F0EEE9]">{MEAL_TYPE_LABELS[slot.mealType]}</Text>
+              <Text className="text-[13px] font-medium text-muted dark:text-[#6B6878]">{label}</Text>
             </View>
           </View>
         </View>
@@ -170,10 +171,10 @@ export default function AddMealModal({
               <Icon name="sparkles" size={18} color="#FFFFFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                 AI assist
               </Text>
-              <Text className="text-[13px] font-semibold text-ink">
+              <Text className="text-[13px] font-semibold text-ink dark:text-[#F0EEE9]">
                 Let Larderly pick a {slot.mealType} from your pantry.
               </Text>
               {aiSuggestion ? (
@@ -208,7 +209,7 @@ export default function AddMealModal({
         />
 
         <View>
-          <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
+          <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
             Ingredients
           </Text>
           <View className="mb-3 gap-2">
@@ -224,14 +225,14 @@ export default function AddMealModal({
                   <Icon
                     name={inPantry ? 'success' : 'warning'}
                     size={18}
-                    color={inPantry ? colors.success : colors.primary}
+                    color={inPantry ? c.success : c.primary}
                   />
-                  <Text className="flex-1 text-sm font-medium text-ink">{ing.name}</Text>
-                  <Text className="text-xs text-muted">
+                  <Text className="flex-1 text-sm font-medium text-ink dark:text-[#F0EEE9]">{ing.name}</Text>
+                  <Text className="text-xs text-muted dark:text-[#6B6878]">
                     {ing.quantity} {ing.unit}
                   </Text>
                   <Pressable onPress={() => removeIngredient(i)} hitSlop={8}>
-                    <Icon name="close" size={16} color={colors.muted} />
+                    <Icon name="close" size={16} color={c.muted} />
                   </Pressable>
                 </View>
               );

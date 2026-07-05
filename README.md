@@ -1,22 +1,17 @@
 # Larderly Mobile
 
-React Native (Expo) app for [Larderly](https://github.com/ibude7/Larderly) — pantry tracking, barcode scanning, meal planning, and shopping lists.
+React Native (Expo) app for [Larderly](https://github.com/ibude7/Larderly-mobile) — pantry tracking, barcode scanning, meal planning, and shopping lists.
 
 ## Setup
+
+See **[SETUP.md](./SETUP.md)** for Firebase native config, environment variables, Firestore deploy, and troubleshooting.
 
 ```bash
 npm install
 cp .env.example .env
+# Add GoogleService-Info.plist + google-services.json (see SETUP.md)
+npm start
 ```
-
-Add Firebase native config from the Firebase console (not committed to git):
-
-- `GoogleService-Info.plist` (iOS)
-- `google-services.json` (Android)
-
-## Shared code with web
-
-Types, Firestore path helpers, and household mappers come from `@larderly/shared` (local path: `../Larderly/packages/shared`). After pulling web repo changes that touch shared code, run `npm install` again in this repo.
 
 ## Run
 
@@ -24,7 +19,12 @@ Types, Firestore path helpers, and household mappers come from `@larderly/shared
 npm start
 npm run ios
 npm run android
+npm run typecheck
 ```
+
+## Shared code
+
+Business logic shared with the web app lives in **`src/shared/`** (vendored from `@larderly/shared`). See SETUP.md for sync instructions.
 
 ## Environment
 

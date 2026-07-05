@@ -92,6 +92,13 @@ module.exports = () => ({
         cameraPermission: 'Larderly uses the camera to capture profile photos and receipts.',
       },
     ],
+    [
+      'expo-speech-recognition',
+      {
+        microphonePermission: 'Larderly uses the microphone for voice commands when adding items.',
+        speechRecognitionPermission: 'Larderly uses speech recognition to turn voice into shopping commands.',
+      },
+    ],
     googleSignInPlugin,
     withoutPaidTeamEntitlements,
   ],

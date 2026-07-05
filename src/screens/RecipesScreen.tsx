@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { TabScreenNavigationProp } from '../navigation/types';
 import {
   collection,
   onSnapshot,
@@ -30,14 +33,16 @@ import { generatePantryRecipes, generatePersonalizedRecipes } from '../lib/recip
 import { recordActivity } from '../lib/activity';
 import { bumpCounter } from '../lib/achievements';
 import { isAllergenRisk } from '../lib/nutrition';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 type Tab = 'browse' | 'expiring' | 'favorites' | 'mine' | 'trending';
 
 type FavoriteRecipe = Recipe & { collection?: string };
 
 export default function RecipesScreen() {
-  const navigation = useNavigation<any>();
+  const c = useAppColors();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<TabScreenNavigationProp>();
   const { user, userProfile, householdId } = useAuth();
   const { showToast } = useToast();
   const { items, addShoppingItem } = usePantryStore();
@@ -260,12 +265,12 @@ export default function RecipesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas">
+    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
       <AppHeader
         onOpenSettings={() => navigation.navigate('Settings')}
         right={
-          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line bg-surface px-3 py-1.5">
-            <Text className="text-xs font-semibold text-ink">Planner</Text>
+          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3 py-1.5">
+            <Text className="text-xs font-semibold text-ink dark:text-[#F0EEE9]">Planner</Text>
           </Pressable>
         }
       />
@@ -273,8 +278,8 @@ export default function RecipesScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 py-3">
         <View className="flex-row gap-2">
           {(['browse', 'expiring', 'favorites', 'mine', 'trending'] as Tab[]).map((t) => (
-            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line bg-surface'}`}>
-              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink'}`}>{t}</Text>
+            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}>
+              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{t}</Text>
             </Pressable>
           ))}
         </View>
@@ -304,15 +309,15 @@ export default function RecipesScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 pb-2">
           <View className="flex-row gap-2">
             {collections.map((c) => (
-              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line'}`}>
-                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink'}`}>{c}</Text>
+              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line dark:border-[#2A2A35]'}`}>
+                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{c}</Text>
               </Pressable>
             ))}
           </View>
         </ScrollView>
       )}
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 90 }}>
         {recipes.length === 0 ? (
           <EmptyState icon="chef" title="No recipes" description="Try another tab or generate AI recipes." actionLabel="AI from pantry" onAction={handleGenerateAI} />
         ) : (
@@ -321,17 +326,17 @@ export default function RecipesScreen() {
             const views = viewCounts[recipe.id] ?? 0;
             const rating = ratings[recipe.id] ?? recipe.rating;
             return (
-              <Pressable key={recipe.id} onPress={() => { setActiveRecipe(recipe); setUserRating(ratings[recipe.id] ?? 5); }} className="mb-3 overflow-hidden rounded-2xl border border-line bg-surface">
-                {recipe.imageUrl ? <Image source={{ uri: recipe.imageUrl }} className="h-36 w-full" resizeMode="cover" /> : null}
+              <Pressable key={recipe.id} onPress={() => { setActiveRecipe(recipe); setUserRating(ratings[recipe.id] ?? 5); }} className="mb-3 overflow-hidden rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+                {recipe.imageUrl ? <Image source={{ uri: recipe.imageUrl }} className="h-36 w-full" contentFit="cover" /> : null}
                 <View className="p-4">
                   <View className="flex-row items-start justify-between">
                     <View className="flex-1">
-                      <Text className="text-lg font-bold text-ink">{recipe.title}</Text>
-                      <Text className="text-sm text-muted">{recipe.prepTime + recipe.cookTime} min · {recipe.difficulty} · ★ {rating.toFixed(1)}</Text>
-                      {views > 0 && <Text className="text-xs text-muted">{views} views</Text>}
+                      <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{recipe.title}</Text>
+                      <Text className="text-sm text-muted dark:text-[#6B6878]">{recipe.prepTime + recipe.cookTime} min · {recipe.difficulty} · ★ {rating.toFixed(1)}</Text>
+                      {views > 0 && <Text className="text-xs text-muted dark:text-[#6B6878]">{views} views</Text>}
                     </View>
                     <Pressable onPress={() => toggleFavorite(recipe)} hitSlop={8}>
-                      <Icon name="star" size={20} color={favoriteIds.has(recipe.id) ? colors.primary : colors.muted} />
+                      <Icon name="star" size={20} color={favoriteIds.has(recipe.id) ? c.primary : c.muted} />
                     </Pressable>
                   </View>
                   {risky && <Text className="mt-1 text-xs font-semibold text-danger">⚠ Allergen check</Text>}
@@ -346,14 +351,14 @@ export default function RecipesScreen() {
       <Modal isOpen={!!activeRecipe} onClose={() => setActiveRecipe(null)} title={activeRecipe?.title ?? 'Recipe'}>
         {activeRecipe && (
           <ScrollView style={{ maxHeight: 420 }}>
-            <Text className="mb-3 text-sm text-muted">{activeRecipe.description}</Text>
-            <Text className="mb-1 font-semibold text-ink">Ingredients</Text>
+            <Text className="mb-3 text-sm text-muted dark:text-[#6B6878]">{activeRecipe.description}</Text>
+            <Text className="mb-1 font-semibold text-ink dark:text-[#F0EEE9]">Ingredients</Text>
             {activeRecipe.ingredients.map((ing, i) => (
-              <Text key={i} className="text-sm text-ink">• {ing}</Text>
+              <Text key={i} className="text-sm text-ink dark:text-[#F0EEE9]">• {ing}</Text>
             ))}
-            <Text className="mb-1 mt-4 font-semibold text-ink">Steps</Text>
+            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-[#F0EEE9]">Steps</Text>
             {activeRecipe.instructions.map((step, i) => (
-              <Text key={i} className="mb-1 text-sm text-ink">{i + 1}. {step}</Text>
+              <Text key={i} className="mb-1 text-sm text-ink dark:text-[#F0EEE9]">{i + 1}. {step}</Text>
             ))}
             <View className="mt-4 gap-2">
               <TextField label="Your rating (1-5)" value={String(userRating)} onChangeText={(v) => setUserRating(Number(v) || 5)} keyboardType="numeric" />

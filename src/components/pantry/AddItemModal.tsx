@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { PantryItem, StorageLocation, CATEGORIES, UNITS } from '../../types';
 import { useToast } from '../../contexts/ToastContext';
 import { getCategoryIcon } from '../../lib/appIcons';
@@ -9,7 +10,7 @@ import SelectField from '../ui/SelectField';
 import DateInput from '../ui/DateInput';
 import Button from '../ui/Button';
 import { Icon } from '../ui/Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 type NewItem = Omit<PantryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
 
@@ -43,6 +44,7 @@ function buildInitialForm(prefill: Partial<PantryItem> | undefined, defaultLocat
 }
 
 export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefill }: AddItemModalProps) {
+  const c = useAppColors();
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
   const { showToast } = useToast();
@@ -80,7 +82,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Item to Pantry">
       {/* Preview */}
-      <View className="mb-5 flex-row items-center gap-4 rounded-3xl border border-line bg-surface-muted p-4">
+      <View className="mb-5 flex-row items-center gap-4 rounded-3xl border border-line dark:border-[#2A2A35] bg-surface-muted dark:bg-[#14141C] p-4">
         {form.image_url && !imgError ? (
           <Image
             source={{ uri: form.image_url }}
@@ -89,25 +91,25 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
             resizeMode="contain"
           />
         ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line bg-white">
-            <Icon name={getCategoryIcon(form.category)} size={32} color={colors.ink} />
+          <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-[#2A2A35] bg-white">
+            <Icon name={getCategoryIcon(form.category)} size={32} color={c.ink} />
           </View>
         )}
         <View className="flex-1">
-          <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">
+          <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
             Product preview
           </Text>
-          <Text numberOfLines={1} className="text-lg font-semibold text-ink">
+          <Text numberOfLines={1} className="text-lg font-semibold text-ink dark:text-[#F0EEE9]">
             {form.name || 'New pantry item'}
           </Text>
-          {form.brand ? <Text className="mt-0.5 text-sm text-muted">{form.brand}</Text> : null}
+          {form.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-[#6B6878]">{form.brand}</Text> : null}
           <View className="mt-2 flex-row flex-wrap gap-2">
-            <View className="rounded-full border border-line bg-white px-3 py-1">
-              <Text className="text-[11px] font-bold text-muted">{form.category}</Text>
+            <View className="rounded-full border border-line dark:border-[#2A2A35] bg-white px-3 py-1">
+              <Text className="text-[11px] font-bold text-muted dark:text-[#6B6878]">{form.category}</Text>
             </View>
             {form.barcode ? (
-              <View className="rounded-full border border-line bg-white px-3 py-1">
-                <Text className="text-[11px] font-bold text-muted">{form.barcode}</Text>
+              <View className="rounded-full border border-line dark:border-[#2A2A35] bg-white px-3 py-1">
+                <Text className="text-[11px] font-bold text-muted dark:text-[#6B6878]">{form.barcode}</Text>
               </View>
             ) : null}
           </View>
@@ -162,7 +164,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
           placeholder="None"
         />
         <View>
-          <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">
+          <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
             Expiry Date
           </Text>
           <DateInput value={form.expiry_date ?? null} onChange={(v) => set('expiry_date', v)} />

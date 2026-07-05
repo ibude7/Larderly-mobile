@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Share } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { RootStackNavigationProp } from '../navigation/types';
 import { onSnapshot } from '@react-native-firebase/firestore';
 import AppHeader from '../components/layout/AppHeader';
 import Button from '../components/ui/Button';
@@ -25,15 +26,15 @@ import {
   type NutritionGoals,
   type DailyIntake,
 } from '../lib/nutrition';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 function MacroBar({ label, current, goal, color }: { label: string; current: number; goal: number; color: string }) {
   const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
   return (
     <View className="mb-3">
       <View className="mb-1 flex-row justify-between">
-        <Text className="text-sm font-semibold text-ink">{label}</Text>
-        <Text className="text-xs text-muted">{Math.round(current)} / {goal}</Text>
+        <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">{label}</Text>
+        <Text className="text-xs text-muted dark:text-[#6B6878]">{Math.round(current)} / {goal}</Text>
       </View>
       <View className="h-2 overflow-hidden rounded-full bg-line">
         <View className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
@@ -43,7 +44,8 @@ function MacroBar({ label, current, goal, color }: { label: string; current: num
 }
 
 export default function NutritionScreen() {
-  const navigation = useNavigation<any>();
+  const c = useAppColors();
+  const navigation = useNavigation<RootStackNavigationProp>();
   const { user, userProfile } = useAuth();
   const { showToast } = useToast();
   const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
@@ -154,7 +156,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
   };
 
   return (
-    <View className="flex-1 bg-canvas">
+    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
       <AppHeader title="Nutrition" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <View className="mb-4 flex-row gap-2">
@@ -162,27 +164,27 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
           <Button label="Export" variant="ghost" size="sm" onPress={exportReport} className="flex-1" />
         </View>
 
-        <View className="mb-4 rounded-2xl border border-line bg-surface p-5">
-          <Text className="text-lg font-bold text-ink">Today</Text>
+        <View className="mb-4 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
+          <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Today</Text>
           <Text className="mt-2 text-3xl font-bold text-primary">
             {Math.round(intake.calories)} / {goals.dailyCalories} kcal
           </Text>
           <View className="mt-4 h-2 overflow-hidden rounded-full bg-line">
             <View className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, progress.cal * 100)}%` }} />
           </View>
-          <MacroBar label="Protein (g)" current={intake.proteinG} goal={goals.proteinG} color={colors.info} />
-          <MacroBar label="Carbs (g)" current={intake.carbsG} goal={goals.carbsG} color={colors.warning} />
-          <MacroBar label="Fat (g)" current={intake.fatG} goal={goals.fatG} color={colors.danger} />
-          <Text className="text-sm text-muted">
+          <MacroBar label="Protein (g)" current={intake.proteinG} goal={goals.proteinG} color={c.info} />
+          <MacroBar label="Carbs (g)" current={intake.carbsG} goal={goals.carbsG} color={c.warning} />
+          <MacroBar label="Fat (g)" current={intake.fatG} goal={goals.fatG} color={c.danger} />
+          <Text className="text-sm text-muted dark:text-[#6B6878]">
             Fiber {intake.fiberG}g / {goals.fiberG}g · Sodium {intake.sodiumMg}mg / {goals.sodiumMg}mg
           </Text>
-          <Text className="mt-1 text-sm text-muted">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
+          <Text className="mt-1 text-sm text-muted dark:text-[#6B6878]">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
         </View>
 
         {(aiLoading || aiTip) && (
           <View className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <Text className="text-xs font-bold uppercase text-primary">AI coach</Text>
-            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink">{aiTip}</Text>}
+            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-[#F0EEE9]">{aiTip}</Text>}
           </View>
         )}
 
@@ -192,8 +194,8 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
         </View>
 
         {trend.length > 0 && (
-          <View className="mb-4 rounded-2xl border border-line bg-surface p-4">
-            <Text className="mb-3 font-semibold text-ink">7-day calories</Text>
+          <View className="mb-4 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
+            <Text className="mb-3 font-semibold text-ink dark:text-[#F0EEE9]">7-day calories</Text>
             <View className="h-28 flex-row items-end gap-1">
               {trend.map((day) => {
                 const h = Math.max(4, (day.calories / trendMaxCal) * 100);
@@ -201,7 +203,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
                 return (
                   <View key={day.date} className="flex-1 items-center">
                     <View className={`w-full rounded-t-md ${isToday ? 'bg-primary' : 'bg-primary/40'}`} style={{ height: h }} />
-                    <Text className="mt-1 text-[10px] text-muted">
+                    <Text className="mt-1 text-[10px] text-muted dark:text-[#6B6878]">
                       {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                     </Text>
                   </View>
@@ -213,11 +215,11 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
         {intake.meals.length > 0 && (
           <View className="mt-2">
-            <Text className="mb-2 font-semibold text-ink">Meals today</Text>
+            <Text className="mb-2 font-semibold text-ink dark:text-[#F0EEE9]">Meals today</Text>
             {[...intake.meals].reverse().map((m, i) => (
-              <View key={i} className="mb-2 rounded-xl border border-line bg-surface px-4 py-3">
-                <Text className="font-medium text-ink">{m.label}</Text>
-                <Text className="text-sm text-muted">
+              <View key={i} className="mb-2 rounded-xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
+                <Text className="font-medium text-ink dark:text-[#F0EEE9]">{m.label}</Text>
+                <Text className="text-sm text-muted dark:text-[#6B6878]">
                   {m.calories} kcal · P {m.proteinG}g · C {m.carbsG}g · F {m.fatG}g
                 </Text>
               </View>
@@ -237,15 +239,15 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
       <Modal isOpen={showGoals} onClose={() => setShowGoals(false)} title="Nutritional goals">
         <ScrollView style={{ maxHeight: 420 }}>
-          <Text className="mb-2 text-sm font-semibold text-ink">Macro preset</Text>
+          <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F0EEE9]">Macro preset</Text>
           <View className="mb-4 flex-row flex-wrap gap-2">
             {(Object.keys(RATIO_PRESETS) as NutritionGoals['ratioPreset'][]).map((p) => (
               <Pressable
                 key={p}
                 onPress={() => applyPreset(p)}
-                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line bg-surface'}`}
+                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
               >
-                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink'}>{p}</Text>
+                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-[#F0EEE9]'}>{p}</Text>
               </Pressable>
             ))}
           </View>

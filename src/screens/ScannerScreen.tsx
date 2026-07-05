@@ -7,9 +7,10 @@ import {
   BarcodeType,
 } from 'expo-camera';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import AppHeader from '../components/layout/AppHeader';
-import TextField from '../components/ui/TextField';
+import AppHeader from "../components/layout/AppHeader";
 import Button from '../components/ui/Button';
+import TextField from '../components/ui/TextField';
+import Chip from '../components/ui/Chip';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
 import ScannedProductModal, { ScannedItem } from '../components/pantry/ScannedProductModal';
@@ -292,24 +293,15 @@ export default function ScannerScreen() {
         </Text>
 
         {/* Mode toggle */}
-        <View className="mt-5 flex-row gap-1.5 rounded-2xl border border-line bg-line/60 p-1.5">
+        <View className="mt-5 flex-row gap-2">
           {(['add', 'consume'] as const).map((m) => (
-            <Pressable
+            <Chip
               key={m}
+              label={m === 'add' ? 'Add stock' : 'Use stock'}
+              icon={m === 'add' ? 'plus' : 'minus'}
+              active={scanMode === m}
               onPress={() => setScanMode(m)}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2.5 ${
-                scanMode === m ? 'bg-surface' : ''
-              }`}
-            >
-              <Icon
-                name={m === 'add' ? 'plus' : 'minus'}
-                size={16}
-                color={scanMode === m ? colors.primary : colors.muted}
-              />
-              <Text className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted'}`}>
-                {m === 'add' ? 'Add stock' : 'Use stock'}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
 

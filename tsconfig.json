@@ -1,10 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@larderly/shared": ["../Larderly/packages/shared/src/index.ts"]
-    }
+    "strict": true
   },
   "include": [
     "**/*.ts",

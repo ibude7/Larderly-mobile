@@ -1,4 +1,6 @@
-import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { CompositeNavigationProp, NavigatorScreenParams } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type TabParamList = {
   Dashboard: undefined;
@@ -23,3 +25,15 @@ export type RootStackParamList = {
   Analytics: undefined;
   MealPlanner: undefined;
 };
+
+/** Stack screens pushed above the tab navigator. */
+export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+/** Bottom-tab screens only (no stack routes). */
+export type TabNavigationProp = BottomTabNavigationProp<TabParamList>;
+
+/** Tab screens that also navigate to root stack routes (Settings, Search, …). */
+export type TabScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;

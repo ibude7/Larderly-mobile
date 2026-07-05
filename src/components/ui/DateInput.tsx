@@ -3,7 +3,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { parseStoredDate, formatDateString } from '../../lib/date';
 import { Icon } from './Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 interface DateInputProps {
   value: string | null;
@@ -28,6 +28,7 @@ function displayDate(iso: string): string {
  * rest of the app expects (via formatDateString), or null when cleared.
  */
 export default function DateInput({ value, onChange, placeholder = 'Select date' }: DateInputProps) {
+  const c = useAppColors();
   const [show, setShow] = useState(false);
   const current = value ? parseStoredDate(value) : new Date();
 
@@ -41,18 +42,18 @@ export default function DateInput({ value, onChange, placeholder = 'Select date'
     <View>
       <Pressable
         onPress={() => setShow(true)}
-        className="flex-row items-center justify-between rounded-field border border-line bg-surface px-3.5 py-3"
+        className="flex-row items-center justify-between rounded-field border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3.5 py-3"
       >
-        <Text className={value ? 'text-sm text-ink' : 'text-sm text-muted'}>
+        <Text className={value ? 'text-sm text-ink dark:text-[#F0EEE9]' : 'text-sm text-muted dark:text-[#6B6878]'}>
           {value ? displayDate(value) : placeholder}
         </Text>
         <View className="flex-row items-center gap-3">
           {value ? (
             <Pressable onPress={() => onChange(null)} hitSlop={8}>
-              <Icon name="close" size={16} color={colors.muted} />
+              <Icon name="close" size={16} color={c.muted} />
             </Pressable>
           ) : null}
-          <Icon name="calendar" size={18} color={colors.muted} />
+          <Icon name="calendar" size={18} color={c.muted} />
         </View>
       </Pressable>
 
@@ -63,7 +64,7 @@ export default function DateInput({ value, onChange, placeholder = 'Select date'
             mode="date"
             display={Platform.OS === 'ios' ? 'inline' : 'default'}
             onChange={handleChange}
-            accentColor={colors.primary}
+            accentColor={c.primary}
           />
           {Platform.OS === 'ios' ? (
             <Pressable onPress={() => setShow(false)} className="items-center py-2">

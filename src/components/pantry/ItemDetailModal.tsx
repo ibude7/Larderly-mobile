@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { PantryItem, StorageLocation, CATEGORIES, UNITS } from '../../types';
 import { getDaysUntilDate } from '../../lib/date';
 import { getCategoryIcon } from '../../lib/appIcons';
@@ -12,7 +13,7 @@ import SelectField from '../ui/SelectField';
 import DateInput from '../ui/DateInput';
 import Button from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 interface ItemDetailModalProps {
   item: PantryItem | null;
@@ -33,7 +34,7 @@ const CHIP_TONE: Record<ChipTone, { bg: string; text: string }> = {
   orange: { bg: 'bg-primary/10', text: 'text-primary' },
   yellow: { bg: 'bg-warning/10', text: 'text-warning' },
   green: { bg: 'bg-success/10', text: 'text-success' },
-  stone: { bg: 'bg-canvas', text: 'text-muted' },
+  stone: { bg: 'bg-canvas dark:bg-[#0F0F13]', text: 'text-muted dark:text-[#6B6878]' },
 };
 
 export default function ItemDetailModal({
@@ -45,6 +46,7 @@ export default function ItemDetailModal({
   onConsume,
   locations,
 }: ItemDetailModalProps) {
+  const c = useAppColors();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editForm, setEditForm] = useState<Partial<PantryItem>>({});
@@ -140,7 +142,7 @@ export default function ItemDetailModal({
         {!editing ? (
           <View className="gap-5">
             {/* Preview */}
-            <View className="flex-row items-start gap-4 rounded-3xl border border-line bg-surface-muted p-4">
+            <View className="flex-row items-start gap-4 rounded-3xl border border-line dark:border-[#2A2A35] bg-surface-muted dark:bg-[#14141C] p-4">
               {showImage ? (
                 <Image
                   source={{ uri: item.image_url }}
@@ -149,16 +151,16 @@ export default function ItemDetailModal({
                   resizeMode="contain"
                 />
               ) : (
-                <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line bg-white">
-                  <Icon name={getCategoryIcon(item.category)} size={32} color={colors.ink} />
+                <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-[#2A2A35] bg-white">
+                  <Icon name={getCategoryIcon(item.category)} size={32} color={c.ink} />
                 </View>
               )}
               <View className="flex-1">
-                <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">
+                <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   Pantry item
                 </Text>
-                <Text className="text-xl font-bold text-ink">{item.name}</Text>
-                {item.brand ? <Text className="mt-0.5 text-sm text-muted">{item.brand}</Text> : null}
+                <Text className="text-xl font-bold text-ink dark:text-[#F0EEE9]">{item.name}</Text>
+                {item.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-[#6B6878]">{item.brand}</Text> : null}
                 <View className="mt-2 flex-row flex-wrap gap-2">
                   <Chip label={item.category} />
                   {location ? <Chip label={location.name} icon="location" /> : null}
@@ -168,14 +170,14 @@ export default function ItemDetailModal({
             </View>
 
             {/* Quantity */}
-            <View className="rounded-3xl border border-line bg-surface-muted p-4">
+            <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface-muted dark:bg-[#14141C] p-4">
               <View className="mb-3 flex-row items-center justify-between">
-                <Text className="text-sm font-semibold text-muted">Quantity</Text>
+                <Text className="text-sm font-semibold text-muted dark:text-[#6B6878]">Quantity</Text>
                 <Text
-                  className={`text-3xl font-bold ${isLowStock ? 'text-warning' : 'text-ink'}`}
+                  className={`text-3xl font-bold ${isLowStock ? 'text-warning' : 'text-ink dark:text-[#F0EEE9]'}`}
                 >
                   {item.quantity}
-                  <Text className="text-sm font-normal text-muted"> {item.unit}</Text>
+                  <Text className="text-sm font-normal text-muted dark:text-[#6B6878]"> {item.unit}</Text>
                 </Text>
               </View>
               <View className="flex-row gap-2">
@@ -222,11 +224,11 @@ export default function ItemDetailModal({
             </View>
 
             {item.notes ? (
-              <View className="rounded-3xl border border-line bg-surface-muted p-4">
-                <Text className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted">
+              <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface-muted dark:bg-[#14141C] p-4">
+                <Text className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   Notes
                 </Text>
-                <Text className="text-sm leading-6 text-ink/80">{item.notes}</Text>
+                <Text className="text-sm leading-6 text-ink/80 dark:text-[#F0EEE9]">{item.notes}</Text>
               </View>
             ) : null}
 
@@ -294,7 +296,7 @@ export default function ItemDetailModal({
               placeholder="None"
             />
             <View>
-              <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">
+              <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
                 Expiry Date
               </Text>
               <DateInput value={editForm.expiry_date ?? null} onChange={(v) => set('expiry_date', v)} />
@@ -319,7 +321,7 @@ export default function ItemDetailModal({
             </View>
             <View>
               <View className="mb-1.5 flex-row items-center justify-between">
-                <Text className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                <Text className="text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
                   Notes
                 </Text>
                 <Button
@@ -383,11 +385,12 @@ export default function ItemDetailModal({
 }
 
 function Chip({ label, icon, tone }: { label: string; icon?: IconName; tone?: 'warning' }) {
-  const bg = tone === 'warning' ? 'bg-warning/10' : 'bg-white border border-line';
-  const text = tone === 'warning' ? 'text-warning' : 'text-muted';
+  const c = useAppColors();
+  const bg = tone === 'warning' ? 'bg-warning/10' : 'bg-white border border-line dark:border-[#2A2A35]';
+  const text = tone === 'warning' ? 'text-warning' : 'text-muted dark:text-[#6B6878]';
   return (
     <View className={`flex-row items-center gap-1 rounded-full px-3 py-1 ${bg}`}>
-      {icon ? <Icon name={icon} size={12} color={colors.muted} /> : null}
+      {icon ? <Icon name={icon} size={12} color={c.muted} /> : null}
       <Text className={`text-[11px] font-bold ${text}`}>{label}</Text>
     </View>
   );
@@ -404,12 +407,13 @@ function DetailChip({
   value: string;
   tone: ChipTone;
 }) {
+  const c = useAppColors();
   const t = CHIP_TONE[tone];
   return (
     <View className={`min-w-[45%] grow rounded-2xl p-3.5 ${t.bg}`}>
       <View className="mb-1 flex-row items-center gap-1">
-        <Icon name={icon} size={14} color={colors.muted} />
-        <Text className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</Text>
+        <Icon name={icon} size={14} color={c.muted} />
+        <Text className="text-xs font-semibold uppercase tracking-wide text-muted dark:text-[#6B6878]">{label}</Text>
       </View>
       <Text className={`text-sm font-semibold ${t.text}`}>{value}</Text>
     </View>

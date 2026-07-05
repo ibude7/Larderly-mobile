@@ -119,31 +119,31 @@ export default function HouseholdSettingsSection() {
 
   return (
     <View className="gap-4">
-      <Text className="text-lg font-bold text-ink">Household</Text>
+      <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Household</Text>
       <TextField label="Household name" value={household.name} onChangeText={() => {}} editable={false} />
       {household.inviteCode ? (
         <View className="flex-row gap-2">
-          <View className="flex-1 rounded-xl border border-line bg-canvas px-4 py-3">
-            <Text className="text-xs text-muted">Invite code</Text>
-            <Text className="font-mono text-lg font-bold tracking-widest text-ink">{household.inviteCode}</Text>
+          <View className="flex-1 rounded-xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-4 py-3">
+            <Text className="text-xs text-muted dark:text-[#6B6878]">Invite code</Text>
+            <Text className="font-mono text-lg font-bold tracking-widest text-ink dark:text-[#F0EEE9]">{household.inviteCode}</Text>
           </View>
           <Button label="Copy" size="sm" variant="secondary" onPress={copyInvite} />
           <Button label="Share" size="sm" variant="secondary" onPress={shareInvite} />
         </View>
       ) : null}
 
-      <Text className="text-sm font-semibold text-ink">Members</Text>
+      <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">Members</Text>
       {members.map((m) => (
-        <View key={m.uid} className="flex-row items-center justify-between rounded-xl border border-line px-3 py-2">
+        <View key={m.uid} className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#2A2A35] px-3 py-2">
           <View>
-            <Text className="font-medium text-ink">{m.name}</Text>
-            <Text className="text-xs capitalize text-muted">{m.role}</Text>
+            <Text className="font-medium text-ink dark:text-[#F0EEE9]">{m.name}</Text>
+            <Text className="text-xs capitalize text-muted dark:text-[#6B6878]">{m.role}</Text>
           </View>
           {role === 'admin' && m.uid !== user?.uid && (
             <View className="flex-row gap-1">
               {(['editor', 'viewer'] as Role[]).map((r) => (
-                <Pressable key={r} onPress={() => changeRole(m.uid, r)} className="rounded-full border border-line px-2 py-1">
-                  <Text className="text-[10px] capitalize text-ink">{r}</Text>
+                <Pressable key={r} onPress={() => changeRole(m.uid, r)} className="rounded-full border border-line dark:border-[#2A2A35] px-2 py-1">
+                  <Text className="text-[10px] capitalize text-ink dark:text-[#F0EEE9]">{r}</Text>
                 </Pressable>
               ))}
               <Button label="Remove" size="sm" variant="danger" onPress={() => removeMember(m.uid, m.name)} />
@@ -152,15 +152,15 @@ export default function HouseholdSettingsSection() {
         </View>
       ))}
 
-      <Text className="text-sm font-semibold text-ink">Household dietary prefs</Text>
+      <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">Household dietary prefs</Text>
       <View className="flex-row flex-wrap gap-2">
         {DIET_OPTIONS.map((d) => (
           <Pressable
             key={d}
             onPress={() => setDraftDiet((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))}
-            className={`rounded-full px-3 py-1.5 ${draftDiet.includes(d) ? 'bg-primary' : 'border border-line'}`}
+            className={`rounded-full px-3 py-1.5 ${draftDiet.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#2A2A35]'}`}
           >
-            <Text className={`text-xs font-semibold ${draftDiet.includes(d) ? 'text-white' : 'text-ink'}`}>{d}</Text>
+            <Text className={`text-xs font-semibold ${draftDiet.includes(d) ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{d}</Text>
           </Pressable>
         ))}
       </View>

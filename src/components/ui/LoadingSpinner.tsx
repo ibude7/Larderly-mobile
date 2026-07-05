@@ -1,5 +1,5 @@
 import { ActivityIndicator, View } from 'react-native';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 interface LoadingSpinnerProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
@@ -21,12 +21,13 @@ const SIZE_MAP: Record<NonNullable<LoadingSpinnerProps['size']>, number> = {
  */
 export default function LoadingSpinner({
   size = 'md',
-  color = colors.primary,
+  color,
   className,
 }: LoadingSpinnerProps) {
+  const c = useAppColors();
   return (
     <View className={className}>
-      <ActivityIndicator size={SIZE_MAP[size]} color={color} />
+      <ActivityIndicator size={SIZE_MAP[size]} color={color ?? c.primary} />
     </View>
   );
 }

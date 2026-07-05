@@ -3,7 +3,8 @@ import { View, Text } from 'react-native';
 import Modal from './Modal';
 import Button from './Button';
 import { Icon, IconName } from './Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
+import type { AppColors } from '../../theme';
 
 export type ConfirmTone = 'danger' | 'warning' | 'info';
 
@@ -19,11 +20,13 @@ interface ConfirmDialogProps {
   busy?: boolean;
 }
 
-const TONE: Record<ConfirmTone, { icon: IconName; color: string; badge: string }> = {
-  danger: { icon: 'warning', color: colors.danger, badge: 'bg-danger/10' },
-  warning: { icon: 'warning', color: colors.warning, badge: 'bg-warning/10' },
-  info: { icon: 'info', color: colors.info, badge: 'bg-info/10' },
-};
+function toneStyles(c: AppColors): Record<ConfirmTone, { icon: IconName; color: string; badge: string }> {
+  return {
+    danger: { icon: 'warning', color: c.danger, badge: 'bg-danger/10' },
+    warning: { icon: 'warning', color: c.warning, badge: 'bg-warning/10' },
+    info: { icon: 'info', color: c.info, badge: 'bg-info/10' },
+  };
+}
 
 export default function ConfirmDialog({
   isOpen,
@@ -36,7 +39,8 @@ export default function ConfirmDialog({
   onClose,
   busy = false,
 }: ConfirmDialogProps) {
-  const t = TONE[tone];
+  const c = useAppColors();
+  const t = toneStyles(c)[tone];
 
   return (
     <Modal
@@ -53,7 +57,7 @@ export default function ConfirmDialog({
           </View>
           <View className="flex-1">
             {typeof description === 'string' ? (
-              <Text className="text-sm leading-relaxed text-ink/70">{description}</Text>
+              <Text className="text-sm leading-relaxed text-ink/70 dark:text-[#F0EEE9]">{description}</Text>
             ) : (
               description
             )}

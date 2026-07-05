@@ -7,7 +7,7 @@ import { PantryItem, MealPlan, ShoppingListItem, MealIngredient } from '../../ty
 import { useToast } from '../../contexts/ToastContext';
 import { generateRecipe, type AIRecipe, type MealType as AIMealType } from '../../lib/mealAI';
 import { formatDateString } from '../../lib/date';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 interface AIRecipeModalProps {
   mealName: string;
@@ -38,6 +38,7 @@ export default function AIRecipeModal({
   onAddToShoppingList,
   onClose,
 }: AIRecipeModalProps) {
+  const c = useAppColors();
   const { showToast } = useToast();
   const [recipe, setRecipe] = useState<Partial<AIRecipe> | null>(initialPartial ?? null);
   const [loading, setLoading] = useState(true);
@@ -153,18 +154,18 @@ export default function AIRecipeModal({
             </View>
             <View className="flex-1">
               <View className="mb-1 flex-row items-center gap-1.5">
-                <Icon name="sparkles" size={13} color={colors.primary} />
-                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                <Icon name="sparkles" size={13} color={c.primary} />
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   AI recipe
                 </Text>
               </View>
-              <Text className="text-xl font-bold text-ink">{recipe?.name ?? mealName}</Text>
+              <Text className="text-xl font-bold text-ink dark:text-[#F0EEE9]">{recipe?.name ?? mealName}</Text>
               {recipe?.description ? (
-                <Text className="mt-1.5 text-[13px] leading-relaxed text-ink/70">
+                <Text className="mt-1.5 text-[13px] leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
                   {recipe.description}
                 </Text>
               ) : loading ? (
-                <Text className="mt-1.5 text-[13px] text-muted">Crafting a recipe…</Text>
+                <Text className="mt-1.5 text-[13px] text-muted dark:text-[#6B6878]">Crafting a recipe…</Text>
               ) : null}
               <View className="mt-3 flex-row flex-wrap gap-2">
                 {totalMin > 0 ? <Badge icon="clock" label={`${totalMin} min`} /> : null}
@@ -179,8 +180,8 @@ export default function AIRecipeModal({
 
         {error ? (
           <View className="rounded-2xl border border-danger/30 bg-danger/10 p-4">
-            <Text className="text-sm font-semibold text-ink">Couldn't generate the recipe.</Text>
-            <Text className="mt-1 text-sm text-ink/70">{error}</Text>
+            <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">Couldn't generate the recipe.</Text>
+            <Text className="mt-1 text-sm text-ink/70 dark:text-[#F0EEE9]">{error}</Text>
             <View className="mt-3 self-start">
               <Button label="Try again" icon="refresh" variant="secondary" size="sm" onPress={run} />
             </View>
@@ -189,9 +190,9 @@ export default function AIRecipeModal({
 
         {/* Ingredients */}
         {(recipe?.ingredients ?? []).length > 0 ? (
-          <View className="rounded-3xl border border-line bg-canvas p-4">
+          <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-4">
             <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                 Ingredients
               </Text>
               {recipe?.pantryCoverage != null ? (
@@ -213,10 +214,10 @@ export default function AIRecipeModal({
                   <Icon
                     name={ing.inPantry ? 'success' : 'warning'}
                     size={18}
-                    color={ing.inPantry ? colors.success : colors.primary}
+                    color={ing.inPantry ? c.success : c.primary}
                   />
-                  <Text className="flex-1 text-sm font-medium text-ink">{ing.name}</Text>
-                  <Text className="text-xs font-semibold text-muted">
+                  <Text className="flex-1 text-sm font-medium text-ink dark:text-[#F0EEE9]">{ing.name}</Text>
+                  <Text className="text-xs font-semibold text-muted dark:text-[#6B6878]">
                     {ing.quantity} {ing.unit}
                   </Text>
                 </View>
@@ -239,8 +240,8 @@ export default function AIRecipeModal({
 
         {/* Steps */}
         {(recipe?.steps ?? []).length > 0 ? (
-          <View className="rounded-3xl border border-line bg-surface p-4">
-            <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+          <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
+            <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
               Steps
             </Text>
             <View className="gap-3">
@@ -251,10 +252,10 @@ export default function AIRecipeModal({
                   </View>
                   <View className="flex-1">
                     {step.title ? (
-                      <Text className="text-sm font-bold text-ink">{step.title}</Text>
+                      <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">{step.title}</Text>
                     ) : null}
                     {step.body ? (
-                      <Text className="mt-0.5 text-[13px] leading-relaxed text-ink/70">
+                      <Text className="mt-0.5 text-[13px] leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
                         {step.body}
                       </Text>
                     ) : null}
@@ -269,14 +270,14 @@ export default function AIRecipeModal({
         {(recipe?.tips ?? []).length > 0 ? (
           <View className="rounded-3xl border border-warning/30 bg-warning/5 p-4">
             <View className="mb-2 flex-row items-center gap-1.5">
-              <Icon name="sparkles" size={13} color={colors.warning} />
-              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">Tips</Text>
+              <Icon name="sparkles" size={13} color={c.warning} />
+              <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">Tips</Text>
             </View>
             <View className="gap-1.5">
               {(recipe?.tips ?? []).map((tip, i) => (
                 <View key={`tip-${i}`} className="flex-row gap-2">
                   <View className="mt-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
-                  <Text className="flex-1 text-[13px] text-ink/80">{tip}</Text>
+                  <Text className="flex-1 text-[13px] text-ink/80 dark:text-[#F0EEE9]">{tip}</Text>
                 </View>
               ))}
             </View>
@@ -304,10 +305,11 @@ export default function AIRecipeModal({
 }
 
 function Badge({ icon, label }: { icon?: Parameters<typeof Icon>[0]['name']; label: string }) {
+  const c = useAppColors();
   return (
-    <View className="flex-row items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1">
-      {icon ? <Icon name={icon} size={12} color={colors.muted} /> : null}
-      <Text className="text-[11px] font-bold text-ink">{label}</Text>
+    <View className="flex-row items-center gap-1 rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-2.5 py-1">
+      {icon ? <Icon name={icon} size={12} color={c.muted} /> : null}
+      <Text className="text-[11px] font-bold text-ink dark:text-[#F0EEE9]">{label}</Text>
     </View>
   );
 }

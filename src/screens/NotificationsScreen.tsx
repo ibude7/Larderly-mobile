@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { RootStackNavigationProp } from '../navigation/types';
 import {
   collection,
   onSnapshot,
@@ -22,7 +23,7 @@ import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
 import { relativeTime } from '../lib/format';
 import type { NotificationKind } from '../lib/notifications';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 interface NotifItem {
   id: string;
@@ -34,7 +35,8 @@ interface NotifItem {
 }
 
 export default function NotificationsScreen() {
-  const navigation = useNavigation<any>();
+  const c = useAppColors();
+  const navigation = useNavigation<RootStackNavigationProp>();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [items, setItems] = useState<NotifItem[]>([]);
@@ -74,16 +76,16 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas">
+    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
       <AppHeader title="Notifications" onBack={() => navigation.goBack()} />
       <View className="flex-row gap-2 px-5 py-3">
         {(['all', 'unread'] as const).map((f) => (
           <Pressable
             key={f}
             onPress={() => setFilter(f)}
-            className={`rounded-full px-4 py-2 ${filter === f ? 'bg-ink' : 'border border-line bg-surface'}`}
+            className={`rounded-full px-4 py-2 ${filter === f ? 'bg-ink' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
           >
-            <Text className={`text-sm font-semibold capitalize ${filter === f ? 'text-white' : 'text-ink'}`}>{f}</Text>
+            <Text className={`text-sm font-semibold capitalize ${filter === f ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{f}</Text>
           </Pressable>
         ))}
       </View>
@@ -99,14 +101,14 @@ export default function NotificationsScreen() {
             <Pressable
               key={n.id}
               onPress={() => markRead(n.id)}
-              className={`mb-2 rounded-2xl border p-4 ${n.read ? 'border-line bg-surface' : 'border-primary/30 bg-primary/5'}`}
+              className={`mb-2 rounded-2xl border p-4 ${n.read ? 'border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]' : 'border-primary/30 bg-primary/5'}`}
             >
               <View className="flex-row items-start gap-3">
-                <Icon name="bell" size={18} color={colors.primary} />
+                <Icon name="bell" size={18} color={c.primary} />
                 <View className="flex-1">
-                  <Text className="font-semibold text-ink">{n.title}</Text>
-                  <Text className="mt-1 text-sm text-muted">{n.body}</Text>
-                  <Text className="mt-2 text-xs text-muted">{relativeTime(n.createdAt)}</Text>
+                  <Text className="font-semibold text-ink dark:text-[#F0EEE9]">{n.title}</Text>
+                  <Text className="mt-1 text-sm text-muted dark:text-[#6B6878]">{n.body}</Text>
+                  <Text className="mt-2 text-xs text-muted dark:text-[#6B6878]">{relativeTime(n.createdAt)}</Text>
                 </View>
               </View>
             </Pressable>

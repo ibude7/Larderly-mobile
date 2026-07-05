@@ -4,7 +4,7 @@ import {
   mapInventoryToPantryItem,
   mapPantryToInventory,
   mapHouseholdLocationToStorageLocation,
-} from '@larderly/shared';
+} from '../shared';
 import { InventoryItem } from '../types/household';
 import { PantryItem, ShoppingListItem, StorageLocation } from '../types';
 import { categoryFromName, STORAGE_LOCATIONS } from './categories';

@@ -1,10 +1,11 @@
-import { View, Text, Pressable, Image } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSync } from '../../contexts/SyncContext';
 import { AppLogoMark } from '../ui/AppLogo';
 import { Icon } from '../ui/Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -36,6 +37,7 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ title, onBack, onOpenSettings, right }: AppHeaderProps) {
+  const c = useAppColors();
   const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const hasTopBanner = useHasTopBanner();
@@ -45,16 +47,16 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
     return (
       <View
         style={{ paddingTop: insets.top + 8 }}
-        className="flex-row items-center gap-3 border-b border-line bg-canvas px-5 pb-3"
+        className="flex-row items-center gap-3 border-b border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-5 pb-3"
       >
         {onBack ? (
-          <Pressable onPress={onBack} className="h-10 w-10 items-center justify-center rounded-full border border-line bg-surface">
-            <Icon name="chevron-left" size={20} color={colors.ink} />
+          <Pressable onPress={onBack} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+            <Icon name="chevron-left" size={20} color={c.ink} />
           </Pressable>
         ) : (
           <View className="w-10" />
         )}
-        <Text className="flex-1 text-lg font-bold text-ink">{title}</Text>
+        <Text className="flex-1 text-lg font-bold text-ink dark:text-[#F0EEE9]">{title}</Text>
         <View className="w-10">{right}</View>
       </View>
     );
@@ -68,13 +70,13 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
   return (
     <View
       style={{ paddingTop: mainHeaderTop }}
-      className="flex-row items-center justify-between border-b border-line bg-canvas px-5 pb-3"
+      className="flex-row items-center justify-between border-b border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-5 pb-3"
     >
       <View className="flex-row items-center gap-3">
         <AppLogoMark size="sm" />
         <View>
-          <Text className="text-sm font-bold text-ink">Hello {firstName},</Text>
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-muted">
+          <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Hello {firstName},</Text>
+          <Text className="text-[10px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
             {todayLabel()}
           </Text>
         </View>
@@ -84,12 +86,12 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
         (onOpenSettings ? (
           <Pressable
             onPress={onOpenSettings}
-            className="h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-line bg-surface"
+            className="h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
           >
             {avatarUrl ? (
               <Image source={{ uri: avatarUrl }} className="h-full w-full" />
             ) : (
-              <Text className="text-sm font-bold text-ink">{initial}</Text>
+              <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">{initial}</Text>
             )}
           </Pressable>
         ) : null)}

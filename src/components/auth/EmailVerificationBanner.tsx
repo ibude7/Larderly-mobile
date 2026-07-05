@@ -5,9 +5,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSync } from '../../contexts/SyncContext';
 import { useToast } from '../../contexts/ToastContext';
 import { Icon } from '../ui/Icon';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 export default function EmailVerificationBanner() {
+  const c = useAppColors();
   const { user, sendVerificationEmail, isAnonymous } = useAuth();
   const { online } = useSync();
   const { showToast } = useToast();
@@ -36,23 +37,28 @@ export default function EmailVerificationBanner() {
       style={{ paddingTop: online && !isAnonymous ? insets.top + 4 : 0 }}
       className="px-5 mb-3"
     >
-      <View className="flex-row items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+      <View
+        className="flex-row items-center justify-between gap-3 rounded-2xl border px-4 py-3"
+        style={{ borderColor: `${c.warning}40`, backgroundColor: `${c.warning}12` }}
+      >
       <View className="min-w-0 flex-1 flex-row items-center gap-2">
-        <Icon name="mail" size={16} color="#b45309" />
-        <Text numberOfLines={2} className="flex-1 text-sm text-amber-900">
+        <Icon name="mail" size={16} color={c.warning} />
+        <Text numberOfLines={2} className="flex-1 text-sm" style={{ color: c.ink }}>
           Verify your email — <Text className="font-bold">{user.email}</Text>
         </Text>
       </View>
       <View className="flex-row items-center gap-2">
         <Pressable onPress={handleResend} disabled={sending} className="px-2 py-1">
           {sending ? (
-            <ActivityIndicator size="small" color="#b45309" />
+            <ActivityIndicator size="small" color={c.warning} />
           ) : (
-            <Text className="text-xs font-bold text-amber-800">Resend</Text>
+            <Text className="text-xs font-bold" style={{ color: c.warning }}>
+              Resend
+            </Text>
           )}
         </Pressable>
         <Pressable onPress={() => setDismissed(true)} hitSlop={8}>
-          <Text style={{ color: colors.muted }} className="text-sm">
+          <Text style={{ color: c.muted }} className="text-sm">
             ✕
           </Text>
         </Pressable>

@@ -1,8 +1,10 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, useColorScheme } from 'react-native';
 import { usePrefs, Theme, ThemeColor, Language, FontScale } from '../../contexts/PreferencesContext';
 import { Currency, UnitSystem } from '../../lib/format';
 import { requestNotificationPermission } from '../../lib/push';
 import { useToast } from '../../contexts/ToastContext';
+import { useAppColors } from '../../hooks/useAppColors';
+import { Icon, IconName } from '../ui/Icon';
 import Button from '../ui/Button';
 
 const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR'];
@@ -11,6 +13,12 @@ const LANGUAGES: { id: Language; name: string }[] = [
   { id: 'en', name: 'English' },
   { id: 'es', name: 'Español' },
   { id: 'fr', name: 'Français' },
+];
+
+const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
+  { value: 'light', label: 'Light', icon: 'sun' },
+  { value: 'dark', label: 'Dark', icon: 'moon' },
+  { value: 'system', label: 'System', icon: 'phone' },
 ];
 
 function Chip({
@@ -25,9 +33,9 @@ function Chip({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-full px-3 py-2 ${active ? 'bg-primary' : 'border border-line bg-canvas'}`}
+      className={`rounded-full px-3 py-2 ${active ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13]'}`}
     >
-      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-ink'}`}>{label}</Text>
+      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{label}</Text>
     </Pressable>
   );
 }
@@ -35,6 +43,8 @@ function Chip({
 export default function PreferencesSection() {
   const { prefs, setPrefs, setNotificationPref } = usePrefs();
   const { showToast } = useToast();
+  const c = useAppColors();
+  const systemScheme = useColorScheme();
 
   const enablePush = async () => {
     const ok = await requestNotificationPermission();
@@ -45,14 +55,40 @@ export default function PreferencesSection() {
   return (
     <View className="gap-5">
       <View>
-        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Appearance</Text>
-        <View className="flex-row flex-wrap gap-2">
-          <Chip label="Light" active={prefs.theme === 'light'} onPress={() => setPrefs({ theme: 'light' as Theme })} />
-          <Chip label="Dark" active={prefs.theme === 'dark'} onPress={() => setPrefs({ theme: 'dark' as Theme })} />
+        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Appearance</Text>
+        <View className="gap-2">
+          {THEME_OPTIONS.map((opt) => {
+            const active = prefs.theme === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                onPress={() => setPrefs({ theme: opt.value })}
+                className={`flex-row items-center gap-3 rounded-xl border px-3 py-2.5 ${
+                  active ? 'border-primary bg-primary/10' : 'border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13]'
+                }`}
+              >
+                <Icon name={opt.icon} size={18} color={active ? c.primary : c.muted} />
+                <View className="flex-1">
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: active ? c.primary : c.ink }}
+                  >
+                    {opt.label}
+                  </Text>
+                  {opt.value === 'system' ? (
+                    <Text style={{ fontSize: 11, color: c.muted }}>
+                      Currently {systemScheme ?? 'unknown'}
+                    </Text>
+                  ) : null}
+                </View>
+                {active ? <Icon name="check" size={16} color={c.primary} /> : null}
+              </Pressable>
+            );
+          })}
         </View>
         <View className="mt-2 flex-row flex-wrap gap-2">
-          {THEME_COLORS.map((c) => (
-            <Chip key={c} label={c} active={prefs.themeColor === c} onPress={() => setPrefs({ themeColor: c })} />
+          {THEME_COLORS.map((color) => (
+            <Chip key={color} label={color} active={prefs.themeColor === color} onPress={() => setPrefs({ themeColor: color })} />
           ))}
         </View>
         <View className="mt-2 flex-row flex-wrap gap-2">
@@ -63,10 +99,10 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Region</Text>
+        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Region</Text>
         <View className="flex-row flex-wrap gap-2">
-          {CURRENCIES.map((c) => (
-            <Chip key={c} label={c} active={prefs.currency === c} onPress={() => setPrefs({ currency: c })} />
+          {CURRENCIES.map((currency) => (
+            <Chip key={currency} label={currency} active={prefs.currency === currency} onPress={() => setPrefs({ currency: currency })} />
           ))}
         </View>
         <View className="mt-2 flex-row gap-2">
@@ -89,7 +125,7 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Notifications</Text>
+        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Notifications</Text>
         <Button label="Enable push notifications" variant="secondary" size="sm" onPress={enablePush} />
         <View className="mt-3 gap-2">
           {(
@@ -105,9 +141,9 @@ export default function PreferencesSection() {
             <Pressable
               key={key}
               onPress={() => setNotificationPref(key, !prefs.notifications[key])}
-              className="flex-row items-center justify-between rounded-xl border border-line bg-canvas px-3 py-2.5"
+              className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-3 py-2.5"
             >
-              <Text className="text-sm text-ink">{label}</Text>
+              <Text className="text-sm text-ink dark:text-[#F0EEE9]">{label}</Text>
               <Text className="text-xs font-bold text-primary">{prefs.notifications[key] ? 'On' : 'Off'}</Text>
             </Pressable>
           ))}
@@ -115,12 +151,12 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Privacy</Text>
+        <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Privacy</Text>
         <Pressable
           onPress={() => setPrefs({ privacy: { ...prefs.privacy, analytics: !prefs.privacy.analytics } })}
-          className="flex-row items-center justify-between rounded-xl border border-line bg-canvas px-3 py-2.5"
+          className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-3 py-2.5"
         >
-          <Text className="text-sm text-ink">Usage analytics</Text>
+          <Text className="text-sm text-ink dark:text-[#F0EEE9]">Usage analytics</Text>
           <Text className="text-xs font-bold text-primary">{prefs.privacy.analytics ? 'On' : 'Off'}</Text>
         </Pressable>
       </View>

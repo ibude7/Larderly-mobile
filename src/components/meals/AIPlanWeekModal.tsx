@@ -16,7 +16,7 @@ import {
 } from '../../lib/mealAI';
 import { formatDateString } from '../../lib/date';
 import { getMealTypeIcon } from '../../lib/appIcons';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 interface AIPlanWeekModalProps {
   weekStart: Date;
@@ -48,6 +48,7 @@ export default function AIPlanWeekModal({
   onAddMeal,
   onAddToShoppingList,
 }: AIPlanWeekModalProps) {
+  const c = useAppColors();
   const { showToast } = useToast();
   const [stage, setStage] = useState<Stage>('configure');
   const [plan, setPlan] = useState<AIWeekPlan | null>(null);
@@ -196,13 +197,13 @@ export default function AIPlanWeekModal({
                 <Icon name="sparkles" size={22} color="#FFFFFF" />
               </View>
               <View className="flex-1">
-                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   The week of {weekRange}
                 </Text>
-                <Text className="text-[15px] font-bold text-ink">
+                <Text className="text-[15px] font-bold text-ink dark:text-[#F0EEE9]">
                   I'll build a smart plan around what you have.
                 </Text>
-                <Text className="mt-1 text-xs text-muted">
+                <Text className="mt-1 text-xs text-muted dark:text-[#6B6878]">
                   {pantryItems.length} pantry items · {expiringSoon.length} expiring soon
                 </Text>
               </View>
@@ -210,7 +211,7 @@ export default function AIPlanWeekModal({
           </View>
 
           <View>
-            <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
+            <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
               Meal types to plan
             </Text>
             <View className="flex-row flex-wrap gap-2">
@@ -221,16 +222,16 @@ export default function AIPlanWeekModal({
                     key={t}
                     onPress={() => toggleMealType(t)}
                     className={`flex-row items-center gap-1.5 rounded-full border px-3 py-2 ${
-                      selected ? 'border-primary bg-primary/10' : 'border-line bg-surface'
+                      selected ? 'border-primary bg-primary/10' : 'border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'
                     }`}
                   >
                     <Icon
                       name={getMealTypeIcon(t)}
                       size={14}
-                      color={selected ? colors.primary : colors.muted}
+                      color={selected ? c.primary : c.muted}
                     />
                     <Text
-                      className={`text-xs font-bold ${selected ? 'text-primary' : 'text-muted'}`}
+                      className={`text-xs font-bold ${selected ? 'text-primary' : 'text-muted dark:text-[#6B6878]'}`}
                     >
                       {MEAL_TYPE_LABEL[t]}
                     </Text>
@@ -255,26 +256,26 @@ export default function AIPlanWeekModal({
 
           <Pressable
             onPress={() => setUseExpiringFirst((v) => !v)}
-            className="flex-row items-center gap-3 rounded-2xl border border-line bg-canvas p-3"
+            className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3"
           >
             <Icon
               name={useExpiringFirst ? 'checkmark-done' : 'add'}
               size={20}
-              color={useExpiringFirst ? colors.success : colors.muted}
+              color={useExpiringFirst ? c.success : c.muted}
             />
-            <Text className="flex-1 text-sm text-ink">Prioritize expiring pantry items</Text>
+            <Text className="flex-1 text-sm text-ink dark:text-[#F0EEE9]">Prioritize expiring pantry items</Text>
           </Pressable>
 
           <Pressable
             onPress={() => setAlsoShoppingList((v) => !v)}
-            className="flex-row items-center gap-3 rounded-2xl border border-line bg-canvas p-3"
+            className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3"
           >
             <Icon
               name={alsoShoppingList ? 'checkmark-done' : 'add'}
               size={20}
-              color={alsoShoppingList ? colors.success : colors.muted}
+              color={alsoShoppingList ? c.success : c.muted}
             />
-            <Text className="flex-1 text-sm text-ink">
+            <Text className="flex-1 text-sm text-ink dark:text-[#F0EEE9]">
               Add missing ingredients to shopping list
             </Text>
           </Pressable>
@@ -291,8 +292,8 @@ export default function AIPlanWeekModal({
       {stage === 'generating' ? (
         <View className="items-center gap-4 py-10">
           <LoadingSpinner size="lg" />
-          <Text className="text-base font-bold text-ink">Planning your week…</Text>
-          <Text className="text-center text-sm text-muted">
+          <Text className="text-base font-bold text-ink dark:text-[#F0EEE9]">Planning your week…</Text>
+          <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
             Matching meals to your pantry and preferences.
           </Text>
           <Button label="Cancel" variant="ghost" onPress={handleClose} />
@@ -302,27 +303,27 @@ export default function AIPlanWeekModal({
       {stage === 'review' && plan ? (
         <View className="gap-4">
           {plan.summary ? (
-            <View className="rounded-2xl border border-line bg-canvas p-3">
-              <Text className="text-sm leading-relaxed text-ink/80">{plan.summary}</Text>
+            <View className="rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3">
+              <Text className="text-sm leading-relaxed text-ink/80 dark:text-[#F0EEE9]">{plan.summary}</Text>
             </View>
           ) : null}
           <View className="gap-2">
             {plan.entries.map((entry, i) => (
               <View
                 key={`${entry.date}-${entry.mealType}-${i}`}
-                className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3"
+                className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-3"
               >
                 <View className="h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                  <Icon name={getMealTypeIcon(entry.mealType)} size={18} color={colors.primary} />
+                  <Icon name={getMealTypeIcon(entry.mealType)} size={18} color={c.primary} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[10px] font-bold uppercase text-muted">
+                  <Text className="text-[10px] font-bold uppercase text-muted dark:text-[#6B6878]">
                     {entry.date} · {MEAL_TYPE_LABEL[entry.mealType]}
                   </Text>
-                  <Text className="text-sm font-bold text-ink">{entry.meal.name}</Text>
+                  <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">{entry.meal.name}</Text>
                 </View>
                 <Pressable onPress={() => handleRemoveEntry(entry)} hitSlop={8}>
-                  <Icon name="close" size={16} color={colors.muted} />
+                  <Icon name="close" size={16} color={c.muted} />
                 </Pressable>
               </View>
             ))}

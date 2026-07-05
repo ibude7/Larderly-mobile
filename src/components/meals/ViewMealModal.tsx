@@ -9,7 +9,7 @@ import { PantryItem, MealPlan, ShoppingListItem, MealIngredient } from '../../ty
 import { useToast } from '../../contexts/ToastContext';
 import { parseStoredDate } from '../../lib/date';
 import { getMealTypeIcon } from '../../lib/appIcons';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 const MEAL_TYPE_LABELS: Record<MealPlan['meal_type'], string> = {
   breakfast: 'Breakfast',
@@ -39,6 +39,7 @@ export default function ViewMealModal({
   onAddToShoppingList,
   onAdd,
 }: ViewMealModalProps) {
+  const c = useAppColors();
   const date = parseStoredDate(meal.date);
   const label = date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -87,23 +88,23 @@ export default function ViewMealModal({
     <>
       <Modal isOpen onClose={onClose} title={meal.name}>
         <View className="gap-5">
-          <View className="rounded-3xl border border-line bg-canvas p-4">
+          <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-4">
             <View className="flex-row items-center gap-3">
               <View className="h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                 <Icon
                   name={getMealTypeIcon(meal.meal_type)}
                   size={22}
-                  color={colors.primary}
+                  color={c.primary}
                 />
               </View>
               <View>
-                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   Scheduled meal
                 </Text>
-                <Text className="text-base font-bold text-ink">
+                <Text className="text-base font-bold text-ink dark:text-[#F0EEE9]">
                   {MEAL_TYPE_LABELS[meal.meal_type]}
                 </Text>
-                <Text className="text-[13px] font-medium text-muted">{label}</Text>
+                <Text className="text-[13px] font-medium text-muted dark:text-[#6B6878]">{label}</Text>
               </View>
             </View>
           </View>
@@ -117,20 +118,20 @@ export default function ViewMealModal({
             </View>
             <View className="flex-1">
               <View className="flex-row items-center gap-1.5">
-                <Icon name="sparkles" size={13} color={colors.primary} />
-                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                <Icon name="sparkles" size={13} color={c.primary} />
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                   AI recipe
                 </Text>
               </View>
-              <Text className="text-sm font-bold text-ink">Generate a full recipe</Text>
-              <Text className="text-[11px] text-muted">Steps, timing, and tips</Text>
+              <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Generate a full recipe</Text>
+              <Text className="text-[11px] text-muted dark:text-[#6B6878]">Steps, timing, and tips</Text>
             </View>
-            <Icon name="chevron-right" size={18} color={colors.muted} />
+            <Icon name="chevron-right" size={18} color={c.muted} />
           </Pressable>
 
           {meal.ingredients && meal.ingredients.length > 0 ? (
-            <View className="rounded-3xl border border-line bg-canvas p-4">
-              <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
+            <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-4">
+              <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                 Ingredients
               </Text>
               <View className="gap-2">
@@ -148,10 +149,10 @@ export default function ViewMealModal({
                       <Icon
                         name={inPantry ? 'success' : 'warning'}
                         size={16}
-                        color={inPantry ? colors.success : colors.primary}
+                        color={inPantry ? c.success : c.primary}
                       />
-                      <Text className="flex-1 text-sm text-ink">{ing.name}</Text>
-                      <Text className="text-xs text-muted">
+                      <Text className="flex-1 text-sm text-ink dark:text-[#F0EEE9]">{ing.name}</Text>
+                      <Text className="text-xs text-muted dark:text-[#6B6878]">
                         {ing.quantity} {ing.unit}
                       </Text>
                     </View>
@@ -173,11 +174,11 @@ export default function ViewMealModal({
           ) : null}
 
           {meal.notes ? (
-            <View className="rounded-3xl border border-line bg-surface p-4">
-              <Text className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted">
+            <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
+              <Text className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
                 Notes
               </Text>
-              <Text className="text-sm leading-relaxed text-ink/80">{meal.notes}</Text>
+              <Text className="text-sm leading-relaxed text-ink/80 dark:text-[#F0EEE9]">{meal.notes}</Text>
             </View>
           ) : null}
 

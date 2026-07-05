@@ -1,20 +1,24 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { TabScreenNavigationProp } from '../../navigation/types';
 import { Icon } from '../ui/Icon';
 import { buildSuggestions, type SmartSuggestion, type ActivityEvent, type InventoryItem } from '../../lib/insights';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
+import type { ColorTokens } from '../../theme';
 
-const KIND_COLORS: Record<SmartSuggestion['kind'], { bg: string; text: string }> = {
-  predictive: { bg: '#eff6ff', text: '#1d4ed8' },
-  bundle: { bg: '#fff7ed', text: '#c2410c' },
-  price: { bg: '#ecfdf5', text: '#047857' },
-  seasonal: { bg: '#fffbeb', text: '#b45309' },
-  waste: { bg: '#fef2f2', text: '#dc2626' },
-  balance: { bg: '#faf5ff', text: '#7c3aed' },
-  eco: { bg: '#ecfdf5', text: '#047857' },
-  prep: { bg: '#eef2ff', text: '#4338ca' },
-};
+function kindColors(c: ColorTokens): Record<SmartSuggestion['kind'], { bg: string; text: string }> {
+  return {
+    predictive: { bg: `${c.info}18`, text: c.info },
+    bundle: { bg: `${c.primary}33`, text: c.primaryDark },
+    price: { bg: `${c.success}18`, text: c.success },
+    seasonal: { bg: `${c.warning}18`, text: c.warning },
+    waste: { bg: `${c.danger}18`, text: c.danger },
+    balance: { bg: `${c.info}18`, text: c.info },
+    eco: { bg: `${c.success}18`, text: c.success },
+    prep: { bg: `${c.info}18`, text: c.info },
+  };
+}
 
 interface SmartSuggestionsCardProps {
   inventory: InventoryItem[];
@@ -27,7 +31,9 @@ export default function SmartSuggestionsCard({
   activity,
   shoppingItems,
 }: SmartSuggestionsCardProps) {
-  const navigation = useNavigation<any>();
+  const c = useAppColors();
+  const paletteMap = useMemo(() => kindColors(c), [c]);
+  const navigation = useNavigation<TabScreenNavigationProp>();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const suggestions = useMemo(
@@ -39,15 +45,15 @@ export default function SmartSuggestionsCard({
   if (visible.length === 0) return null;
 
   return (
-    <View className="mt-6 rounded-card border border-line bg-surface p-5">
+    <View className="mt-6 rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
       <View className="mb-4 flex-row items-center gap-2">
-        <Icon name="sparkles" size={20} color={colors.primary} />
-        <Text className="text-lg font-bold text-ink">Smart Suggestions</Text>
+        <Icon name="sparkles" size={20} color={c.primary} />
+        <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Smart Suggestions</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
         <View className="flex-row gap-3 px-1">
           {visible.map((s) => {
-            const palette = KIND_COLORS[s.kind];
+            const palette = paletteMap[s.kind];
             return (
               <View
                 key={s.id}
@@ -67,7 +73,7 @@ export default function SmartSuggestionsCard({
                     </Text>
                   </Pressable>
                 </View>
-                <Text className="text-xs leading-5 text-ink/80">{s.body}</Text>
+                <Text className="text-xs leading-5 text-ink/80 dark:text-[#F0EEE9]">{s.body}</Text>
                 {s.kind === 'predictive' || s.kind === 'bundle' ? (
                   <Pressable
                     onPress={() => navigation.navigate('Shopping')}

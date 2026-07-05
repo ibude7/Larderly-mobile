@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import {
   Modal as RNModal,
   View,
@@ -7,10 +7,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Icon } from './Icon';
-import { colors } from '../../theme';
+import { BlurView } from 'expo-blur';
+import { useAppColors } from '../../hooks/useAppColors';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ModalProps {
   isOpen: boolean;
@@ -37,56 +41,97 @@ export default function Modal({
   scroll = true,
   dismissable = true,
 }: ModalProps) {
+  const c = useAppColors();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const translateY = useSharedValue(300);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      translateY.value = 300;
+      opacity.value = 0;
+      translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+      opacity.value = withSpring(1, { damping: 20, stiffness: 200 });
+    }
+  }, [isOpen, opacity, translateY]);
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
   return (
     <RNModal
       visible={isOpen}
       transparent
-      animationType="slide"
+      animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent
     >
       <View className="flex-1 justify-end">
         <Pressable
-          className="absolute inset-0 bg-black/50"
+          style={StyleSheet.absoluteFill}
           onPress={dismissable ? onClose : undefined}
-        />
+        >
+          <BlurView intensity={15} tint={theme} style={StyleSheet.absoluteFill} />
+        </Pressable>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="w-full"
         >
-          <SafeAreaView
-            edges={['bottom']}
-            className="max-h-[92%] overflow-hidden rounded-t-[32px] border border-line bg-surface"
-          >
-            <View className="flex-row items-center justify-between border-b border-line px-5 py-4">
-              <View className="flex-1 pr-4">
-                <Text className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-muted">
-                  Larderly
-                </Text>
-                <Text numberOfLines={1} className="text-lg font-bold text-ink">
+          <Animated.View style={sheetStyle}>
+            <BlurView
+              intensity={theme === 'dark' ? 75 : 80}
+              tint={theme}
+              style={{
+                borderTopLeftRadius: 36,
+                borderTopRightRadius: 36,
+                borderWidth: 1,
+                borderBottomWidth: 0,
+                borderColor: c.line,
+                overflow: 'hidden',
+                maxHeight: '92%',
+                paddingBottom: insets.bottom,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: c.muted,
+                  alignSelf: 'center',
+                  marginTop: 12,
+                  marginBottom: 8,
+                }}
+              />
+              <View className="flex-row items-center justify-between border-b border-line dark:border-[#2A2A35] px-5 pb-4">
+                <Text numberOfLines={1} className="flex-1 pr-4 text-lg font-bold text-ink dark:text-[#F0EEE9]">
                   {title}
                 </Text>
+                <Pressable
+                  onPress={onClose}
+                  hitSlop={8}
+                  className="h-10 w-10 items-center justify-center rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+                >
+                  <Icon name="close" size={18} color={c.muted} />
+                </Pressable>
               </View>
-              <Pressable
-                onPress={onClose}
-                hitSlop={8}
-                className="h-10 w-10 items-center justify-center rounded-2xl border border-line bg-surface"
-              >
-                <Icon name="close" size={18} color={colors.muted} />
-              </Pressable>
-            </View>
-            {scroll ? (
-              <ScrollView
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ padding: 20 }}
-                showsVerticalScrollIndicator={false}
-              >
-                {children}
-              </ScrollView>
-            ) : (
-              children
-            )}
-          </SafeAreaView>
+              {scroll ? (
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{ padding: 20 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {children}
+                </ScrollView>
+              ) : (
+                children
+              )}
+            </BlurView>
+          </Animated.View>
         </KeyboardAvoidingView>
       </View>
     </RNModal>

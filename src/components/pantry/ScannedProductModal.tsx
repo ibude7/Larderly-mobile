@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import TextField from '../ui/TextField';
@@ -12,7 +13,7 @@ import { usePrefs } from '../../contexts/PreferencesContext';
 import { formatCurrency } from '../../lib/format';
 import { generateProductNote } from '../../lib/productNoteAI';
 import type { NoteInput } from '../../lib/notes';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 export interface ScannedItem extends ProductData {
   quantity: number;
@@ -50,6 +51,7 @@ export default function ScannedProductModal({
   onClose,
   onScanAgain,
 }: ScannedProductModalProps) {
+  const c = useAppColors();
   const { prefs } = usePrefs();
   const [qty, setQty] = useState('1');
   const [location, setLocation] = useState('Pantry');
@@ -88,7 +90,7 @@ export default function ScannedProductModal({
       <Modal isOpen onClose={onClose} title="Looking up product" scroll={false}>
         <View className="items-center py-8">
           <LoadingSpinner />
-          <Text className="mt-3 text-sm text-muted">Searching databases…</Text>
+          <Text className="mt-3 text-sm text-muted dark:text-[#6B6878]">Searching databases…</Text>
         </View>
       </Modal>
     );
@@ -127,19 +129,19 @@ export default function ScannedProductModal({
             </View>
           )}
           <View className="flex-1">
-            <Text className="text-lg font-bold text-ink">{product.name}</Text>
-            {product.brand ? <Text className="text-sm text-muted">{product.brand}</Text> : null}
-            {product.barcode ? <Text className="font-mono text-xs text-muted">{product.barcode}</Text> : null}
+            <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{product.name}</Text>
+            {product.brand ? <Text className="text-sm text-muted dark:text-[#6B6878]">{product.brand}</Text> : null}
+            {product.barcode ? <Text className="font-mono text-xs text-muted dark:text-[#6B6878]">{product.barcode}</Text> : null}
           </View>
         </View>
 
         {hasNutrition && (
           <Pressable onPress={() => setShowNutrition((s) => !s)} className="mb-3">
-            <Text className="text-xs font-bold uppercase text-muted">Nutrition per 100g {showNutrition ? '▲' : '▼'}</Text>
+            <Text className="text-xs font-bold uppercase text-muted dark:text-[#6B6878]">Nutrition per 100g {showNutrition ? '▲' : '▼'}</Text>
           </Pressable>
         )}
         {showNutrition && hasNutrition && (
-          <View className="mb-4 flex-row justify-between rounded-2xl bg-canvas p-3">
+          <View className="mb-4 flex-row justify-between rounded-2xl bg-canvas dark:bg-[#0F0F13] p-3">
             <Text className="text-xs">Cal {product.calories ?? '—'}</Text>
             <Text className="text-xs">P {product.protein ?? '—'}g</Text>
             <Text className="text-xs">F {product.fat ?? '—'}g</Text>
@@ -160,7 +162,7 @@ export default function ScannedProductModal({
             />
           </View>
         </View>
-        <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">Expiry</Text>
+        <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Expiry</Text>
         <DateInput value={expiry} onChange={setExpiry} placeholder="Select expiry date" />
         <TextField
           label={`Price (${prefs.currency})`}
@@ -172,8 +174,8 @@ export default function ScannedProductModal({
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline numberOfLines={3} />
         {noteLoading ? (
           <View className="mt-1 flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text className="text-xs text-muted">Generating note with AI…</Text>
+            <ActivityIndicator size="small" color={c.primary} />
+            <Text className="text-xs text-muted dark:text-[#6B6878]">Generating note with AI…</Text>
           </View>
         ) : null}
 

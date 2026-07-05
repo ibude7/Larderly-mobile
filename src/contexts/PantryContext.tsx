@@ -13,7 +13,10 @@ import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { categoryFromName } from '../lib/categories';
 
-type PantryStore = Omit<ReturnType<typeof useShoppingLists>, 'items'> & ReturnType<typeof usePantry>;
+type PantryStore = Omit<ReturnType<typeof useShoppingLists>, 'items'> &
+  ReturnType<typeof usePantry> & {
+    shoppingListItems: ReturnType<typeof useShoppingLists>['items'];
+  };
 
 const PantryContext = createContext<PantryStore | undefined>(undefined);
 
@@ -55,7 +58,13 @@ export function PantryProvider({ children }: { children: ReactNode }) {
   );
 
   const pantry = usePantry(shoppingBridge);
-  const store = { ...shopping, ...pantry };
+  const store = {
+    ...shopping,
+    ...pantry,
+    // pantry.items wins (it is the pantry inventory), which is correct,
+    // but name the shopping items explicitly so nothing is lost:
+    shoppingListItems: shopping.items,
+  };
 
   return <PantryContext.Provider value={store}>{children}</PantryContext.Provider>;
 }

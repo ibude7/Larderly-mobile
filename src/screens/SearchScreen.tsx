@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { RootStackNavigationProp } from '../navigation/types';
 import TextField from '../components/ui/TextField';
 import { Icon } from '../components/ui/Icon';
 import EmptyState from '../components/ui/EmptyState';
 import { usePantryStore } from '../contexts/PantryContext';
 import { useMealPlans } from '../hooks/useMealPlans';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 type ResultType = 'pantry' | 'shopping' | 'meal';
 
@@ -20,7 +21,8 @@ interface SearchResult {
 }
 
 export default function SearchScreen() {
-  const navigation = useNavigation<any>();
+  const c = useAppColors();
+  const navigation = useNavigation<RootStackNavigationProp>();
   const { items, shoppingList } = usePantryStore();
   const { meals } = useMealPlans();
   const [query, setQuery] = useState('');
@@ -75,10 +77,10 @@ export default function SearchScreen() {
   }, [query, items, shoppingList, meals]);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas" edges={['top']}>
-      <View className="flex-row items-center gap-3 border-b border-line px-5 py-4">
-        <Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full border border-line bg-surface">
-          <Icon name="chevron-left" size={20} color={colors.ink} />
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]" edges={['top']}>
+      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#2A2A35] px-5 py-4">
+        <Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+          <Icon name="chevron-left" size={20} color={c.ink} />
         </Pressable>
         <View className="flex-1">
           <TextField
@@ -111,20 +113,20 @@ export default function SearchScreen() {
               <Pressable
                 key={`${r.type}-${r.id}`}
                 onPress={() => navigation.navigate('Main', { screen: r.tab })}
-                className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-4"
+                className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4"
               >
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-canvas">
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-canvas dark:bg-[#0F0F13]">
                   <Icon
                     name={r.type === 'pantry' ? 'pantry' : r.type === 'shopping' ? 'shopping' : 'meals'}
                     size={18}
-                    color={colors.ink}
+                    color={c.ink}
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-bold text-ink">{r.title}</Text>
-                  <Text className="text-xs text-muted">{r.subtitle}</Text>
+                  <Text className="font-bold text-ink dark:text-[#F0EEE9]">{r.title}</Text>
+                  <Text className="text-xs text-muted dark:text-[#6B6878]">{r.subtitle}</Text>
                 </View>
-                <Icon name="chevron-right" size={16} color={colors.muted} />
+                <Icon name="chevron-right" size={16} color={c.muted} />
               </Pressable>
             ))}
           </View>

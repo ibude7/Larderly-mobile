@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { useAppColors } from '../../hooks/useAppColors';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -99,7 +99,9 @@ export type IconName =
   | 'location'
   // Meal-type glyphs
   | 'sunny'
+  | 'sun'
   | 'moon'
+  | 'phone'
   | 'egg';
 
 const MAP: Record<IconName, IoniconName> = {
@@ -191,7 +193,9 @@ const MAP: Record<IconName, IoniconName> = {
   location: 'location',
   // Meal-type glyphs
   sunny: 'sunny',
+  sun: 'sunny',
   moon: 'moon',
+  phone: 'phone-portrait',
   egg: 'egg',
 };
 
@@ -201,6 +205,7 @@ interface IconProps {
   color?: string;
 }
 
-export function Icon({ name, size = 22, color = colors.ink }: IconProps) {
-  return <Ionicons name={MAP[name] ?? 'ellipse'} size={size} color={color} />;
+export function Icon({ name, size = 22, color }: IconProps) {
+  const c = useAppColors();
+  return <Ionicons name={MAP[name] ?? 'ellipse'} size={size} color={color ?? c.ink} />;
 }

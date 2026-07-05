@@ -129,9 +129,9 @@ export default function AppLogo({
     <View className="flex-row items-center gap-3">
       <AppLogoMark size={size} animated={animated} />
       <View>
-        <Text className={`${s.title} font-bold tracking-tight text-ink`}>Larderly</Text>
+        <Text className={`${s.title} font-bold tracking-tight text-ink dark:text-[#F0EEE9]`}>Larderly</Text>
         {showSubtitle ? (
-          <Text className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
+          <Text className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted dark:text-[#6B6878]">
             {subtitle}
           </Text>
         ) : null}

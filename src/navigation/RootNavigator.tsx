@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { NavigationContainer, DefaultTheme, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
@@ -21,21 +22,9 @@ import AnonymousUpgradeBanner from '../components/auth/AnonymousUpgradeBanner';
 import EmailVerificationBanner from '../components/auth/EmailVerificationBanner';
 import OfflineBanner from '../components/layout/OfflineBanner';
 import { RootStackParamList } from './types';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const navTheme: Theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: colors.canvas,
-    primary: colors.primary,
-    card: colors.surface,
-    text: colors.ink,
-    border: colors.line,
-  },
-};
 
 function MainWithBanners() {
   return (
@@ -50,6 +39,21 @@ function MainWithBanners() {
 
 export default function RootNavigator() {
   const { user, loading, householdId, userProfile } = useAuth();
+  const c = useAppColors();
+  const navTheme = useMemo<Theme>(
+    () => ({
+      ...DefaultTheme,
+      colors: {
+        ...DefaultTheme.colors,
+        background: c.canvas,
+        primary: c.primary,
+        card: c.surface,
+        text: c.ink,
+        border: c.line,
+      },
+    }),
+    [c],
+  );
   const bypass = Boolean((Constants.expoConfig?.extra as { bypassAuth?: boolean } | undefined)?.bypassAuth);
 
   if (loading) return <LoadingScreen />;

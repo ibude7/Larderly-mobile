@@ -23,7 +23,7 @@ import {
   mapInventoryDoc,
   pantryToInventoryPayload,
 } from '../lib/inventoryMapper';
-import { mapPantryUpdatesToInventory } from '@larderly/shared';
+import { mapPantryUpdatesToInventory } from '../shared';
 import { useSync } from '../contexts/SyncContext';
 
 interface ShoppingBridge {

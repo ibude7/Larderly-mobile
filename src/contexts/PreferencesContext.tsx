@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState, Rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Currency, UnitSystem } from '../lib/format';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'system';
 export type ThemeColor = 'orange' | 'blue' | 'green' | 'purple' | 'rose';
 export type Language = 'en' | 'es' | 'fr';
 export type FontScale = 'sm' | 'md' | 'lg';
@@ -43,7 +43,7 @@ export interface Preferences {
 }
 
 const DEFAULTS: Preferences = {
-  theme: 'light',
+  theme: 'system',
   themeColor: 'orange',
   language: 'en',
   currency: 'USD',

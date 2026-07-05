@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useRef,
   ReactNode,
   useCallback,
 } from 'react';
@@ -33,6 +34,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   collection,
@@ -80,6 +82,8 @@ interface AuthContextType {
   role: Role;
   isAnonymous: boolean;
   loading: boolean;
+  signInFailCount: number;
+  signInLockedUntil: number;
   /** True when a native Google Sign-In client is configured (web client id set). */
   googleAvailable: boolean;
   /** True when Sign in with Apple is available (iOS 13+ with capability). */
@@ -128,12 +132,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-let phoneConfirmation: Awaited<ReturnType<typeof signInWithPhoneNumber>> | null = null;
-let mfaEnrollmentVerificationId: string | null = null;
-let mfaChallengeVerificationId: string | null = null;
-
-import { DEFAULT_STORAGE_LOCATIONS } from '@larderly/shared';
 
 // ── Google Sign-In config ────────────────────────────────────────────────────
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
@@ -237,21 +235,6 @@ async function initializeNewUser(userId: string, fullName: string): Promise<Prof
     updated_at: serverTimestamp(),
   });
 
-  // Seed default storage locations in a single batch write.
-  const batch = writeBatch(db);
-  const locationsCol = collection(db, 'users', userId, 'storage_locations');
-  for (const loc of DEFAULT_STORAGE_LOCATIONS) {
-    const locRef = doc(locationsCol);
-    batch.set(locRef, {
-      user_id: userId,
-      name: loc.name,
-      icon: loc.icon,
-      color: loc.color,
-      created_at: serverTimestamp(),
-    });
-  }
-  await batch.commit();
-
   const now = new Date().toISOString();
   return {
     id: userId,
@@ -263,12 +246,20 @@ async function initializeNewUser(userId: string, fullName: string): Promise<Prof
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const phoneConfirmationRef = useRef<Awaited<ReturnType<typeof signInWithPhoneNumber>> | null>(
+    null,
+  );
+  const mfaEnrollmentVerificationIdRef = useRef<string | null>(null);
+  const mfaChallengeVerificationIdRef = useRef<string | null>(null);
+
   const [user, setUser] = useState<FbUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [householdId, setHouseholdIdState] = useState<string | null>(null);
   const [role, setRole] = useState<Role>('admin');
   const [loading, setLoading] = useState(true);
+  const [signInFailCount, setSignInFailCount] = useState(0);
+  const [signInLockedUntil, setSignInLockedUntil] = useState(0);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
 
@@ -448,8 +439,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (Date.now() < signInLockedUntil) {
+      return { error: new Error('Too many attempts. Please wait 30 seconds.'), mfaRequired: false };
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      setSignInFailCount(0);
       return { error: null, mfaRequired: false };
     } catch (err) {
       const e = err as { code?: string };
@@ -458,6 +453,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (resolver) setMfaResolver(resolver);
         return { error: null, mfaRequired: true };
       }
+      setSignInFailCount((prev) => {
+        const next = prev + 1;
+        if (next >= 5) {
+          setSignInLockedUntil(Date.now() + 30_000);
+          return 0;
+        }
+        return next;
+      });
       return { error: err as Error, mfaRequired: false };
     }
   };
@@ -475,7 +478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const startPhoneSignIn = async (phoneE164: string) => {
     try {
-      phoneConfirmation = await signInWithPhoneNumber(auth, phoneE164);
+      phoneConfirmationRef.current = await signInWithPhoneNumber(auth, phoneE164);
       return { error: null };
     } catch (err) {
       return { error: err as Error };
@@ -484,9 +487,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const confirmPhoneSignIn = async (code: string) => {
     try {
-      if (!phoneConfirmation) throw new Error('No phone verification in progress.');
-      await phoneConfirmation.confirm(code);
-      phoneConfirmation = null;
+      if (!phoneConfirmationRef.current) throw new Error('No phone verification in progress.');
+      await phoneConfirmationRef.current.confirm(code);
+      phoneConfirmationRef.current = null;
       return { error: null };
     } catch (err) {
       return { error: err as Error };
@@ -547,8 +550,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setMfaResolver(null);
-    mfaEnrollmentVerificationId = null;
-    mfaChallengeVerificationId = null;
+    mfaEnrollmentVerificationIdRef.current = null;
+    mfaChallengeVerificationIdRef.current = null;
     // Best-effort sign out of the native Google session too so the next
     // Google sign-in shows the account picker.
     if (googleConfigured) {
@@ -684,6 +687,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const current = auth.currentUser;
     if (!current) return { error: new Error('Not authenticated') };
     try {
+      const uid = current.uid;
+      try {
+        const batch = writeBatch(db);
+        const storageLocationsSnap = await getDocs(
+          collection(db, 'users', uid, 'storage_locations'),
+        );
+        storageLocationsSnap.docs.forEach((d) => batch.delete(d.ref));
+        const legacyPantrySnap = await getDocs(collection(db, 'users', uid, 'pantry_items'));
+        legacyPantrySnap.docs.forEach((d) => batch.delete(d.ref));
+        const loginEventsSnap = await getDocs(collection(db, 'users', uid, 'loginEvents'));
+        loginEventsSnap.docs.forEach((d) => batch.delete(d.ref));
+        batch.delete(doc(db, 'users', uid));
+        await batch.commit();
+      } catch (batchErr) {
+        console.warn('[Larderly] Failed to delete user Firestore data', batchErr);
+      }
       await deleteUser(current);
       return { error: null };
     } catch (err) {
@@ -712,7 +731,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current) throw new Error('Sign in first.');
     const session = await multiFactor(current).getSession();
     const provider = new PhoneAuthProvider(auth);
-    mfaEnrollmentVerificationId = await provider.verifyPhoneNumber({
+    mfaEnrollmentVerificationIdRef.current = await provider.verifyPhoneNumber({
       phoneNumber: phoneE164,
       session,
     });
@@ -720,13 +739,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeMfaEnrollment = async (code: string, displayName: string) => {
     const current = auth.currentUser;
-    if (!current || !mfaEnrollmentVerificationId) {
+    if (!current || !mfaEnrollmentVerificationIdRef.current) {
       throw new Error('No enrollment in progress.');
     }
-    const credential = PhoneAuthProvider.credential(mfaEnrollmentVerificationId, code);
+    const credential = PhoneAuthProvider.credential(
+      mfaEnrollmentVerificationIdRef.current,
+      code,
+    );
     const assertion = PhoneMultiFactorGenerator.assertion(credential);
     await multiFactor(current).enroll(assertion, displayName.trim() || 'My phone');
-    mfaEnrollmentVerificationId = null;
+    mfaEnrollmentVerificationIdRef.current = null;
   };
 
   const unenrollMfaFactor = async (factorUid: string) => {
@@ -740,26 +762,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const hint = mfaResolver.hints[factorIndex];
     if (!hint) throw new Error('Invalid second-factor selection.');
     const provider = new PhoneAuthProvider(auth);
-    mfaChallengeVerificationId = await provider.verifyPhoneNumber({
+    mfaChallengeVerificationIdRef.current = await provider.verifyPhoneNumber({
       multiFactorHint: hint,
       session: mfaResolver.session,
     });
   };
 
   const completeMfaChallenge = async (code: string) => {
-    if (!mfaResolver || !mfaChallengeVerificationId) {
+    if (!mfaResolver || !mfaChallengeVerificationIdRef.current) {
       throw new Error('No MFA challenge in progress.');
     }
-    const credential = PhoneAuthProvider.credential(mfaChallengeVerificationId, code);
+    const credential = PhoneAuthProvider.credential(mfaChallengeVerificationIdRef.current, code);
     const assertion = PhoneMultiFactorGenerator.assertion(credential);
     await mfaResolver.resolveSignIn(assertion);
     setMfaResolver(null);
-    mfaChallengeVerificationId = null;
+    mfaChallengeVerificationIdRef.current = null;
   };
 
   const clearMfaResolver = () => {
     setMfaResolver(null);
-    mfaChallengeVerificationId = null;
+    mfaChallengeVerificationIdRef.current = null;
   };
 
   return (
@@ -772,6 +794,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         isAnonymous: Boolean(user?.isAnonymous),
         loading,
+        signInFailCount,
+        signInLockedUntil,
         googleAvailable: !!GOOGLE_WEB_CLIENT_ID,
         appleAvailable,
         setHouseholdId,

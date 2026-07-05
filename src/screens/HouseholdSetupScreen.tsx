@@ -16,8 +16,9 @@ import { Icon } from '../components/ui/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
+import { seedHouseholdStorageLocations } from '../lib/householdStorage';
 import { recordActivity } from '../lib/activity';
-import { colors } from '../theme';
+import { useAppColors } from '../hooks/useAppColors';
 
 type Mode = 'choice' | 'create' | 'join';
 
@@ -29,6 +30,7 @@ function generateInviteCode() {
 }
 
 export default function HouseholdSetupScreen() {
+  const c = useAppColors();
   const { user, setHouseholdId } = useAuth();
   const { showToast } = useToast();
   const [mode, setMode] = useState<Mode>('choice');
@@ -67,6 +69,8 @@ export default function HouseholdSetupScreen() {
         householdId,
         updated_at: serverTimestamp(),
       });
+
+      await seedHouseholdStorageLocations(householdId, user.uid);
 
       await recordActivity(householdId, {
         verb: 'member.joined',
@@ -121,17 +125,17 @@ export default function HouseholdSetupScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]">
       <View className="flex-1 justify-center px-6">
-        <View className="rounded-3xl border border-line bg-surface p-8">
+        <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-8">
           {mode === 'choice' && (
             <>
               <View className="mb-6 items-center">
                 <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <Icon name="dashboard" size={32} color={colors.primary} />
+                  <Icon name="dashboard" size={32} color={c.primary} />
                 </View>
-                <Text className="text-center text-2xl font-bold text-ink">Set up your kitchen</Text>
-                <Text className="mt-2 text-center text-sm text-muted">
+                <Text className="text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Set up your kitchen</Text>
+                <Text className="mt-2 text-center text-sm text-muted dark:text-[#6B6878]">
                   Create a household or join with an invite code.
                 </Text>
               </View>
@@ -140,26 +144,26 @@ export default function HouseholdSetupScreen() {
                 className="mb-3 flex-row items-center justify-between rounded-2xl border-2 border-primary/30 bg-primary/5 p-5"
               >
                 <View className="flex-row items-center gap-4">
-                  <View className="h-12 w-12 items-center justify-center rounded-xl bg-surface">
-                    <Icon name="plus" size={22} color={colors.primary} />
+                  <View className="h-12 w-12 items-center justify-center rounded-xl bg-surface dark:bg-[#1A1A22]">
+                    <Icon name="plus" size={22} color={c.primary} />
                   </View>
                   <View>
-                    <Text className="font-bold text-ink">Create household</Text>
-                    <Text className="text-xs text-muted">Start fresh and invite family</Text>
+                    <Text className="font-bold text-ink dark:text-[#F0EEE9]">Create household</Text>
+                    <Text className="text-xs text-muted dark:text-[#6B6878]">Start fresh and invite family</Text>
                   </View>
                 </View>
               </Pressable>
               <Pressable
                 onPress={() => setMode('join')}
-                className="flex-row items-center justify-between rounded-2xl border border-line bg-canvas p-5"
+                className="flex-row items-center justify-between rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-5"
               >
                 <View className="flex-row items-center gap-4">
                   <View className="h-12 w-12 items-center justify-center rounded-xl bg-line/50">
-                    <Icon name="user" size={22} color={colors.ink} />
+                    <Icon name="user" size={22} color={c.ink} />
                   </View>
                   <View>
-                    <Text className="font-bold text-ink">Join household</Text>
-                    <Text className="text-xs text-muted">8-character invite code</Text>
+                    <Text className="font-bold text-ink dark:text-[#F0EEE9]">Join household</Text>
+                    <Text className="text-xs text-muted dark:text-[#6B6878]">8-character invite code</Text>
                   </View>
                 </View>
               </Pressable>
@@ -168,7 +172,7 @@ export default function HouseholdSetupScreen() {
 
           {mode === 'create' && (
             <>
-              <Text className="mb-2 text-center text-2xl font-bold text-ink">Name your household</Text>
+              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Name your household</Text>
               <TextField
                 label="Household name"
                 value={name}
@@ -184,7 +188,7 @@ export default function HouseholdSetupScreen() {
 
           {mode === 'join' && (
             <>
-              <Text className="mb-2 text-center text-2xl font-bold text-ink">Enter invite code</Text>
+              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Enter invite code</Text>
               <TextField
                 label="Invite code"
                 value={inviteCode}
