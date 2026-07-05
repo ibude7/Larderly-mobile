@@ -17,7 +17,6 @@ import Svg, { Path } from 'react-native-svg';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import SelectField from '../components/ui/SelectField';
-import Chip from '../components/ui/Chip';
 import { Icon, IconName } from '../components/ui/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -366,13 +365,26 @@ export default function OnboardingScreen() {
               {DIET_OPTIONS.map((d) => {
                 const selected = dietaryPrefs.includes(d.name);
                 return (
-                  <Chip
+                  <Pressable
                     key={d.name}
-                    label={d.name}
-                    icon={d.icon as any}
-                    active={selected}
                     onPress={() => toggleDiet(d.name)}
-                  />
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      borderRadius: 100,
+                      backgroundColor: selected ? c.primary : c.surface,
+                      borderWidth: selected ? 0 : 1,
+                      borderColor: c.line,
+                      gap: 8,
+                    }}
+                  >
+                    <Icon name={d.icon} size={16} color={selected ? '#FFFFFF' : c.ink} />
+                    <Text style={{ fontWeight: selected ? '700' : '500', color: selected ? '#FFFFFF' : c.ink }}>
+                      {d.name}
+                    </Text>
+                  </Pressable>
                 );
               })}
             </View>
@@ -389,13 +401,26 @@ export default function OnboardingScreen() {
               {STORES.map((s) => {
                 const selected = stores.includes(s.name);
                 return (
-                  <Chip
+                  <Pressable
                     key={s.name}
-                    label={s.name}
-                    icon={s.icon as any}
-                    active={selected}
                     onPress={() => toggleStore(s.name)}
-                  />
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      borderRadius: 100,
+                      backgroundColor: selected ? c.primary : c.surface,
+                      borderWidth: selected ? 0 : 1,
+                      borderColor: c.line,
+                      gap: 8,
+                    }}
+                  >
+                    <Icon name={s.icon} size={16} color={selected ? '#FFFFFF' : c.ink} />
+                    <Text style={{ fontWeight: selected ? '700' : '500', color: selected ? '#FFFFFF' : c.ink }}>
+                      {s.name}
+                    </Text>
+                  </Pressable>
                 );
               })}
             </View>

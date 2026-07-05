@@ -11,8 +11,6 @@ import VoiceInputButton from '../components/ui/VoiceInputButton';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
 import ItemDetailModal from '../components/pantry/ItemDetailModal';
-import InventoryCard from '../components/pantry/InventoryCard';
-import Chip from '../components/ui/Chip';
 import { usePantryStore } from '../contexts/PantryContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
@@ -277,9 +275,9 @@ export default function PantryScreen() {
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
               <View className="flex-row gap-2">
-                <Chip label="All" active={activeLocation === 'All'} onPress={() => setActiveLocation('All')} />
+                <FilterChip label="All" active={activeLocation === 'All'} onPress={() => setActiveLocation('All')} />
                 {STORAGE_LOCATIONS.map((l) => (
-                  <Chip
+                  <FilterChip
                     key={l}
                     label={l}
                     active={activeLocation === l}
@@ -413,5 +411,105 @@ export default function PantryScreen() {
         onConsume={consumeItem}
       />
     </View>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`rounded-full px-3 py-1.5 ${active ? 'bg-primary' : 'border border-line bg-surface'}`}
+    >
+      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-muted'}`}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function InventoryCard({
+  item,
+  locations,
+  listMode,
+  selectMode,
+  selected,
+  onToggleSelect,
+  onAddStock,
+  onPress,
+}: {
+  item: PantryItem;
+  locations: StorageLocation[];
+  listMode?: boolean;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  onAddStock: () => void;
+  onPress: () => void;
+}) {
+  const locName = locations.find((l) => l.id === item.location_id)?.name || '—';
+  const isOut = item.quantity === 0;
+  const isLow = item.quantity <= item.low_stock_threshold;
+  const statusText = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'Full';
+  const statusStyle = isOut ? 'bg-danger/10' : 'bg-primary/10';
+  const statusText2 = isOut ? 'text-danger' : 'text-primary';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onToggleSelect}
+      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1, flex: listMode ? undefined : 1 }]}
+      className={`rounded-card border bg-surface p-4 ${selected ? 'border-primary' : 'border-line'} ${listMode ? 'mx-5 mb-3' : ''}`}
+    >
+      <View className="min-h-[92px] flex-row justify-between">
+        <View>
+          <View className={`self-start rounded-md px-2 py-1 ${statusStyle}`}>
+            <Text className={`text-[9px] font-bold uppercase tracking-wider ${statusText2}`}>
+              {statusText}
+            </Text>
+          </View>
+          <View className="mt-3 gap-1">
+            <Text className="text-[9px] font-bold uppercase text-muted">
+              QTY <Text className="text-ink">{item.quantity} {item.unit}</Text>
+            </Text>
+            <Text className="text-[9px] font-bold uppercase text-muted">
+              PP <Text className="text-ink">${item.purchase_price?.toFixed(2) || '0.00'}</Text>
+            </Text>
+            <Text numberOfLines={1} className="text-[9px] font-bold uppercase text-muted">
+              LOC <Text className="text-ink">{locName}</Text>
+            </Text>
+          </View>
+        </View>
+        <View className="h-14 w-14 items-center justify-center">
+          {item.image_url ? (
+            <Image source={{ uri: item.image_url }} className="h-full w-full" resizeMode="contain" />
+          ) : (
+            <View className="h-12 w-12 items-center justify-center rounded-full bg-canvas">
+              <Icon name={getCategoryIcon(item.category)} size={24} color={colors.muted} />
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View className="mt-3">
+        <Text numberOfLines={1} className="text-base font-bold text-ink">
+          {item.name}
+        </Text>
+        <View className="mt-3 flex-row items-center justify-between border-t border-canvas pt-3">
+          <Text numberOfLines={1} className="flex-1 text-[10px] font-semibold text-muted">
+            #{item.barcode || item.id.substring(0, 8).toUpperCase()}
+          </Text>
+          <Pressable onPress={onAddStock} hitSlop={8} className="flex-row items-center gap-1">
+            <Icon name="plus" size={12} color={colors.primary} />
+            <Text className="text-[10px] font-bold uppercase tracking-wider text-primary">Add Stock</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Pressable>
   );
 }
