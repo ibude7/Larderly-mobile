@@ -11,7 +11,19 @@ export interface Toast {
 
 interface ToastContextType {
   toasts: Toast[];
-  showToast: (message: string, type?: ToastType, duration?: number) => void;
+  /**
+   * Show a toast message.
+   *
+   * @param message  Text to display.
+   * @param type     Visual style. Defaults to `'info'`.
+   * @param duration Auto-dismiss delay in ms. Defaults to 5000.
+   *                 Pass `0` for a persistent toast that must be dismissed
+   *                 manually via `removeToast`.
+   * @param id       Optional stable ID. If omitted, a random one is generated.
+   *                 Supply a known ID when you need to dismiss the toast
+   *                 programmatically later (e.g. the offline banner).
+   */
+  showToast: (message: string, type?: ToastType, duration?: number, id?: string) => void;
   removeToast: (id: string) => void;
 }
 
@@ -25,10 +37,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    (message: string, type: ToastType = 'info', duration = 5000) => {
-      const id = Math.random().toString(36).slice(2);
-      setToasts((prev) => [...prev, { id, message, type, duration }]);
-      setTimeout(() => removeToast(id), duration);
+    (message: string, type: ToastType = 'info', duration = 5000, id?: string) => {
+      const toastId = id ?? Math.random().toString(36).slice(2);
+
+      setToasts((prev) => {
+        // If a toast with this ID already exists, replace it in place so we
+        // don't stack duplicate offline banners.
+        const exists = prev.some((t) => t.id === toastId);
+        if (exists) {
+          return prev.map((t) =>
+            t.id === toastId ? { ...t, message, type, duration } : t,
+          );
+        }
+        return [...prev, { id: toastId, message, type, duration }];
+      });
+
+      // Only schedule auto-dismiss when duration > 0.
+      if (duration > 0) {
+        setTimeout(() => removeToast(toastId), duration);
+      }
     },
     [removeToast],
   );

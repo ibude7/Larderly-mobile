@@ -1,22 +1,17 @@
-import { generateStructuredJson, Schema } from './aiCore';
+/**
+ * Voice command parsing — client proxy.
+ *
+ * Delegates to the `ai_parseShoppingVoice` and `ai_parsePantryVoice` Cloud
+ * Functions instead of calling the Vertex AI Gemini API directly. All exported
+ * types and function signatures are unchanged.
+ */
+
+import { httpsCallable } from '@react-native-firebase/functions';
+import { functions } from './firebase';
 
 export interface ParsedVoiceCommand {
   productName: string;
   quantity: number;
-}
-
-const VOICE_SCHEMA = Schema.object({
-  properties: {
-    productName: Schema.string(),
-    quantity: Schema.number(),
-  },
-});
-
-export async function parseShoppingVoiceCommand(transcript: string): Promise<ParsedVoiceCommand> {
-  return generateStructuredJson<ParsedVoiceCommand>(
-    `Parse this shopping voice command: "${transcript}". Return JSON with productName and quantity.`,
-    VOICE_SCHEMA,
-  );
 }
 
 export interface ParsedPantryVoice {
@@ -27,19 +22,22 @@ export interface ParsedPantryVoice {
   category: string;
 }
 
-const PANTRY_VOICE_SCHEMA = Schema.object({
-  properties: {
-    name: Schema.string(),
-    quantity: Schema.number(),
-    unit: Schema.string(),
-    storageLocation: Schema.string(),
-    category: Schema.string(),
-  },
-});
+const _parseShoppingVoice = httpsCallable<
+  { transcript: string },
+  ParsedVoiceCommand
+>(functions, 'ai_parseShoppingVoice');
+
+const _parsePantryVoice = httpsCallable<
+  { transcript: string },
+  ParsedPantryVoice
+>(functions, 'ai_parsePantryVoice');
+
+export async function parseShoppingVoiceCommand(transcript: string): Promise<ParsedVoiceCommand> {
+  const result = await _parseShoppingVoice({ transcript });
+  return result.data;
+}
 
 export async function parsePantryVoiceCommand(transcript: string): Promise<ParsedPantryVoice> {
-  return generateStructuredJson<ParsedPantryVoice>(
-    `Parse this pantry voice command into a grocery item: "${transcript}". Return JSON with name, quantity, unit, storageLocation (Pantry/Fridge/Freezer/Other), and category.`,
-    PANTRY_VOICE_SCHEMA,
-  );
+  const result = await _parsePantryVoice({ transcript });
+  return result.data;
 }

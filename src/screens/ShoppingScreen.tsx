@@ -13,7 +13,8 @@ import VoiceInputButton from '../components/ui/VoiceInputButton';
 import SmartSuggestionsCard from '../components/dashboard/SmartSuggestionsCard';
 import ShoppingModeOverlay from '../components/shopping/ShoppingModeOverlay';
 import { Icon } from '../components/ui/Icon';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
@@ -24,6 +25,7 @@ import { CATEGORIES, categoryFromName } from '../lib/categories';
 import { parseReceiptImage } from '../lib/receiptScan';
 import { parseShoppingVoiceCommand } from '../lib/voiceCommands';
 import { pantryItemToInventory } from '../lib/pantryInsights';
+import SwipeableShoppingRow from '../components/shopping/SwipeableShoppingRow';
 import { colors } from '../theme';
 
 export default function ShoppingScreen() {
@@ -31,6 +33,9 @@ export default function ShoppingScreen() {
   const { user } = useAuth();
   const {
     items: pantryItems,
+    addItem,
+  } = useInventory();
+  const {
     lists,
     activeList,
     activeListId,
@@ -49,8 +54,7 @@ export default function ShoppingScreen() {
     deleteShoppingItem,
     clearCheckedItems,
     checkoutToPantry,
-    addItem,
-  } = usePantryStore();
+  } = useShopping();
   const activity = useActivity();
   const { showToast } = useToast();
   const confirm = useConfirm();
@@ -86,7 +90,7 @@ export default function ShoppingScreen() {
 
   const unchecked = useMemo(() => shoppingList.filter((i) => !i.is_checked), [shoppingList]);
   const checked = useMemo(() => shoppingList.filter((i) => i.is_checked), [shoppingList]);
-  const spent = checked.reduce((s, i) => s + (i as any).estimatedPrice * i.quantity || 0, 0);
+  const spent = checked.reduce((s, i) => s + (i.estimatedPrice || 0) * i.quantity, 0);
 
   const grouped = useMemo(() => {
     const groups: Record<string, typeof unchecked> = {};
@@ -149,7 +153,7 @@ export default function ShoppingScreen() {
       is_auto_generated: false,
       notes: '',
       estimatedPrice: parseFloat(addPrice) || 0,
-    } as any);
+    });
     if (error) showToast('Failed to add item', 'error');
     else {
       setAddName('');
@@ -173,7 +177,7 @@ export default function ShoppingScreen() {
         is_auto_generated: false,
         notes: 'voice',
         estimatedPrice: 0,
-      } as any);
+      });
       showToast(`Added ${parsed.productName}`, 'success');
     } catch {
       showToast('Could not parse voice command', 'error');
@@ -271,7 +275,7 @@ export default function ShoppingScreen() {
     <View className="flex-1 bg-canvas">
       <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View className="mb-4 flex-row items-center justify-between">
           <View className="flex-1">
             <Pressable onPress={() => setShowListPicker(true)} className="flex-row items-center gap-2">
@@ -333,22 +337,14 @@ export default function ShoppingScreen() {
                   {CATEGORIES.find((c) => c.id === cat)?.name ?? cat}
                 </Text>
                 {catItems.map((item) => (
-                  <Pressable
+                  <SwipeableShoppingRow
                     key={item.id}
-                    onPress={() => toggleShoppingItem(item.id)}
-                    className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3"
-                  >
-                    <Icon name={item.is_checked ? 'success' : 'cart'} size={20} color={item.is_checked ? colors.success : colors.primary} />
-                    <View className="flex-1">
-                      <Text className={`font-semibold ${item.is_checked ? 'text-muted line-through' : 'text-ink'}`}>{item.name}</Text>
-                      <Text className="text-xs text-muted">{item.quantity} {item.unit}</Text>
-                    </View>
-                    {!shopMode && canEdit && (
-                      <Pressable onPress={() => deleteShoppingItem(item.id)} hitSlop={8}>
-                        <Icon name="trash" size={16} color={colors.danger} />
-                      </Pressable>
-                    )}
-                  </Pressable>
+                    item={item}
+                    canEdit={canEdit}
+                    shopMode={shopMode}
+                    onToggle={toggleShoppingItem}
+                    onDelete={deleteShoppingItem}
+                  />
                 ))}
               </View>
             ))}
@@ -467,8 +463,8 @@ export default function ShoppingScreen() {
           quantity: i.quantity,
           unit: i.unit,
           is_checked: i.is_checked,
-          estimatedPrice: (i as { estimatedPrice?: number }).estimatedPrice,
-          barcode: (i as { barcode?: string }).barcode,
+          estimatedPrice: i.estimatedPrice,
+          barcode: i.barcode,
         }))}
         onTogglePurchased={toggleShoppingItem}
         onCheckout={async () => {

@@ -18,11 +18,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import AppHeader from '../components/layout/AppHeader';
 import { BlurView } from 'expo-blur';
+import AnimatedNumber from '../components/ui/AnimatedNumber';
+import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import { Icon, IconName } from '../components/ui/Icon';
 import SmartSuggestionsCard from '../components/dashboard/SmartSuggestionsCard';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useActivity } from '../hooks/useActivity';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,8 +52,30 @@ export default function DashboardScreen() {
   const { householdId } = useAuth();
   const { itemCount, lowStockItems, expiringSoonItems, uncheckedCount, totalValue } =
     useDashboardStats();
-  const { items, locations, shoppingList } = usePantryStore();
+  const { items, locations, isLoading } = useInventory();
+  const { shoppingList } = useShopping();
   const activity = useActivity();
+
+  const itemsAddedToday = useMemo(() => {
+    return items.filter((i) => {
+      if (!i.created_at) return false;
+      const d = new Date(i.created_at);
+      return d.toDateString() === new Date().toDateString();
+    }).length;
+  }, [items]);
+
+  const shoppingAddedToday = useMemo(() => {
+    return shoppingList.filter((s) => {
+      if (!s.created_at) return false;
+      const d = new Date(s.created_at);
+      return d.toDateString() === new Date().toDateString();
+    }).length;
+  }, [shoppingList]);
+
+  const itemsTrend = itemsAddedToday > 0 ? `+${itemsAddedToday} today` : 'Stable today';
+  const shoppingTrend = shoppingAddedToday > 0 ? `+${shoppingAddedToday} today` : 'No new items';
+  const lowStockTrend = lowStockItems.length > 0 ? 'Needs attention' : 'Healthy stock';
+  const expiringTrend = expiringSoonItems.length > 0 ? 'Consume soon' : 'All fresh';
   const [householdName, setHouseholdName] = useState('Your household');
   const [memberCount, setMemberCount] = useState(1);
   const [aiTip, setAiTip] = useState<string | null>(null);
@@ -155,30 +180,38 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <View className="mt-6 flex-row flex-wrap gap-3">
-          <StatCard
-            label="Total Items"
-            value={itemCount}
-            onPress={() => navigation.navigate('Pantry')}
-          />
-          <StatCard
-            label="Shopping List"
-            value={uncheckedCount}
-            onPress={() => navigation.navigate('Shopping')}
-          />
-          <StatCard
-            label="Low Stock"
-            value={lowStockItems.length}
-            alert={lowStockItems.length > 0}
-            onPress={() => navigation.navigate('Pantry')}
-          />
-          <StatCard
-            label="Expiring Soon"
-            value={expiringSoonItems.length}
-            alert={expiringSoonItems.length > 0}
-            onPress={() => navigation.navigate('Pantry')}
-          />
-        </View>
+        {isLoading ? (
+          <DashboardSkeleton />
+        ) : (
+          <View className="mt-6 flex-row flex-wrap gap-3">
+            <StatCard
+              label="Total Items"
+              value={itemCount}
+              trendText={itemsTrend}
+              onPress={() => navigation.navigate('Pantry')}
+            />
+            <StatCard
+              label="Shopping List"
+              value={uncheckedCount}
+              trendText={shoppingTrend}
+              onPress={() => navigation.navigate('Shopping')}
+            />
+            <StatCard
+              label="Low Stock"
+              value={lowStockItems.length}
+              alert={lowStockItems.length > 0}
+              trendText={lowStockTrend}
+              onPress={() => navigation.navigate('Pantry')}
+            />
+            <StatCard
+              label="Expiring Soon"
+              value={expiringSoonItems.length}
+              alert={expiringSoonItems.length > 0}
+              trendText={expiringTrend}
+              onPress={() => navigation.navigate('Pantry')}
+            />
+          </View>
+        )}
 
         {totalValue > 0 ? (
           <LinearGradient
@@ -190,12 +223,16 @@ export default function DashboardScreen() {
             <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
               Pantry Value
             </Text>
-            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 42 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
               <Text style={{ color: 'rgba(255,255,255,0.65)', fontWeight: '900', fontSize: 28 }}>
                 $
               </Text>
-              {totalValue.toFixed(2)}
-            </Text>
+              <AnimatedNumber
+                value={totalValue}
+                formatFn={(n) => n.toFixed(2)}
+                style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 42 }}
+              />
+            </View>
             <Text className="mt-3 text-xs text-white/90">
               Based on purchase prices of {itemCount} items
             </Text>
@@ -302,67 +339,106 @@ function StatCard({
   label,
   value,
   alert,
+  trendText,
   onPress,
 }: {
   label: string;
   value: number;
   alert?: boolean;
+  trendText?: string;
   onPress: () => void;
 }) {
   const c = useAppColors();
   const theme = useTheme();
   const highlight = alert && value > 0;
-  const animatedValue = useSharedValue(0);
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    animatedValue.value = 0;
-    animatedValue.value = withSpring(value, { duration: 600 });
-  }, [animatedValue, value]);
-
-  useAnimatedReaction(
-    () => animatedValue.value,
-    (current) => {
-      runOnJS(setDisplayValue)(Math.round(current));
-    },
-  );
 
   const iconName = STAT_ICONS[label];
+
+  const glassBg = theme === 'dark' ? 'rgba(26, 26, 34, 0.5)' : 'rgba(255, 255, 255, 0.4)';
+  const accentColor = highlight ? c.danger : c.primary;
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1, width: '47.5%' }]}
     >
-      <BlurView
-        intensity={theme === 'dark' ? 75 : 80}
-        tint={theme}
+      <View
         style={{
           borderRadius: 20,
-          borderWidth: 1,
-          borderColor: highlight ? c.danger : c.line,
           overflow: 'hidden',
-          width: '100%',
-          padding: 20,
-          ...(highlight
-            ? {
-                shadowColor: c.danger,
-                shadowOpacity: 0.35,
-                shadowRadius: 12,
-              }
-            : {}),
+          borderWidth: 1,
+          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+          shadowColor: theme === 'dark' ? '#000' : '#A09C96',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: theme === 'dark' ? 0.4 : 0.12,
+          shadowRadius: 8,
+          elevation: 4,
         }}
       >
-        {iconName ? (
-          <View style={{ position: 'absolute', top: 16, right: 16 }}>
-            <Icon name={iconName} size={16} color={highlight ? c.danger : c.muted} />
+        <BlurView
+          intensity={theme === 'dark' ? 65 : 70}
+          tint={theme}
+          style={{
+            width: '100%',
+            padding: 20,
+            backgroundColor: glassBg,
+            flexDirection: 'row',
+          }}
+        >
+          {/* Left accent bar */}
+          <View
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 4,
+              backgroundColor: accentColor,
+            }}
+          />
+
+          <View className="flex-1 min-h-[85px] justify-between pl-2">
+            <View className="mt-1">
+              <AnimatedNumber
+                value={value}
+                duration={800}
+                style={{
+                  fontSize: 30,
+                  fontWeight: '900',
+                  color: theme === 'dark' ? '#F0EEE9' : c.ink,
+                }}
+              />
+              <Text className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+                {label}
+              </Text>
+            </View>
+
+            {trendText ? (
+              <Text className="text-[10px] font-semibold text-muted dark:text-[#6B6878] mt-3">
+                {trendText}
+              </Text>
+            ) : null}
           </View>
-        ) : null}
-        <Text className="text-3xl font-black text-ink dark:text-[#F0EEE9]">{displayValue}</Text>
-        <Text className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
-          {label}
-        </Text>
-      </BlurView>
+
+          {iconName ? (
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: highlight ? `${c.danger}15` : `${c.primary}15`,
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'absolute',
+                top: 16,
+                right: 16,
+              }}
+            >
+              <Icon name={iconName} size={16} color={accentColor} />
+            </View>
+          ) : null}
+        </BlurView>
+      </View>
     </Pressable>
   );
 }

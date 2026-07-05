@@ -4,12 +4,14 @@ import type { TabScreenNavigationProp } from '../navigation/types';
 import AppHeader from '../components/layout/AppHeader';
 import MealPlanner from '../components/meals/MealPlanner';
 import { useMealPlansStore } from '../contexts/MealPlansContext';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 
 export default function MealsScreen() {
   const navigation = useNavigation<TabScreenNavigationProp>();
   const { meals, loading, addMeal, deleteMeal } = useMealPlansStore();
-  const { items, addShoppingItem } = usePantryStore();
+  const { items } = useInventory();
+  const { addShoppingItem } = useShopping();
 
   return (
     <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">

@@ -1,28 +1,14 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react';
-import { usePantry } from '../hooks/usePantry';
-import { useShoppingLists } from '../hooks/useShoppingLists';
-import {
-  collection,
-  doc,
-  addDoc,
-  deleteDoc,
-  serverTimestamp,
-  writeBatch,
-} from '@react-native-firebase/firestore';
-import { db } from '../lib/firebase';
+import React, { ReactNode, useMemo } from 'react';
+import { ShoppingProvider, useShopping } from './ShoppingContext';
+import { InventoryProvider, useInventory } from './InventoryContext';
 import { useAuth } from './AuthContext';
+import { collection, doc, addDoc, serverTimestamp, writeBatch } from '@react-native-firebase/firestore';
+import { db } from '../lib/firebase';
 import { categoryFromName } from '../lib/categories';
 
-type PantryStore = Omit<ReturnType<typeof useShoppingLists>, 'items'> &
-  ReturnType<typeof usePantry> & {
-    shoppingListItems: ReturnType<typeof useShoppingLists>['items'];
-  };
-
-const PantryContext = createContext<PantryStore | undefined>(undefined);
-
-export function PantryProvider({ children }: { children: ReactNode }) {
+function InventoryProviderBridge({ children }: { children: ReactNode }) {
   const { user, householdId } = useAuth();
-  const shopping = useShoppingLists();
+  const shopping = useShopping();
 
   const shoppingBridge = useMemo(
     () => ({
@@ -57,20 +43,36 @@ export function PantryProvider({ children }: { children: ReactNode }) {
     [shopping.activeListId, shopping.shoppingList, householdId, user],
   );
 
-  const pantry = usePantry(shoppingBridge);
-  const store = {
-    ...shopping,
-    ...pantry,
-    // pantry.items wins (it is the pantry inventory), which is correct,
-    // but name the shopping items explicitly so nothing is lost:
-    shoppingListItems: shopping.items,
-  };
-
-  return <PantryContext.Provider value={store}>{children}</PantryContext.Provider>;
+  return (
+    <InventoryProvider shoppingBridge={shoppingBridge}>
+      {children}
+    </InventoryProvider>
+  );
 }
 
+export function PantryProvider({ children }: { children: ReactNode }) {
+  return (
+    <ShoppingProvider>
+      <InventoryProviderBridge>
+        {children}
+      </InventoryProviderBridge>
+    </ShoppingProvider>
+  );
+}
+
+/**
+ * Legacy combined hook.
+ * @deprecated Use useInventory() or useShopping() directly.
+ */
 export function usePantryStore() {
-  const ctx = useContext(PantryContext);
-  if (!ctx) throw new Error('usePantryStore must be used within PantryProvider');
-  return ctx;
+  const shopping = useShopping();
+  const inventory = useInventory();
+  return useMemo(
+    () => ({
+      ...shopping,
+      ...inventory,
+      shoppingListItems: shopping.items,
+    }),
+    [shopping, inventory],
+  );
 }

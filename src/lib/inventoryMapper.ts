@@ -164,6 +164,8 @@ export function householdShoppingToLegacy(
     unit?: string;
     category?: string;
     notes?: string;
+    barcode?: string;
+    store?: string;
   },
   userId: string,
 ): ShoppingListItem {

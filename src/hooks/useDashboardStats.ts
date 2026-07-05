@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 import { PantryItem } from '../types';
 
 export interface DashboardStats {
@@ -19,7 +20,8 @@ function shoppingCheckKey(list: { id: string; is_checked: boolean }[]): string {
 }
 
 export function useDashboardStats(): DashboardStats {
-  const { items, shoppingList, lowStockItems, expiringSoonItems } = usePantryStore();
+  const { items, lowStockItems, expiringSoonItems } = useInventory();
+  const { shoppingList } = useShopping();
 
   const quantityPriceKey = stockKey(items);
   const checkKey = shoppingCheckKey(shoppingList);

@@ -26,7 +26,8 @@ import SelectField from '../components/ui/SelectField';
 import { Icon } from '../components/ui/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 import { db } from '../lib/firebase';
 import { BUILTIN_RECIPES, type Recipe, type Cuisine, type MealType, type Difficulty } from '../lib/recipes';
 import { generatePantryRecipes, generatePersonalizedRecipes } from '../lib/recipeGen';
@@ -45,7 +46,8 @@ export default function RecipesScreen() {
   const navigation = useNavigation<TabScreenNavigationProp>();
   const { user, userProfile, householdId } = useAuth();
   const { showToast } = useToast();
-  const { items, addShoppingItem } = usePantryStore();
+  const { items } = useInventory();
+  const { addShoppingItem } = useShopping();
 
   const [tab, setTab] = useState<Tab>('browse');
   const [favorites, setFavorites] = useState<FavoriteRecipe[]>([]);

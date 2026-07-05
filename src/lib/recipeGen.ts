@@ -1,5 +1,16 @@
-import { generateStructuredJson, Schema } from './aiCore';
+/**
+ * Recipe generation — client proxy.
+ *
+ * Delegates to dedicated Firebase Cloud Functions instead of calling the
+ * Vertex AI Gemini API directly. All exported function signatures are
+ * unchanged; callers (RecipesScreen, DashboardScreen) require no updates.
+ */
+
+import { httpsCallable } from '@react-native-firebase/functions';
+import { functions } from './firebase';
 import type { Recipe, Cuisine, MealType, Difficulty } from './recipes';
+
+// ─── Raw type (matches server response shape) ─────────────────────────────────
 
 interface RawRecipe {
   title: string;
@@ -15,27 +26,24 @@ interface RawRecipe {
   caloriesPerServing?: number;
 }
 
-const RECIPES_SCHEMA = Schema.object({
-  properties: {
-    recipes: Schema.array({
-      items: Schema.object({
-        properties: {
-          title: Schema.string(),
-          description: Schema.string(),
-          cuisine: Schema.string(),
-          mealType: Schema.string(),
-          difficulty: Schema.string(),
-          prepTime: Schema.number(),
-          cookTime: Schema.number(),
-          servings: Schema.number(),
-          ingredients: Schema.array({ items: Schema.string() }),
-          instructions: Schema.array({ items: Schema.string() }),
-          caloriesPerServing: Schema.number(),
-        },
-      }),
-    }),
-  },
-});
+// ─── Callable references ──────────────────────────────────────────────────────
+
+const _generatePantryRecipes = httpsCallable<
+  { pantryNames: string[]; dietaryPrefs: string[]; allergies: string; count?: number },
+  { recipes: RawRecipe[] }
+>(functions, 'ai_generatePantryRecipes');
+
+const _generatePersonalizedRecipes = httpsCallable<
+  { recentActivity: string; dietaryPrefs: string[]; allergies: string; count?: number },
+  { recipes: RawRecipe[] }
+>(functions, 'ai_generatePersonalizedRecipes');
+
+const _generateDashboardTip = httpsCallable<
+  { summary: string },
+  { tip: string }
+>(functions, 'ai_generateDashboardTip');
+
+// ─── Mapper (unchanged from original) ────────────────────────────────────────
 
 function mapRaw(r: RawRecipe, idx: number): Recipe {
   return {
@@ -58,18 +66,16 @@ function mapRaw(r: RawRecipe, idx: number): Recipe {
   };
 }
 
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 export async function generatePantryRecipes(
   pantryNames: string[],
   dietaryPrefs: string[],
   allergies: string,
   count = 3,
 ): Promise<Recipe[]> {
-  let constraint = '';
-  if (dietaryPrefs.length) constraint += `Dietary: ${dietaryPrefs.join(', ')}. `;
-  if (allergies) constraint += `Avoid allergens: ${allergies}. `;
-  const prompt = `Generate ${count} recipe ideas using these pantry ingredients where possible: ${pantryNames.join(', ')}. ${constraint}Return realistic recipes with full ingredient lists and step-by-step instructions.`;
-  const result = await generateStructuredJson<{ recipes: RawRecipe[] }>(prompt, RECIPES_SCHEMA);
-  return (result.recipes ?? []).map(mapRaw);
+  const result = await _generatePantryRecipes({ pantryNames, dietaryPrefs, allergies, count });
+  return (result.data.recipes ?? []).map(mapRaw);
 }
 
 export async function generatePersonalizedRecipes(
@@ -78,21 +84,11 @@ export async function generatePersonalizedRecipes(
   allergies: string,
   count = 2,
 ): Promise<Recipe[]> {
-  let constraint = '';
-  if (dietaryPrefs.length) constraint += `Dietary: ${dietaryPrefs.join(', ')}. `;
-  if (allergies) constraint += `Avoid allergens: ${allergies}. `;
-  const prompt = `Based on recent kitchen activity: "${recentActivity || 'None yet'}", suggest ${count} personalized recipes. ${constraint}Return full ingredients and instructions.`;
-  const result = await generateStructuredJson<{ recipes: RawRecipe[] }>(prompt, RECIPES_SCHEMA);
-  return (result.recipes ?? []).map(mapRaw);
+  const result = await _generatePersonalizedRecipes({ recentActivity, dietaryPrefs, allergies, count });
+  return (result.data.recipes ?? []).map(mapRaw);
 }
 
 export async function generateDashboardTip(summary: string): Promise<string> {
-  const schema = Schema.object({
-    properties: { tip: Schema.string() },
-  });
-  const result = await generateStructuredJson<{ tip: string }>(
-    `Give one short, actionable pantry tip (max 2 sentences) based on: ${summary}`,
-    schema,
-  );
-  return result.tip ?? '';
+  const result = await _generateDashboardTip({ summary });
+  return result.data.tip ?? '';
 }

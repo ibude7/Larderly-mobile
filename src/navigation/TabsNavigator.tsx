@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import TabBar from './TabBar';
+import CustomTabBar from '../components/navigation/CustomTabBar';
 import { TabParamList } from './types';
 import DashboardScreen from '../screens/DashboardScreen';
 import PantryScreen from '../screens/PantryScreen';
@@ -21,7 +21,7 @@ export default function TabsNavigator() {
           elevation: 0,
         },
       }}
-      tabBar={(props) => <TabBar {...props} />}
+      tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Pantry" component={PantryScreen} />

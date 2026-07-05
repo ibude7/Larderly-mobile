@@ -24,7 +24,8 @@ import Button from '../components/ui/Button';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { Icon } from '../components/ui/Icon';
 import { useAuth } from '../contexts/AuthContext';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
+import { useShopping } from '../contexts/ShoppingContext';
 import { useToast } from '../contexts/ToastContext';
 import { useSync } from '../contexts/SyncContext';
 import { useConfirm } from '../contexts/ConfirmContext';
@@ -77,7 +78,8 @@ export default function SettingsScreen() {
     revokeAllSessions,
     updateUserProfile,
   } = useAuth();
-  const { locations, refetch, items, shoppingList } = usePantryStore();
+  const { locations, refetch, items } = useInventory();
+  const { shoppingList } = useShopping();
   const { showToast } = useToast();
   const { online, syncing, lastSyncedAt } = useSync();
   const confirm = useConfirm();

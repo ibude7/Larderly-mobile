@@ -31,7 +31,7 @@ import Button from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
 import ScannedProductModal, { ScannedItem } from '../components/pantry/ScannedProductModal';
-import { usePantryStore } from '../contexts/PantryContext';
+import { useInventory } from '../contexts/InventoryContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAppColors } from '../hooks/useAppColors';
 import { useTheme } from '../hooks/useTheme';
@@ -70,7 +70,7 @@ const BARCODE_TYPES: BarcodeType[] = [
 
 function productToPrefillBase(
   p: ScannedProduct,
-  locations: ReturnType<typeof usePantryStore>['locations'],
+  locations: ReturnType<typeof useInventory>['locations'],
 ): Partial<PantryItem> {
   return {
     name: p.name,
@@ -86,7 +86,7 @@ function productToPrefillBase(
 
 async function productToPrefillWithAI(
   p: ScannedProduct,
-  locations: ReturnType<typeof usePantryStore>['locations'],
+  locations: ReturnType<typeof useInventory>['locations'],
 ): Promise<Partial<PantryItem>> {
   const notes = await generateProductNote({
     name: p.name,
@@ -112,7 +112,7 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const c = useAppColors();
   const theme = useTheme();
-  const { items, locations, addItem, updateItem, consumeItem } = usePantryStore();
+  const { items, locations, addItem, updateItem, consumeItem } = useInventory();
   const { showToast } = useToast();
 
   const [permission, requestPermission] = useCameraPermissions();

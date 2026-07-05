@@ -266,7 +266,7 @@ export function useShoppingLists() {
   };
 
   const addShoppingItem = async (
-    item: Omit<ShoppingListItem, 'id' | 'user_id' | 'created_at'> & { estimatedPrice?: number },
+    item: Omit<ShoppingListItem, 'id' | 'user_id' | 'created_at'>,
   ) => {
     if (!householdId || !activeListId || !user) return { data: null, error: new Error('Not authenticated') };
     if (!canEdit) return { data: null, error: new Error('View-only access') };

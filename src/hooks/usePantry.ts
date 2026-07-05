@@ -228,6 +228,7 @@ export function usePantry(shopping?: ShoppingBridge) {
     items,
     locations,
     loading,
+    isLoading: loading,
     canEdit,
     refetch,
     addItem,

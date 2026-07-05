@@ -61,6 +61,9 @@ export interface ShoppingListItem {
   is_auto_generated: boolean;
   notes: string;
   created_at: string;
+  estimatedPrice?: number;
+  barcode?: string;
+  store?: string;
 }
 
 export interface MealPlan {

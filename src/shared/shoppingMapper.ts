@@ -18,5 +18,8 @@ export function mapHouseholdItemToShoppingListItem(
     is_auto_generated: false,
     notes: (item.notes as string) ?? '',
     created_at: new Date().toISOString(),
+    estimatedPrice: (item.estimatedPrice as number) ?? 0,
+    barcode: (item.barcode as string) ?? '',
+    store: (item.store as string) ?? '',
   };
 }

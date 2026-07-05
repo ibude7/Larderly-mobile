@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { View, Text, FlatList, Pressable, Image, ScrollView } from 'react-native';
+import { useState, useMemo, useEffect, useReducer } from 'react';
+import { View, Text, FlatList, Pressable, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import AppHeader from '../components/layout/AppHeader';
@@ -12,36 +12,92 @@ import VoiceInputButton from '../components/ui/VoiceInputButton';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
 import ItemDetailModal from '../components/pantry/ItemDetailModal';
-import { usePantryStore } from '../contexts/PantryContext';
+import InventoryCard from '../components/pantry/InventoryCard';
+import PantrySkeletonCard from '../components/pantry/PantrySkeletonCard';
+import { useInventory } from '../contexts/InventoryContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
-import { getCategoryIcon } from '../lib/appIcons';
 import { CATEGORIES, STORAGE_LOCATIONS } from '../lib/categories';
-import { getDaysUntilDate } from '../lib/date';
-import { locationNameFromId, locationIdFromName } from '../lib/inventoryMapper';
+import { locationIdFromName } from '../lib/inventoryMapper';
 import { parsePantryVoiceCommand } from '../lib/voiceCommands';
 import { identifyFoodFromImage } from '../lib/foodIdentify';
-import { PantryItem, StorageLocation } from '../types';
 import { TabParamList } from '../navigation/types';
 import { colors } from '../theme';
+import {
+  useFilteredPantry,
+  ExpirationFilter,
+  StockFilter,
+  SortKey,
+  FilterState,
+} from '../hooks/useFilteredPantry';
 
 type ViewMode = 'grid' | 'list';
 
-type ExpirationFilter = 'All' | 'Fresh' | 'Expiring Soon' | 'Expired';
-type StockFilter = 'All' | 'In Stock' | 'Low Stock' | 'Out of Stock';
-type SortKey = 'expiration' | 'name' | 'quantity' | 'price';
+type FilterAction =
+  | { type: 'SET_SEARCH'; payload: string }
+  | { type: 'SET_LOCATION'; payload: string }
+  | { type: 'SET_CATEGORY'; payload: string }
+  | { type: 'SET_EXPIRATION_FILTER'; payload: ExpirationFilter }
+  | { type: 'SET_STOCK_FILTER'; payload: StockFilter }
+  | { type: 'SET_PRICE_RANGE'; payload: { min?: string; max?: string } }
+  | { type: 'SET_SORT'; payload: SortKey }
+  | { type: 'TOGGLE_FILTERS' }
+  | { type: 'CLEAR_FILTERS' };
 
-function expirationStatus(expiry: string | null): 'fresh' | 'soon' | 'urgent' | 'expired' | 'none' {
-  const days = getDaysUntilDate(expiry);
-  if (days === null) return 'none';
-  if (days < 0) return 'expired';
-  if (days <= 2) return 'urgent';
-  if (days <= 7) return 'soon';
-  return 'fresh';
+const initialFilterState: FilterState & { showFilters: boolean } = {
+  search: '',
+  activeLocation: 'All',
+  activeCategory: 'All',
+  filterExpiration: 'All',
+  filterStock: 'All',
+  filterPriceMin: '',
+  filterPriceMax: '',
+  sortKey: 'expiration',
+  showFilters: false,
+};
+
+function filterReducer(
+  state: FilterState & { showFilters: boolean },
+  action: FilterAction,
+): FilterState & { showFilters: boolean } {
+  switch (action.type) {
+    case 'SET_SEARCH':
+      return { ...state, search: action.payload };
+    case 'SET_LOCATION':
+      return { ...state, activeLocation: action.payload };
+    case 'SET_CATEGORY':
+      return { ...state, activeCategory: action.payload };
+    case 'SET_EXPIRATION_FILTER':
+      return { ...state, filterExpiration: action.payload };
+    case 'SET_STOCK_FILTER':
+      return { ...state, filterStock: action.payload };
+    case 'SET_PRICE_RANGE':
+      return {
+        ...state,
+        filterPriceMin: action.payload.min !== undefined ? action.payload.min : state.filterPriceMin,
+        filterPriceMax: action.payload.max !== undefined ? action.payload.max : state.filterPriceMax,
+      };
+    case 'SET_SORT':
+      return { ...state, sortKey: action.payload };
+    case 'TOGGLE_FILTERS':
+      return { ...state, showFilters: !state.showFilters };
+    case 'CLEAR_FILTERS':
+      return {
+        ...state,
+        filterExpiration: 'All',
+        filterStock: 'All',
+        filterPriceMin: '',
+        filterPriceMax: '',
+        activeLocation: 'All',
+        activeCategory: 'All',
+      };
+    default:
+      return state;
+  }
 }
 
 export default function PantryScreen() {
-  const { items, locations, addItem, updateItem, deleteItem, consumeItem } = usePantryStore();
+  const { items, locations, addItem, updateItem, deleteItem, consumeItem, isLoading } = useInventory();
   const { showToast } = useToast();
   const confirm = useConfirm();
   const navigation = useNavigation<any>();
@@ -53,15 +109,19 @@ export default function PantryScreen() {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [identifying, setIdentifying] = useState(false);
-  const [search, setSearch] = useState('');
-  const [activeLocation, setActiveLocation] = useState('All');
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [filterExpiration, setFilterExpiration] = useState<ExpirationFilter>('All');
-  const [filterStock, setFilterStock] = useState<StockFilter>('All');
-  const [filterPriceMin, setFilterPriceMin] = useState('');
-  const [filterPriceMax, setFilterPriceMax] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('expiration');
-  const [showFilters, setShowFilters] = useState(false);
+
+  const [state, dispatch] = useReducer(filterReducer, initialFilterState);
+  const {
+    search,
+    activeLocation,
+    activeCategory,
+    filterExpiration,
+    filterStock,
+    filterPriceMin,
+    filterPriceMax,
+    sortKey,
+    showFilters,
+  } = state;
 
   const selectedItem = useMemo(
     () => (selectedItemId ? items.find((i) => i.id === selectedItemId) ?? null : null),
@@ -75,64 +135,8 @@ export default function PantryScreen() {
     }
   }, [route.params?.openAdd, navigation]);
 
-  const filtered = useMemo(() => {
-    let arr = [...items];
-    if (activeLocation !== 'All') {
-      arr = arr.filter((i) => locationNameFromId(i.location_id, locations) === activeLocation);
-    }
-    if (activeCategory !== 'All') {
-      arr = arr.filter((i) => (i.category ?? 'other') === activeCategory);
-    }
-    if (filterExpiration !== 'All') {
-      arr = arr.filter((i) => {
-        const stat = expirationStatus(i.expiry_date);
-        if (filterExpiration === 'Expired') return stat === 'expired';
-        if (filterExpiration === 'Expiring Soon') return stat === 'urgent' || stat === 'soon';
-        if (filterExpiration === 'Fresh') return stat === 'fresh' || stat === 'none';
-        return true;
-      });
-    }
-    if (filterStock !== 'All') {
-      arr = arr.filter((i) => {
-        if (filterStock === 'Out of Stock') return i.quantity === 0;
-        if (filterStock === 'Low Stock') return i.quantity > 0 && i.quantity <= i.low_stock_threshold;
-        if (filterStock === 'In Stock') return i.quantity > i.low_stock_threshold;
-        return true;
-      });
-    }
-    if (filterPriceMin) {
-      arr = arr.filter((i) => (i.purchase_price ?? 0) >= Number(filterPriceMin));
-    }
-    if (filterPriceMax) {
-      arr = arr.filter((i) => (i.purchase_price ?? 0) <= Number(filterPriceMax));
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      arr = arr.filter(
-        (i) => i.name.toLowerCase().includes(q) || (i.brand ?? '').toLowerCase().includes(q),
-      );
-    }
-    arr.sort((a, b) => {
-      if (sortKey === 'name') return a.name.localeCompare(b.name);
-      if (sortKey === 'quantity') return b.quantity - a.quantity;
-      if (sortKey === 'price') return (b.purchase_price ?? 0) - (a.purchase_price ?? 0);
-      const da = getDaysUntilDate(a.expiry_date) ?? 9999;
-      const db = getDaysUntilDate(b.expiry_date) ?? 9999;
-      return da - db;
-    });
-    return arr;
-  }, [
-    items,
-    locations,
-    activeLocation,
-    activeCategory,
-    search,
-    sortKey,
-    filterExpiration,
-    filterStock,
-    filterPriceMin,
-    filterPriceMax,
-  ]);
+  // Use the custom hook for filtering and sorting
+  const filtered = useFilteredPantry(items, locations, state);
 
   const hasActiveFilters =
     filterExpiration !== 'All' ||
@@ -237,12 +241,23 @@ export default function PantryScreen() {
     <View className="flex-1 bg-canvas">
       <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
 
-      <FlatList
-        data={filtered}
+      {isLoading ? (
+        <FlatList
+          data={[1, 2, 3, 4, 5, 6]}
+          keyExtractor={(item) => item.toString()}
+          numColumns={viewMode === 'grid' ? 2 : 1}
+          columnWrapperStyle={viewMode === 'grid' ? { gap: 12, paddingHorizontal: 20 } : undefined}
+          contentContainerStyle={{ paddingBottom: 120, gap: 12, paddingTop: 20 }}
+          showsVerticalScrollIndicator={false}
+          renderItem={() => <PantrySkeletonCard listMode={viewMode === 'list'} />}
+        />
+      ) : (
+        <FlatList
+          data={filtered}
         keyExtractor={(item) => item.id}
         numColumns={viewMode === 'grid' ? 2 : 1}
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12, paddingHorizontal: 20 } : undefined}
-        contentContainerStyle={{ paddingBottom: 40, gap: 12 }}
+        contentContainerStyle={{ paddingBottom: 120, gap: 12 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View className="px-5 pb-4 pt-5">
@@ -270,19 +285,19 @@ export default function PantryScreen() {
             </View>
             <TextField
               value={search}
-              onChangeText={setSearch}
+              onChangeText={(v) => dispatch({ type: 'SET_SEARCH', payload: v })}
               placeholder="Search items…"
               icon="search"
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
               <View className="flex-row gap-2">
-                <Chip label="All" active={activeLocation === 'All'} onPress={() => setActiveLocation('All')} />
+                <Chip label="All" active={activeLocation === 'All'} onPress={() => dispatch({ type: 'SET_LOCATION', payload: 'All' })} />
                 {STORAGE_LOCATIONS.map((l) => (
                   <Chip
                     key={l}
                     label={l}
                     active={activeLocation === l}
-                    onPress={() => setActiveLocation(l)}
+                    onPress={() => dispatch({ type: 'SET_LOCATION', payload: l })}
                   />
                 ))}
               </View>
@@ -291,7 +306,7 @@ export default function PantryScreen() {
               <Text className="font-semibold text-muted">
                 {filtered.length} of {items.length} items
               </Text>
-              <Pressable onPress={() => setShowFilters((v) => !v)}>
+              <Pressable onPress={() => dispatch({ type: 'TOGGLE_FILTERS' })}>
                 <Text className="text-sm font-bold text-primary">
                   {showFilters ? 'Hide filters' : 'Filters & sort'}
                   {hasActiveFilters ? ' •' : ''}
@@ -303,13 +318,13 @@ export default function PantryScreen() {
                 <SelectField
                   label="Expiration"
                   value={filterExpiration}
-                  onChange={(v) => setFilterExpiration(v as ExpirationFilter)}
+                  onChange={(v) => dispatch({ type: 'SET_EXPIRATION_FILTER', payload: v as ExpirationFilter })}
                   options={['All', 'Fresh', 'Expiring Soon', 'Expired'].map((v) => ({ label: v, value: v }))}
                 />
                 <SelectField
                   label="Stock"
                   value={filterStock}
-                  onChange={(v) => setFilterStock(v as StockFilter)}
+                  onChange={(v) => dispatch({ type: 'SET_STOCK_FILTER', payload: v as StockFilter })}
                   options={['All', 'In Stock', 'Low Stock', 'Out of Stock'].map((v) => ({ label: v, value: v }))}
                 />
                 <View className="flex-row gap-2">
@@ -317,7 +332,7 @@ export default function PantryScreen() {
                     <TextField
                       label="Min price"
                       value={filterPriceMin}
-                      onChangeText={setFilterPriceMin}
+                      onChangeText={(v) => dispatch({ type: 'SET_PRICE_RANGE', payload: { min: v } })}
                       keyboardType="decimal-pad"
                     />
                   </View>
@@ -325,7 +340,7 @@ export default function PantryScreen() {
                     <TextField
                       label="Max price"
                       value={filterPriceMax}
-                      onChangeText={setFilterPriceMax}
+                      onChangeText={(v) => dispatch({ type: 'SET_PRICE_RANGE', payload: { max: v } })}
                       keyboardType="decimal-pad"
                     />
                   </View>
@@ -333,13 +348,13 @@ export default function PantryScreen() {
                 <SelectField
                   label="Category"
                   value={activeCategory}
-                  onChange={setActiveCategory}
+                  onChange={(v) => dispatch({ type: 'SET_CATEGORY', payload: v })}
                   options={[{ label: 'All', value: 'All' }, ...CATEGORIES.map((c) => ({ label: c.name, value: c.id }))]}
                 />
                 <SelectField
                   label="Sort by"
                   value={sortKey}
-                  onChange={(v) => setSortKey(v as SortKey)}
+                  onChange={(v) => dispatch({ type: 'SET_SORT', payload: v as SortKey })}
                   options={[
                     { label: 'Expiration', value: 'expiration' },
                     { label: 'Name', value: 'name' },
@@ -352,14 +367,7 @@ export default function PantryScreen() {
                     label="Clear filters"
                     variant="ghost"
                     size="sm"
-                    onPress={() => {
-                      setFilterExpiration('All');
-                      setFilterStock('All');
-                      setFilterPriceMin('');
-                      setFilterPriceMax('');
-                      setActiveLocation('All');
-                      setActiveCategory('All');
-                    }}
+                    onPress={() => dispatch({ type: 'CLEAR_FILTERS' })}
                   />
                 )}
               </View>
@@ -378,9 +386,14 @@ export default function PantryScreen() {
               }
               variant="card"
               actionLabel={items.length === 0 ? 'Add your first item' : 'Clear filters'}
-              onAction={() =>
-                items.length === 0 ? setAddOpen(true) : (setSearch(''), setFilterExpiration('All'), setFilterStock('All'), setFilterPriceMin(''), setFilterPriceMax(''), setActiveLocation('All'), setActiveCategory('All'))
-              }
+              onAction={() => {
+                if (items.length === 0) {
+                  setAddOpen(true);
+                } else {
+                  dispatch({ type: 'CLEAR_FILTERS' });
+                  dispatch({ type: 'SET_SEARCH', payload: '' });
+                }
+              }}
               secondaryActionLabel="Open scanner"
               onSecondaryAction={() => navigation.navigate('Scanner', { mode: 'add' })}
             />
@@ -399,6 +412,7 @@ export default function PantryScreen() {
           />
         )}
       />
+      )}
 
       <AddItemModal isOpen={addOpen} onClose={() => setAddOpen(false)} locations={locations} onAdd={addItem} />
 
@@ -412,87 +426,5 @@ export default function PantryScreen() {
         onConsume={consumeItem}
       />
     </View>
-  );
-}
-
-
-function InventoryCard({
-  item,
-  locations,
-  listMode,
-  selectMode,
-  selected,
-  onToggleSelect,
-  onAddStock,
-  onPress,
-}: {
-  item: PantryItem;
-  locations: StorageLocation[];
-  listMode?: boolean;
-  selectMode?: boolean;
-  selected?: boolean;
-  onToggleSelect?: () => void;
-  onAddStock: () => void;
-  onPress: () => void;
-}) {
-  const locName = locations.find((l) => l.id === item.location_id)?.name || '—';
-  const isOut = item.quantity === 0;
-  const isLow = item.quantity <= item.low_stock_threshold;
-  const statusText = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'Full';
-  const statusStyle = isOut ? 'bg-danger/10' : 'bg-primary/10';
-  const statusText2 = isOut ? 'text-danger' : 'text-primary';
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onToggleSelect}
-      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1, flex: listMode ? undefined : 1 }]}
-      className={`rounded-card border bg-surface p-4 ${selected ? 'border-primary' : 'border-line'} ${listMode ? 'mx-5 mb-3' : ''}`}
-    >
-      <View className="min-h-[92px] flex-row justify-between">
-        <View>
-          <View className={`self-start rounded-md px-2 py-1 ${statusStyle}`}>
-            <Text className={`text-[9px] font-bold uppercase tracking-wider ${statusText2}`}>
-              {statusText}
-            </Text>
-          </View>
-          <View className="mt-3 gap-1">
-            <Text className="text-[9px] font-bold uppercase text-muted">
-              QTY <Text className="text-ink">{item.quantity} {item.unit}</Text>
-            </Text>
-            <Text className="text-[9px] font-bold uppercase text-muted">
-              PP <Text className="text-ink">${item.purchase_price?.toFixed(2) || '0.00'}</Text>
-            </Text>
-            <Text numberOfLines={1} className="text-[9px] font-bold uppercase text-muted">
-              LOC <Text className="text-ink">{locName}</Text>
-            </Text>
-          </View>
-        </View>
-        <View className="h-14 w-14 items-center justify-center">
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url }} className="h-full w-full" resizeMode="contain" />
-          ) : (
-            <View className="h-12 w-12 items-center justify-center rounded-full bg-canvas">
-              <Icon name={getCategoryIcon(item.category)} size={24} color={colors.muted} />
-            </View>
-          )}
-        </View>
-      </View>
-
-      <View className="mt-3">
-        <Text numberOfLines={1} className="text-base font-bold text-ink">
-          {item.name}
-        </Text>
-        <View className="mt-3 flex-row items-center justify-between border-t border-canvas pt-3">
-          <Text numberOfLines={1} className="flex-1 text-[10px] font-semibold text-muted">
-            #{item.barcode || item.id.substring(0, 8).toUpperCase()}
-          </Text>
-          <Pressable onPress={onAddStock} hitSlop={8} className="flex-row items-center gap-1">
-            <Icon name="plus" size={12} color={colors.primary} />
-            <Text className="text-[10px] font-bold uppercase tracking-wider text-primary">Add Stock</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Pressable>
   );
 }

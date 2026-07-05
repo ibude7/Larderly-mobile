@@ -1,4 +1,25 @@
-export const lightColors = {
+export interface ColorTokens {
+  readonly primary: string;
+  readonly primaryDark: string;
+  readonly canvas: string;
+  readonly surface: string;
+  readonly surfaceMuted: string;
+  readonly ink: string;
+  readonly line: string;
+  readonly muted: string;
+  readonly success: string;
+  readonly warning: string;
+  readonly danger: string;
+  readonly info: string;
+  readonly primaryGlow: string;
+  readonly violetGlow: string;
+  readonly blurIntensity: number;
+  readonly blurTint: 'light' | 'dark';
+  readonly lineStrong: string;
+  readonly subtle: string;
+}
+
+export const lightColors: ColorTokens = {
   primary: '#E87A3D',
   primaryDark: '#D96B2E',
   canvas: '#F4F2EE',
@@ -11,9 +32,15 @@ export const lightColors = {
   warning: '#E0A63B',
   danger: '#D9524A',
   info: '#3B82F6',
-} as const;
+  primaryGlow: 'rgba(232, 122, 61, 0.15)',
+  violetGlow: 'rgba(139, 92, 246, 0.12)',
+  blurIntensity: 80,
+  blurTint: 'light',
+  lineStrong: '#D1CFC9',
+  subtle: '#8A8680',
+};
 
-export const darkColors = {
+export const darkColors: ColorTokens = {
   primary: '#F08C52',
   primaryDark: '#E87A3D',
   canvas: '#0F0F13',
@@ -26,12 +53,16 @@ export const darkColors = {
   warning: '#F0B84A',
   danger: '#E8605A',
   info: '#5B9CF8',
-} as const;
+  primaryGlow: 'rgba(240, 140, 82, 0.18)',
+  violetGlow: 'rgba(167, 139, 250, 0.15)',
+  blurIntensity: 70,
+  blurTint: 'dark',
+  lineStrong: '#3E3D4A',
+  subtle: '#9E9BA8',
+};
 
-// Keep `colors` as the light default for any file that imports it unchanged
 export const colors = lightColors;
-export type AppColor = keyof typeof lightColors;
-export type ColorTokens = typeof lightColors;
+export type AppColor = keyof ColorTokens;
 export type AppColors = ColorTokens;
 
 export const toastColors = (c: ColorTokens) => ({

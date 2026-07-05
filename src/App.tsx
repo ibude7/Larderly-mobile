@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ToastProvider } from './contexts/ToastContext';
+import { useNetworkSync } from './hooks/useNetworkSync';
 import { ConfirmProvider } from './contexts/ConfirmContext';
 import { ReauthProvider } from './components/auth/ReauthDialog';
 import { PreferencesProvider, usePrefs } from './contexts/PreferencesContext';
@@ -35,6 +36,16 @@ function ThemeBridge() {
     setColorScheme(prefs.theme);
   }, [prefs.theme, setColorScheme]);
 
+  return null;
+}
+
+/**
+ * Mounts the NetInfo ↔ Firestore network listener.
+ * Must sit inside ToastProvider so it can call showToast/removeToast.
+ * Renders nothing — side-effects only.
+ */
+function NetworkSync() {
+  useNetworkSync();
   return null;
 }
 
@@ -82,6 +93,7 @@ export default function App() {
           <PreferencesProvider>
             <ThemeBridge />
             <ToastProvider>
+              <NetworkSync />
               <ConfirmProvider>
                 <AuthProvider>
                   <ReauthProvider>

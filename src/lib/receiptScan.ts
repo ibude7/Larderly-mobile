@@ -1,4 +1,13 @@
-import { generateStructuredJson, Schema } from './aiCore';
+/**
+ * Receipt scanning — client proxy.
+ *
+ * Delegates to the `ai_parseReceipt` Cloud Function instead of calling the
+ * Vertex AI Gemini API directly. The exported `ReceiptItem` type and
+ * `parseReceiptImage` signature are unchanged.
+ */
+
+import { httpsCallable } from '@react-native-firebase/functions';
+import { functions } from './firebase';
 
 export interface ReceiptItem {
   name: string;
@@ -6,25 +15,12 @@ export interface ReceiptItem {
   price: number;
 }
 
-const RECEIPT_SCHEMA = Schema.object({
-  properties: {
-    items: Schema.array({
-      items: Schema.object({
-        properties: {
-          name: Schema.string(),
-          quantity: Schema.number(),
-          price: Schema.number(),
-        },
-      }),
-    }),
-  },
-});
+const _parseReceipt = httpsCallable<
+  { base64: string; mimeType: string },
+  { items: ReceiptItem[] }
+>(functions, 'ai_parseReceipt');
 
 export async function parseReceiptImage(base64: string, mimeType: string): Promise<ReceiptItem[]> {
-  const result = await generateStructuredJson<{ items: ReceiptItem[] }>(
-    'Extract grocery items, quantities, and prices from this receipt image. Return JSON with an items array.',
-    RECEIPT_SCHEMA,
-    { base64, mimeType },
-  );
-  return result.items ?? [];
+  const result = await _parseReceipt({ base64, mimeType });
+  return result.data.items ?? [];
 }
