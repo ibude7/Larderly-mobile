@@ -18,6 +18,7 @@ import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import SelectField from '../components/ui/SelectField';
 import { Icon, IconName } from '../components/ui/Icon';
+import Chip from '../components/ui/Chip';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
@@ -362,31 +363,15 @@ export default function OnboardingScreen() {
         return (
           <ScrollView className="flex-1 mt-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
             <View className="flex-row flex-wrap gap-3">
-              {DIET_OPTIONS.map((d) => {
-                const selected = dietaryPrefs.includes(d.name);
-                return (
-                  <Pressable
-                    key={d.name}
-                    onPress={() => toggleDiet(d.name)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      borderRadius: 100,
-                      backgroundColor: selected ? c.primary : c.surface,
-                      borderWidth: selected ? 0 : 1,
-                      borderColor: c.line,
-                      gap: 8,
-                    }}
-                  >
-                    <Icon name={d.icon} size={16} color={selected ? '#FFFFFF' : c.ink} />
-                    <Text style={{ fontWeight: selected ? '700' : '500', color: selected ? '#FFFFFF' : c.ink }}>
-                      {d.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {DIET_OPTIONS.map((d) => (
+                <Chip
+                  key={d.name}
+                  label={d.name}
+                  icon={d.icon}
+                  active={dietaryPrefs.includes(d.name)}
+                  onPress={() => toggleDiet(d.name)}
+                />
+              ))}
             </View>
             <View className="mt-6">
               <TextField label="Allergies" value={allergies} onChangeText={setAllergies} placeholder="e.g. peanuts, shellfish" />
@@ -398,31 +383,15 @@ export default function OnboardingScreen() {
         return (
           <ScrollView className="flex-1 mt-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
             <View className="flex-row flex-wrap gap-3 mb-6">
-              {STORES.map((s) => {
-                const selected = stores.includes(s.name);
-                return (
-                  <Pressable
-                    key={s.name}
-                    onPress={() => toggleStore(s.name)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      borderRadius: 100,
-                      backgroundColor: selected ? c.primary : c.surface,
-                      borderWidth: selected ? 0 : 1,
-                      borderColor: c.line,
-                      gap: 8,
-                    }}
-                  >
-                    <Icon name={s.icon} size={16} color={selected ? '#FFFFFF' : c.ink} />
-                    <Text style={{ fontWeight: selected ? '700' : '500', color: selected ? '#FFFFFF' : c.ink }}>
-                      {s.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {STORES.map((s) => (
+                <Chip
+                  key={s.name}
+                  label={s.name}
+                  icon={s.icon}
+                  active={stores.includes(s.name)}
+                  onPress={() => toggleStore(s.name)}
+                />
+              ))}
             </View>
             <View className="flex-row gap-3 items-end">
               <View className="flex-1">

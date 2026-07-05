@@ -7,6 +7,7 @@ import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import TextField from '../components/ui/TextField';
 import SelectField from '../components/ui/SelectField';
+import Chip from '../components/ui/Chip';
 import VoiceInputButton from '../components/ui/VoiceInputButton';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
@@ -275,9 +276,9 @@ export default function PantryScreen() {
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
               <View className="flex-row gap-2">
-                <FilterChip label="All" active={activeLocation === 'All'} onPress={() => setActiveLocation('All')} />
+                <Chip label="All" active={activeLocation === 'All'} onPress={() => setActiveLocation('All')} />
                 {STORAGE_LOCATIONS.map((l) => (
-                  <FilterChip
+                  <Chip
                     key={l}
                     label={l}
                     active={activeLocation === l}
@@ -414,24 +415,6 @@ export default function PantryScreen() {
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={`rounded-full px-3 py-1.5 ${active ? 'bg-primary' : 'border border-line bg-surface'}`}
-    >
-      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-muted'}`}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function InventoryCard({
   item,

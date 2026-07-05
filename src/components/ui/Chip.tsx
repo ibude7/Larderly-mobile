@@ -1,4 +1,3 @@
-import React from 'react';
 import { Pressable, Text } from 'react-native';
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 import { useAppColors } from '../../hooks/useAppColors';
@@ -31,7 +30,7 @@ export default function Chip({ label, active, onPress, emoji, icon, count, varia
         style={[
           animStyle,
           {
-            flexDirection: 'row', alignItems: 'center', gap: 6,
+            flexDirection: 'row', alignItems: 'center', gap: 5,
             paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100,
             backgroundColor: active ? accentColor : 'transparent',
             borderWidth: 1,
@@ -39,7 +38,7 @@ export default function Chip({ label, active, onPress, emoji, icon, count, varia
           }
         ]}
       >
-        {icon ? <Icon name={icon} size={14} color={active ? '#FFFFFF' : c.muted} /> : null}
+        {icon ? <Icon name={icon} size={14} color={active ? '#FFFFFF' : c.ink} /> : null}
         {emoji ? <Text style={{ fontSize: 13 }}>{emoji}</Text> : null}
         <Text style={{
           fontSize: 12, fontWeight: '700',
