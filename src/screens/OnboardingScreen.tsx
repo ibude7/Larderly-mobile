@@ -9,6 +9,8 @@ import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import SelectField from '../components/ui/SelectField';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
 import { categoryFromName, STORAGE_LOCATIONS } from '../lib/categories';
@@ -42,7 +44,9 @@ interface ScannedItem {
 
 export default function OnboardingScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { user, userProfile, householdId, updateUserProfile, updateUserPreferences } = useAuth();
+  const { user } = useAuth();
+  const { householdId } = useHousehold();
+  const { userProfile, updateUserProfile, updateUserPreferences } = useProfile();
   const { showToast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);

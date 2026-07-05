@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, orderBy, limit } from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import type { ActivityEvent } from '../lib/insights';
 
 function mapHouseholdActivity(id: string, data: Record<string, unknown>): ActivityEvent & { id: string } {
@@ -26,7 +26,7 @@ function mapHouseholdActivity(id: string, data: Record<string, unknown>): Activi
 }
 
 export function useActivity(limitCount = 50): ActivityEvent[] {
-  const { householdId } = useAuth();
+  const { householdId } = useHousehold();
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {

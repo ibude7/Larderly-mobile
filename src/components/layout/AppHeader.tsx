@@ -2,6 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProfile } from '../../contexts/ProfileContext';
 import { useSync } from '../../contexts/SyncContext';
 import { AppLogoMark } from '../ui/AppLogo';
 import { Icon } from '../ui/Icon';
@@ -39,7 +40,8 @@ interface AppHeaderProps {
 export default function AppHeader({ title, onBack, onOpenSettings, right }: AppHeaderProps) {
   const c = useAppColors();
   const insets = useSafeAreaInsets();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const hasTopBanner = useHasTopBanner();
   const mainHeaderTop = hasTopBanner ? 8 : insets.top + 8;
 

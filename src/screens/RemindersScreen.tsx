@@ -19,7 +19,7 @@ import Button from '../components/ui/Button';
 import TextField from '../components/ui/TextField';
 import SelectField from '../components/ui/SelectField';
 import { Icon } from '../components/ui/Icon';
-import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
 import { Reminder } from '../types/household';
@@ -28,7 +28,7 @@ import { useAppColors } from '../hooks/useAppColors';
 export default function RemindersScreen() {
   const c = useAppColors();
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { householdId } = useAuth();
+  const { householdId } = useHousehold();
   const { showToast } = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showAdd, setShowAdd] = useState(false);

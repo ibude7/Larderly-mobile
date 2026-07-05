@@ -10,6 +10,8 @@ import {
 import TextField from '../ui/TextField';
 import Button from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { useHousehold } from '../../contexts/HouseholdContext';
+import { useProfile } from '../../contexts/ProfileContext';
 import type { Role } from '../../types/household';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
@@ -19,7 +21,9 @@ import { recordActivity } from '../../lib/activity';
 const DIET_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Pescatarian', 'Halal', 'Kosher'];
 
 export default function HouseholdSettingsSection() {
-  const { user, householdId, role, updateUserPreferences } = useAuth();
+  const { user } = useAuth();
+  const { householdId, role } = useHousehold();
+  const { updateUserPreferences } = useProfile();
   const { showToast } = useToast();
   const confirm = useConfirm();
   const [household, setHousehold] = useState<{

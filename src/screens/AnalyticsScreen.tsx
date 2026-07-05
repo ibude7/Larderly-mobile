@@ -6,7 +6,7 @@ import { collection, onSnapshot } from '@react-native-firebase/firestore';
 import AppHeader from '../components/layout/AppHeader';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import { usePrefs } from '../contexts/PreferencesContext';
 import { formatCurrency } from '../lib/format';
 import { CATEGORIES, categoryFromName } from '../lib/categories';
@@ -28,7 +28,7 @@ type Period = (typeof PERIODS)[number];
 
 export default function AnalyticsScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { householdId } = useAuth();
+  const { householdId } = useHousehold();
   const { prefs } = usePrefs();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [lists, setLists] = useState<ShoppingListSummary[]>([]);

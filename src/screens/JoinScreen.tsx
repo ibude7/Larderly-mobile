@@ -3,19 +3,20 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { RootStackNavigationProp, RootStackParamList } from '../navigation/types';
-import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from '@react-native-firebase/firestore';
+import { doc, getDoc } from '@react-native-firebase/firestore';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
-import { recordActivity } from '../lib/activity';
 
 export default function JoinScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
   const route = useRoute<RouteProp<RootStackParamList, 'Join'>>();
   const code = route.params?.code?.toUpperCase() ?? '';
-  const { user, setHouseholdId } = useAuth();
+  const { user } = useAuth();
+  const { joinHousehold } = useHousehold();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [householdName, setHouseholdName] = useState<string | null>(null);
@@ -31,29 +32,7 @@ export default function JoinScreen() {
     if (!user || !code) return;
     setLoading(true);
     try {
-      const codeSnap = await getDoc(doc(db, 'inviteCodes', code));
-      if (!codeSnap.exists()) {
-        showToast('Invalid or expired invite code', 'error');
-        return;
-      }
-      const householdId = codeSnap.data()?.householdId as string;
-      await updateDoc(doc(db, 'households', householdId), {
-        members: arrayUnion(user.uid),
-        [`memberRoles.${user.uid}`]: 'editor',
-        [`memberNames.${user.uid}`]: user.displayName || user.email || 'Member',
-        updatedAt: serverTimestamp(),
-      });
-      await updateDoc(doc(db, 'users', user.uid), {
-        householdId,
-        updated_at: serverTimestamp(),
-      });
-      await recordActivity(householdId, {
-        verb: 'member.joined',
-        target: 'household',
-        actorId: user.uid,
-        actorName: user.displayName || user.email || 'Member',
-      });
-      setHouseholdId(householdId);
+      await joinHousehold(code);
       showToast('Welcome to the household!', 'success');
       navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
     } catch (err) {

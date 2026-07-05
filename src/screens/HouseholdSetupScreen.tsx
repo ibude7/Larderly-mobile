@@ -1,37 +1,18 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  arrayUnion,
-} from '@react-native-firebase/firestore';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
-import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import { useToast } from '../contexts/ToastContext';
-import { db } from '../lib/firebase';
-import { seedHouseholdStorageLocations } from '../lib/householdStorage';
-import { recordActivity } from '../lib/activity';
 import { useAppColors } from '../hooks/useAppColors';
 
 type Mode = 'choice' | 'create' | 'join';
 
-function generateInviteCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let out = '';
-  for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
-}
-
 export default function HouseholdSetupScreen() {
   const c = useAppColors();
-  const { user, setHouseholdId } = useAuth();
+  const { createHousehold: ctxCreateHousehold, joinHousehold: ctxJoinHousehold } = useHousehold();
   const { showToast } = useToast();
   const [mode, setMode] = useState<Mode>('choice');
   const [name, setName] = useState('');
@@ -39,47 +20,10 @@ export default function HouseholdSetupScreen() {
   const [loading, setLoading] = useState(false);
 
   const createHousehold = async () => {
-    if (!name.trim() || !user) return;
+    if (!name.trim()) return;
     setLoading(true);
     try {
-      const newHouseholdRef = doc(collection(db, 'households'));
-      const householdId = newHouseholdRef.id;
-      const code = generateInviteCode();
-
-      await setDoc(newHouseholdRef, {
-        name: name.trim(),
-        ownerId: user.uid,
-        members: [user.uid],
-        memberRoles: { [user.uid]: 'admin' },
-        memberNames: { [user.uid]: user.displayName || user.email || 'Owner' },
-        inviteCode: code,
-        dietaryPrefs: [],
-        allergies: '',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      await setDoc(doc(db, 'inviteCodes', code), {
-        householdId,
-        ownerId: user.uid,
-        createdAt: serverTimestamp(),
-      });
-
-      await updateDoc(doc(db, 'users', user.uid), {
-        householdId,
-        updated_at: serverTimestamp(),
-      });
-
-      await seedHouseholdStorageLocations(householdId, user.uid);
-
-      await recordActivity(householdId, {
-        verb: 'member.joined',
-        target: name.trim(),
-        actorId: user.uid,
-        actorName: user.displayName || user.email || 'Owner',
-      });
-
-      setHouseholdId(householdId);
+      const code = await ctxCreateHousehold(name);
       showToast(`Household ready — invite code: ${code}`, 'success');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not create household', 'error');
@@ -89,33 +33,10 @@ export default function HouseholdSetupScreen() {
   };
 
   const joinHousehold = async () => {
-    if (!inviteCode.trim() || !user) return;
+    if (!inviteCode.trim()) return;
     setLoading(true);
     try {
-      const code = inviteCode.trim().toUpperCase();
-      const codeSnap = await getDoc(doc(db, 'inviteCodes', code));
-      if (!codeSnap.exists()) {
-        showToast('Invalid invite code', 'error');
-        return;
-      }
-      const targetHouseholdId = codeSnap.data()?.householdId as string;
-      await updateDoc(doc(db, 'households', targetHouseholdId), {
-        members: arrayUnion(user.uid),
-        [`memberRoles.${user.uid}`]: 'editor',
-        [`memberNames.${user.uid}`]: user.displayName || user.email || 'Member',
-        updatedAt: serverTimestamp(),
-      });
-      await updateDoc(doc(db, 'users', user.uid), {
-        householdId: targetHouseholdId,
-        updated_at: serverTimestamp(),
-      });
-      await recordActivity(targetHouseholdId, {
-        verb: 'member.joined',
-        target: 'household',
-        actorId: user.uid,
-        actorName: user.displayName || user.email || 'Member',
-      });
-      setHouseholdId(targetHouseholdId);
+      await ctxJoinHousehold(inviteCode);
       showToast('Joined household', 'success');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not join household', 'error');

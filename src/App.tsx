@@ -19,12 +19,15 @@ import { ReauthProvider } from './components/auth/ReauthDialog';
 import { PreferencesProvider, usePrefs } from './contexts/PreferencesContext';
 import { SyncProvider } from './contexts/SyncContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { HouseholdProvider } from './contexts/HouseholdContext';
+import { ProfileProvider } from './contexts/ProfileContext';
 import { PantryProvider } from './contexts/PantryContext';
 import { MealPlansProvider } from './contexts/MealPlansContext';
 import ToastContainer from './components/ui/ToastContainer';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import RootNavigator from './navigation/RootNavigator';
 import { useTheme } from './hooks/useTheme';
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -96,13 +99,17 @@ export default function App() {
               <NetworkSync />
               <ConfirmProvider>
                 <AuthProvider>
-                  <ReauthProvider>
-                    <PantryProvider>
-                      <MealPlansProvider>
-                        <ThemedRoot />
-                      </MealPlansProvider>
-                    </PantryProvider>
-                  </ReauthProvider>
+                  <HouseholdProvider>
+                    <ProfileProvider>
+                      <ReauthProvider>
+                        <PantryProvider>
+                          <MealPlansProvider>
+                            <ThemedRoot />
+                          </MealPlansProvider>
+                        </PantryProvider>
+                      </ReauthProvider>
+                    </ProfileProvider>
+                  </HouseholdProvider>
                 </AuthProvider>
               </ConfirmProvider>
             </ToastProvider>

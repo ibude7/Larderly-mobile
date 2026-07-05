@@ -6,12 +6,16 @@ import { useNavigation } from '@react-navigation/native';
 import AppHeader from '../components/layout/AppHeader';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
-import TextField from '../components/ui/TextField';
-import SelectField from '../components/ui/SelectField';
 import Modal from '../components/ui/Modal';
+import SelectField from '../components/ui/SelectField';
+import TextField from '../components/ui/TextField';
 import VoiceInputButton from '../components/ui/VoiceInputButton';
 import SmartSuggestionsCard from '../components/dashboard/SmartSuggestionsCard';
 import ShoppingModeOverlay from '../components/shopping/ShoppingModeOverlay';
+import ShoppingCategoryGroup from '../components/shopping/ShoppingCategoryGroup';
+import AddItemSheet from '../components/shopping/AddItemSheet';
+import ListPickerSheet from '../components/shopping/ListPickerSheet';
+import ListSettingsSheet from '../components/shopping/ListSettingsSheet';
 import { Icon } from '../components/ui/Icon';
 import { useInventory } from '../contexts/InventoryContext';
 import { useShopping } from '../contexts/ShoppingContext';
@@ -21,20 +25,16 @@ import { useConfirm } from '../contexts/ConfirmContext';
 import { usePrefs } from '../contexts/PreferencesContext';
 import { useActivity } from '../hooks/useActivity';
 import { formatCurrency } from '../lib/format';
-import { CATEGORIES, categoryFromName } from '../lib/categories';
+import { categoryFromName } from '../lib/categories';
 import { parseReceiptImage } from '../lib/receiptScan';
 import { parseShoppingVoiceCommand } from '../lib/voiceCommands';
 import { pantryItemToInventory } from '../lib/pantryInsights';
-import SwipeableShoppingRow from '../components/shopping/SwipeableShoppingRow';
 import { colors } from '../theme';
 
 export default function ShoppingScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const {
-    items: pantryItems,
-    addItem,
-  } = useInventory();
+  const { items: pantryItems, addItem } = useInventory();
   const {
     lists,
     activeList,
@@ -60,6 +60,7 @@ export default function ShoppingScreen() {
   const confirm = useConfirm();
   const { prefs } = usePrefs();
 
+  // ── UI state ────────────────────────────────────────────────────────────────
   const [shopMode, setShopMode] = useState(false);
   const [showNewList, setShowNewList] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -72,26 +73,25 @@ export default function ShoppingScreen() {
   const [addPrice, setAddPrice] = useState('');
   const [addQty, setAddQty] = useState('1');
   const [showListPicker, setShowListPicker] = useState(false);
-  const [showListSettings, setShowListSettings] = useState(false);
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [listTab, setListTab] = useState<'active' | 'history' | 'templates'>('active');
+  const [showListSettings, setShowListSettings] = useState(false);
   const [settingsBudget, setSettingsBudget] = useState('');
   const [settingsStore, setSettingsStore] = useState('');
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [scanningReceipt, setScanningReceipt] = useState(false);
+
+  // ── Derived data ─────────────────────────────────────────────────────────────
   const shoppingNames = useMemo(
     () => shoppingList.filter((s) => !s.is_checked).map((s) => ({ productName: s.name })),
     [shoppingList],
   );
-
   const inventory = useMemo(() => pantryItems.map(pantryItemToInventory), [pantryItems]);
   const activeLists = lists.filter((l) => !l.isTemplate && !l.archivedAt);
   const historyLists = lists.filter((l) => !l.isTemplate && l.archivedAt);
   const templates = lists.filter((l) => l.isTemplate);
-
   const unchecked = useMemo(() => shoppingList.filter((i) => !i.is_checked), [shoppingList]);
   const checked = useMemo(() => shoppingList.filter((i) => i.is_checked), [shoppingList]);
   const spent = checked.reduce((s, i) => s + (i.estimatedPrice || 0) * i.quantity, 0);
-
   const grouped = useMemo(() => {
     const groups: Record<string, typeof unchecked> = {};
     unchecked.forEach((item) => {
@@ -104,6 +104,7 @@ export default function ShoppingScreen() {
   const budget = activeList?.budget ?? 0;
   const overBudget = budget > 0 && spent > budget;
 
+  // ── Budget notification ───────────────────────────────────────────────────
   useEffect(() => {
     if (!user || !activeListId || !budget || !prefs.notifications.budget) return;
     const ratio = spent / budget;
@@ -121,6 +122,7 @@ export default function ShoppingScreen() {
     });
   }, [spent, budget, activeListId, user, prefs.notifications.budget, activeList?.name, showToast]);
 
+  // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleCreateList = async () => {
     if (!newListName.trim()) return;
     const { error } = await createList(newListName.trim(), {
@@ -271,11 +273,13 @@ export default function ShoppingScreen() {
     setShowListSettings(true);
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <View className="flex-1 bg-canvas">
       <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        {/* List title + budget summary */}
         <View className="mb-4 flex-row items-center justify-between">
           <View className="flex-1">
             <Pressable onPress={() => setShowListPicker(true)} className="flex-row items-center gap-2">
@@ -299,25 +303,40 @@ export default function ShoppingScreen() {
           </Pressable>
         </View>
 
+        {/* List action buttons */}
         <View className="mb-4 flex-row flex-wrap gap-2">
           <Button label="New list" icon="plus" size="sm" variant="secondary" onPress={() => setShowNewList(true)} />
           <Button label="Templates" icon="box" size="sm" variant="ghost" onPress={() => setShowTemplatePicker(true)} />
           {canEdit && activeListId && (
             <>
               <Button label="Settings" icon="settings" size="sm" variant="ghost" onPress={openSettings} />
-              <Button label="Archive" icon="box" size="sm" variant="ghost" onPress={async () => {
-                if (!activeListId) return;
-                await archiveList(activeListId);
-                showToast('List archived', 'info');
-              }} />
+              <Button
+                label="Archive"
+                icon="box"
+                size="sm"
+                variant="ghost"
+                onPress={async () => {
+                  if (!activeListId) return;
+                  await archiveList(activeListId);
+                  showToast('List archived', 'info');
+                }}
+              />
             </>
           )}
         </View>
 
+        {/* Receipt scan + voice input */}
         {canEdit && (
           <View className="mb-4 flex-row gap-2">
             <View className="flex-1">
-              <Button label={scanningReceipt ? 'Scanning…' : 'Scan receipt'} icon="camera" variant="secondary" size="sm" onPress={handleReceiptScan} loading={scanningReceipt} />
+              <Button
+                label={scanningReceipt ? 'Scanning…' : 'Scan receipt'}
+                icon="camera"
+                variant="secondary"
+                size="sm"
+                onPress={handleReceiptScan}
+                loading={scanningReceipt}
+              />
             </View>
             <View className="flex-1">
               <VoiceInputButton label="Voice add" onTranscript={handleVoice} />
@@ -327,26 +346,26 @@ export default function ShoppingScreen() {
 
         <SmartSuggestionsCard inventory={inventory} activity={activity} shoppingItems={shoppingNames} />
 
+        {/* Item list */}
         {unchecked.length === 0 && checked.length === 0 ? (
-          <EmptyState icon="shopping" title="List is empty" description="Add items manually, by voice, or scan a receipt." actionLabel="Add item" onAction={() => setAdding(true)} />
+          <EmptyState
+            icon="shopping"
+            title="List is empty"
+            description="Add items manually, by voice, or scan a receipt."
+            actionLabel="Add item"
+            onAction={() => setAdding(true)}
+          />
         ) : (
           <>
             {grouped.map(([cat, catItems]) => (
-              <View key={cat} className="mb-4">
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
-                  {CATEGORIES.find((c) => c.id === cat)?.name ?? cat}
-                </Text>
-                {catItems.map((item) => (
-                  <SwipeableShoppingRow
-                    key={item.id}
-                    item={item}
-                    canEdit={canEdit}
-                    shopMode={shopMode}
-                    onToggle={toggleShoppingItem}
-                    onDelete={deleteShoppingItem}
-                  />
-                ))}
-              </View>
+              <ShoppingCategoryGroup
+                key={cat}
+                category={cat}
+                items={catItems}
+                canEdit={canEdit}
+                onToggle={toggleShoppingItem}
+                onDelete={deleteShoppingItem}
+              />
             ))}
             {checked.length > 0 && (
               <View className="mt-4">
@@ -358,30 +377,39 @@ export default function ShoppingScreen() {
           </>
         )}
 
+        {/* Add item inline form */}
         {adding && (
-          <View className="mt-6 rounded-2xl border border-line bg-surface p-4">
-            <TextField label="Item name" value={addName} onChangeText={setAddName} />
-            <View className="flex-row gap-3">
-              <View className="flex-1"><TextField label="Qty" value={addQty} onChangeText={setAddQty} keyboardType="numeric" /></View>
-              <View className="flex-1"><TextField label="Price est." value={addPrice} onChangeText={setAddPrice} keyboardType="decimal-pad" /></View>
-            </View>
-            <View className="mt-3 flex-row gap-2">
-              <Button label="Add" onPress={handleAddItem} className="flex-1" />
-              <Button label="Cancel" variant="ghost" onPress={() => setAdding(false)} className="flex-1" />
-            </View>
-          </View>
+          <AddItemSheet
+            name={addName}
+            qty={addQty}
+            price={addPrice}
+            onChangeName={setAddName}
+            onChangeQty={setAddQty}
+            onChangePrice={setAddPrice}
+            onAdd={handleAddItem}
+            onCancel={() => setAdding(false)}
+          />
         )}
-        {!adding && canEdit && <Button label="Add item" icon="plus" variant="secondary" onPress={() => setAdding(true)} className="mt-6" />}
+        {!adding && canEdit && (
+          <Button label="Add item" icon="plus" variant="secondary" onPress={() => setAdding(true)} className="mt-6" />
+        )}
       </ScrollView>
 
+      {/* New list modal */}
       <Modal isOpen={showNewList} onClose={() => setShowNewList(false)} title="New shopping list">
         <TextField label="List name" value={newListName} onChangeText={setNewListName} placeholder="Weekly groceries" />
         <TextField label="Budget (optional)" value={newListBudget} onChangeText={setNewListBudget} keyboardType="decimal-pad" />
         <View className="mt-3 flex-row gap-2">
-          <Pressable onPress={() => setNewListTemplate((v) => !v)} className={`rounded-full px-4 py-2 ${newListTemplate ? 'bg-primary' : 'border border-line'}`}>
+          <Pressable
+            onPress={() => setNewListTemplate((v) => !v)}
+            className={`rounded-full px-4 py-2 ${newListTemplate ? 'bg-primary' : 'border border-line'}`}
+          >
             <Text className={newListTemplate ? 'text-white' : 'text-ink'}>Template</Text>
           </Pressable>
-          <Pressable onPress={() => setNewListRecurring((v) => !v)} className={`rounded-full px-4 py-2 ${newListRecurring ? 'bg-primary' : 'border border-line'}`}>
+          <Pressable
+            onPress={() => setNewListRecurring((v) => !v)}
+            className={`rounded-full px-4 py-2 ${newListRecurring ? 'bg-primary' : 'border border-line'}`}
+          >
             <Text className={newListRecurring ? 'text-white' : 'text-ink'}>Recurring</Text>
           </Pressable>
         </View>
@@ -400,13 +428,7 @@ export default function ShoppingScreen() {
         <Button label="Create" onPress={handleCreateList} className="mt-4" />
       </Modal>
 
-      <Modal isOpen={showListSettings} onClose={() => setShowListSettings(false)} title="List settings">
-        <TextField label="Budget" value={settingsBudget} onChangeText={setSettingsBudget} keyboardType="decimal-pad" />
-        <TextField label="Store" value={settingsStore} onChangeText={setSettingsStore} placeholder="Costco" />
-        <Button label="Save" onPress={handleSaveSettings} className="mt-4" />
-        <Button label="Delete list" variant="danger" onPress={handleDeleteList} className="mt-2" />
-      </Modal>
-
+      {/* Template picker modal */}
       <Modal isOpen={showTemplatePicker} onClose={() => setShowTemplatePicker(false)} title="Use a template">
         {templates.length === 0 ? (
           <Text className="text-sm text-muted">No templates yet. Create a list and mark it as a template.</Text>
@@ -431,29 +453,34 @@ export default function ShoppingScreen() {
         )}
       </Modal>
 
-      <Modal isOpen={showListPicker} onClose={() => setShowListPicker(false)} title="Your lists">
-        <View className="mb-3 flex-row gap-2">
-          {(['active', 'history', 'templates'] as const).map((t) => (
-            <Pressable key={t} onPress={() => setListTab(t)} className={`rounded-full px-3 py-1.5 capitalize ${listTab === t ? 'bg-ink' : 'border border-line'}`}>
-              <Text className={listTab === t ? 'text-xs font-semibold text-white' : 'text-xs text-ink'}>{t}</Text>
-            </Pressable>
-          ))}
-        </View>
-        {(listTab === 'active' ? activeLists : listTab === 'history' ? historyLists : templates).map((list) => (
-          <Pressable
-            key={list.id}
-            onPress={() => {
-              if (!list.isTemplate) setActiveListId(list.id);
-              setShowListPicker(false);
-            }}
-            className={`mb-2 rounded-xl border px-4 py-3 ${list.id === activeListId ? 'border-primary bg-primary/5' : 'border-line'}`}
-          >
-            <Text className="font-semibold text-ink">{list.name}</Text>
-            {list.budget ? <Text className="text-xs text-muted">Budget {formatCurrency(list.budget, prefs.currency)}</Text> : null}
-          </Pressable>
-        ))}
-      </Modal>
+      {/* List picker sheet */}
+      <ListPickerSheet
+        isOpen={showListPicker}
+        onClose={() => setShowListPicker(false)}
+        activeListId={activeListId}
+        activeLists={activeLists}
+        historyLists={historyLists}
+        templates={templates}
+        tab={listTab}
+        onTabChange={setListTab}
+        onSelectList={(id, isTemplate) => {
+          if (!isTemplate) setActiveListId(id);
+        }}
+      />
 
+      {/* List settings sheet */}
+      <ListSettingsSheet
+        isOpen={showListSettings}
+        onClose={() => setShowListSettings(false)}
+        budget={settingsBudget}
+        store={settingsStore}
+        onChangeBudget={setSettingsBudget}
+        onChangeStore={setSettingsStore}
+        onSave={handleSaveSettings}
+        onDelete={handleDeleteList}
+      />
+
+      {/* Shop mode overlay */}
       <ShoppingModeOverlay
         visible={shopMode}
         list={activeList ? { name: activeList.name, budget: activeList.budget } : null}

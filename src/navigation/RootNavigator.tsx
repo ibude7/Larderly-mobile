@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import { View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import LoadingScreen from '../screens/LoadingScreen';
 import AuthScreen from '../screens/AuthScreen';
 import TabsNavigator from './TabsNavigator';
@@ -38,7 +40,9 @@ function MainWithBanners() {
 }
 
 export default function RootNavigator() {
-  const { user, loading, householdId, userProfile } = useAuth();
+  const { user, loading } = useAuth();
+  const { householdId } = useHousehold();
+  const { userProfile } = useProfile();
   const c = useAppColors();
   const navTheme = useMemo<Theme>(
     () => ({

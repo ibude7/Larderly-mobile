@@ -28,7 +28,7 @@ import { useInventory } from '../contexts/InventoryContext';
 import { useShopping } from '../contexts/ShoppingContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useActivity } from '../hooks/useActivity';
-import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
 import { useAppColors } from '../hooks/useAppColors';
 import { useTheme } from '../hooks/useTheme';
 import { db } from '../lib/firebase';
@@ -49,7 +49,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation<TabScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const c = useAppColors();
-  const { householdId } = useAuth();
+  const { householdId } = useHousehold();
   const { itemCount, lowStockItems, expiringSoonItems, uncheckedCount, totalValue } =
     useDashboardStats();
   const { items, locations, isLoading } = useInventory();

@@ -14,10 +14,14 @@ import { db } from '../lib/firebase';
 import { mapDoc } from '../lib/firestore';
 import { MealPlan } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { bumpCounter } from '../lib/achievements';
 
 export function useMealPlans() {
-  const { user, profile, householdId } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { householdId } = useHousehold();
   const [meals, setMeals] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(true);
 

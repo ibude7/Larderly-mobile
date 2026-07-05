@@ -14,6 +14,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { recordActivity } from '../lib/activity';
 import { bumpCounter } from '../lib/achievements';
 import { categoryFromName } from '../lib/categories';
@@ -43,7 +45,9 @@ function mapListDoc(id: string, data: Record<string, unknown>): ShoppingListMeta
 }
 
 export function useShoppingLists() {
-  const { user, profile, userProfile, householdId, role } = useAuth();
+  const { user } = useAuth();
+  const { profile, userProfile } = useProfile();
+  const { householdId, role } = useHousehold();
   const [lists, setLists] = useState<ShoppingListMeta[]>([]);
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [items, setItems] = useState<HouseholdShoppingItem[]>([]);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   collection,
   onSnapshot,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -14,6 +15,8 @@ import { db } from '../lib/firebase';
 import { getDaysUntilDate } from '../lib/date';
 import { PantryItem, StorageLocation, ShoppingListItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { recordActivity } from '../lib/activity';
 import { bumpCounter } from '../lib/achievements';
 import {
@@ -34,7 +37,9 @@ interface ShoppingBridge {
 }
 
 export function usePantry(shopping?: ShoppingBridge) {
-  const { user, profile, userProfile, householdId, role } = useAuth();
+  const { user } = useAuth();
+  const { profile, userProfile } = useProfile();
+  const { householdId, role } = useHousehold();
   const { recordSync } = useSync();
   const [items, setItems] = useState<PantryItem[]>([]);
   const [locations, setLocations] = useState<StorageLocation[]>([]);
@@ -42,9 +47,6 @@ export function usePantry(shopping?: ShoppingBridge) {
   const canEdit = role !== 'viewer';
 
   const locationsRef = useRef<StorageLocation[]>([]);
-  useEffect(() => {
-    locationsRef.current = locations;
-  }, [locations]);
 
   const shoppingListRef = useRef<ShoppingListItem[]>([]);
   useEffect(() => {
@@ -60,55 +62,91 @@ export function usePantry(shopping?: ShoppingBridge) {
     }
 
     setLoading(true);
-    let firstLocs = false;
-    let firstItems = false;
-    const maybeDone = () => {
-      if (firstLocs && firstItems) setLoading(false);
+    const fallbackLocs = defaultStorageLocations(user.uid);
+    let active = true;
+    let unsubItems: (() => void) | undefined;
+    let unsubLocs: (() => void) | undefined;
+
+    const loadData = async () => {
+      try {
+        const q = query(
+          collection(db, 'households', householdId, 'storageLocations'),
+          orderBy('name'),
+        );
+        const snap = await getDocs(q);
+        if (!active) return;
+
+        const mapped = snap.docs.map((d) =>
+          mapFirestoreStorageLocation(d.id, d.data() ?? {}, user.uid),
+        );
+        const resolvedLocs = mapped.length > 0 ? mapped : fallbackLocs;
+        locationsRef.current = resolvedLocs;
+        setLocations(resolvedLocs);
+
+        unsubItems = onSnapshot(
+          collection(db, 'households', householdId, 'inventory'),
+          (inventorySnap) => {
+            const locs = locationsRef.current.length ? locationsRef.current : resolvedLocs;
+            setItems(
+              inventorySnap.docs.map((d) =>
+                inventoryToPantryItem(mapInventoryDoc(d.id, d.data() ?? {}), user.uid, locs),
+              ),
+            );
+            setLoading(false);
+            recordSync('synced', 'Inventory updated');
+          },
+          () => {
+            setLoading(false);
+          },
+        );
+      } catch (err) {
+        console.error('[usePantry] Error loading storage locations:', err);
+        if (!active) return;
+        locationsRef.current = fallbackLocs;
+        setLocations(fallbackLocs);
+
+        unsubItems = onSnapshot(
+          collection(db, 'households', householdId, 'inventory'),
+          (inventorySnap) => {
+            setItems(
+              inventorySnap.docs.map((d) =>
+                inventoryToPantryItem(mapInventoryDoc(d.id, d.data() ?? {}), user.uid, fallbackLocs),
+              ),
+            );
+            setLoading(false);
+            recordSync('synced', 'Inventory updated');
+          },
+          () => {
+            setLoading(false);
+          },
+        );
+      }
+
+      unsubLocs = onSnapshot(
+        query(collection(db, 'households', householdId, 'storageLocations'), orderBy('name')),
+        (snap) => {
+          const mapped = snap.docs.map((d) =>
+            mapFirestoreStorageLocation(d.id, d.data() ?? {}, user.uid),
+          );
+          const next = mapped.length > 0 ? mapped : fallbackLocs;
+          locationsRef.current = next;
+          setLocations(next);
+        },
+        () => {
+          locationsRef.current = fallbackLocs;
+          setLocations(fallbackLocs);
+        },
+      );
     };
 
-    const fallbackLocs = defaultStorageLocations(user.uid);
-
-    const unsubLocs = onSnapshot(
-      query(collection(db, 'households', householdId, 'storageLocations'), orderBy('name')),
-      (snap) => {
-        const mapped = snap.docs.map((d) => mapFirestoreStorageLocation(d.id, d.data() ?? {}, user.uid));
-        const next = mapped.length > 0 ? mapped : fallbackLocs;
-        locationsRef.current = next;
-        setLocations(next);
-        firstLocs = true;
-        maybeDone();
-      },
-      () => {
-        setLocations(fallbackLocs);
-        firstLocs = true;
-        maybeDone();
-      },
-    );
-
-    const unsubItems = onSnapshot(
-      collection(db, 'households', householdId, 'inventory'),
-      (snap) => {
-        const locs = locationsRef.current.length ? locationsRef.current : fallbackLocs;
-        setItems(snap.docs.map((d) => inventoryToPantryItem(mapInventoryDoc(d.id, d.data() ?? {}), user.uid, locs)));
-        firstItems = true;
-        maybeDone();
-        recordSync('synced', 'Inventory updated');
-      },
-      () => {
-        firstItems = true;
-        maybeDone();
-      },
-    );
+    loadData();
 
     return () => {
-      unsubLocs();
-      unsubItems();
+      active = false;
+      if (unsubItems) unsubItems();
+      if (unsubLocs) unsubLocs();
     };
   }, [user, householdId, recordSync]);
-
-  useEffect(() => {
-    locationsRef.current = locations;
-  }, [locations]);
 
   const refetch = useCallback(async () => {}, []);
 

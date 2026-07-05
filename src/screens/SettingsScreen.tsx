@@ -24,6 +24,8 @@ import Button from '../components/ui/Button';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { Icon } from '../components/ui/Icon';
 import { useAuth } from '../contexts/AuthContext';
+import { useHousehold } from '../contexts/HouseholdContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { useInventory } from '../contexts/InventoryContext';
 import { useShopping } from '../contexts/ShoppingContext';
 import { useToast } from '../contexts/ToastContext';
@@ -64,20 +66,21 @@ export default function SettingsScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
   const {
     user,
-    profile,
-    userProfile,
-    householdId,
-    role,
     signOut,
-    updateProfile,
     sendVerificationEmail,
     upgradeAnonymous,
     upgradeAnonymousWithGoogle,
     googleAvailable,
     deleteAccount,
     revokeAllSessions,
-    updateUserProfile,
   } = useAuth();
+  const { householdId, role } = useHousehold();
+  const {
+    profile,
+    userProfile,
+    updateProfile,
+    updateUserProfile,
+  } = useProfile();
   const { locations, refetch, items } = useInventory();
   const { shoppingList } = useShopping();
   const { showToast } = useToast();

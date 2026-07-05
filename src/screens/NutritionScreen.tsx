@@ -9,6 +9,7 @@ import TextField from '../components/ui/TextField';
 import Modal from '../components/ui/Modal';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { useToast } from '../contexts/ToastContext';
 import { generateStructuredJson, Schema } from '../lib/aiCore';
 import {
@@ -46,7 +47,8 @@ function MacroBar({ label, current, goal, color }: { label: string; current: num
 export default function NutritionScreen() {
   const c = useAppColors();
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
+  const { userProfile } = useProfile();
   const { showToast } = useToast();
   const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
   const [intake, setIntake] = useState<DailyIntake>({ date: todayKey(), ...EMPTY_INTAKE });

@@ -2,12 +2,14 @@ import React, { ReactNode, useMemo } from 'react';
 import { ShoppingProvider, useShopping } from './ShoppingContext';
 import { InventoryProvider, useInventory } from './InventoryContext';
 import { useAuth } from './AuthContext';
+import { useHousehold } from './HouseholdContext';
 import { collection, doc, addDoc, serverTimestamp, writeBatch } from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
 import { categoryFromName } from '../lib/categories';
 
 function InventoryProviderBridge({ children }: { children: ReactNode }) {
-  const { user, householdId } = useAuth();
+  const { user } = useAuth();
+  const { householdId } = useHousehold();
   const shopping = useShopping();
 
   const shoppingBridge = useMemo(
