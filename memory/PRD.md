@@ -41,12 +41,15 @@
 13. **Nutrition**: Today card hero — giant Fraunces teal calorie number, thicker teal progress bar, asymmetric corner.
 14. **Search**: ink-pill segmented tabs, cleaner header (no heavy border band).
 15. Fixed pre-existing eslint error (ComingSoonScreen require) with disable comment.
-Verified: tsc clean, eslint clean, jest 34/34, full Metro iOS bundle (`npx expo export --platform ios --no-bytecode`) = 3861 modules OK.
+
+### Phase 3 (2026-06) — guided cooking
+16. **RecipeDetailSheet** (`src/components/meals/RecipeDetailSheet.tsx`): full-screen editorial recipe sheet replacing the old modal in RecipesScreen — 320px photo hero w/ scrim + Fraunces title + meta chips (time/servings/kcal), ingredient checklist with pantry availability (teal check vs "Missing" + add-missing-to-list CTA), tappable 5-star rating, sticky "Start cooking" CTA. **Cook mode**: progress bar, checkable step cards (current step highlighted pink, done steps teal + strikethrough, haptics), "Bon appétit" celebration card when all steps done, finish → marks cooked. Sheet hides while the save-to-collection modal is open (sibling RN Modal iOS conflict); cook progress persists (reset keyed on recipe.id only). CUISINE_IMAGES exported from RecipeCard for reuse.
+Verified: tsc clean, eslint clean, jest 34/34, Metro iOS bundle 3861 modules OK.
 
 Pre-existing features confirmed present (not rebuilt): expiry tracking + notifications, dashboard stats (useDashboardStats), barcode scanner w/ animated scan line, AI recipes (recipeGen via Firebase AI), voice add, receipt scan, shopping templates/budget, households, achievements, analytics.
 
 ## Backlog / Next Tasks
 - P2: Scanner glass overlay refinement per guidelines; staggered pantry list entrances.
-- P2: Recipe detail modal → full editorial bottom sheet with hero image.
+- P2: Keep-screen-awake during cook mode (expo-keep-awake not installed yet).
 - P2: Unused lottie assets (household/pantry/shopping/scan.json) still shipped — only meal-planner one used now.
 - Note: user must build via `npm run ios/android` on their machine to see results; Firebase native config files are gitignored.

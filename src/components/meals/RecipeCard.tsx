@@ -21,7 +21,7 @@ interface RecipeCardProps {
 }
 
 /** Curated fallback photography keyed by cuisine (AI/user recipes without images). */
-const CUISINE_IMAGES: Record<Cuisine, string> = {
+export const CUISINE_IMAGES: Record<Cuisine, string> = {
   italian: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80',
   american: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
   mexican: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80',

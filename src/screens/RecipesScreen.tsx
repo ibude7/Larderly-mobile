@@ -24,6 +24,7 @@ import TextField from '../components/ui/TextField';
 import SelectField from '../components/ui/SelectField';
 import { Icon } from '../components/ui/Icon';
 import RecipeCard from '../components/meals/RecipeCard';
+import RecipeDetailSheet from '../components/meals/RecipeDetailSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useProfile } from '../contexts/ProfileContext';
@@ -422,28 +423,22 @@ export default function RecipesScreen() {
         <Icon name="sparkles" size={24} color="#FFFFFF" />
       </Pressable>
 
-      <Modal isOpen={!!activeRecipe} onClose={() => setActiveRecipe(null)} title={activeRecipe?.title ?? 'Recipe'}>
-        {activeRecipe && (
-          <ScrollView style={{ maxHeight: 420 }}>
-            <Text className="mb-3 text-sm text-muted dark:text-muted-dark">{activeRecipe.description}</Text>
-            <Text className="mb-1 font-semibold text-ink dark:text-ink-dark">Ingredients</Text>
-            {activeRecipe.ingredients.map((ing, i) => (
-              <Text key={i} className="text-sm text-ink dark:text-ink-dark">• {ing}</Text>
-            ))}
-            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-ink-dark">Steps</Text>
-            {activeRecipe.instructions.map((step, i) => (
-              <Text key={i} className="mb-1 text-sm text-ink dark:text-ink-dark">{i + 1}. {step}</Text>
-            ))}
-            <View className="mt-4 gap-2">
-              <TextField label="Your rating (1-5)" value={String(userRating)} onChangeText={(v) => setUserRating(Number(v) || 5)} keyboardType="numeric" />
-              <Button label="Save rating" variant="secondary" onPress={() => rateRecipe(activeRecipe.id, userRating)} />
-              <Button label="Mark as cooked" onPress={() => cookRecipe(activeRecipe)} />
-              <Button label="Add missing to list" variant="secondary" onPress={() => addMissingToList(activeRecipe)} />
-              <Button label="Save to collection" variant="ghost" onPress={() => setShowNewCollection(true)} />
-            </View>
-          </ScrollView>
-        )}
-      </Modal>
+      <RecipeDetailSheet
+        recipe={activeRecipe}
+        isOpen={!!activeRecipe && !showNewCollection}
+        favorite={activeRecipe ? favoriteIds.has(activeRecipe.id) : false}
+        userRating={userRating}
+        isAvailable={ingredientAvailable}
+        onClose={() => setActiveRecipe(null)}
+        onFavorite={() => activeRecipe && toggleFavorite(activeRecipe)}
+        onRate={(r) => {
+          setUserRating(r);
+          if (activeRecipe) rateRecipe(activeRecipe.id, r);
+        }}
+        onCook={() => activeRecipe && cookRecipe(activeRecipe)}
+        onAddMissing={() => activeRecipe && addMissingToList(activeRecipe)}
+        onSaveToCollection={() => setShowNewCollection(true)}
+      />
 
       <Modal isOpen={showNewCollection} onClose={() => setShowNewCollection(false)} title="New collection">
         <TextField label="Collection name" value={newCollectionName} onChangeText={setNewCollectionName} placeholder="Weeknight dinners" />
