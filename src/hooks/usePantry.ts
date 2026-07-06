@@ -28,6 +28,7 @@ import {
 } from '../lib/inventoryMapper';
 import { mapPantryUpdatesToInventory } from '../shared';
 import { useSync } from '../contexts/SyncContext';
+import { trackEvent } from '../lib/analytics';
 
 interface ShoppingBridge {
   activeListId: string | null;
@@ -97,6 +98,7 @@ export function usePantry(shopping?: ShoppingBridge) {
           },
           () => {
             setLoading(false);
+            recordSync('error', 'Inventory sync failed');
           },
         );
       } catch (err) {
@@ -118,6 +120,7 @@ export function usePantry(shopping?: ShoppingBridge) {
           },
           () => {
             setLoading(false);
+            recordSync('error', 'Inventory sync failed');
           },
         );
       }
@@ -193,6 +196,7 @@ export function usePantry(shopping?: ShoppingBridge) {
       };
       await syncLowStockShoppingItem(data);
       recordActivity(householdId, { verb: 'item.added', target: item.name, actorId: user.uid, actorName });
+      trackEvent('item_added', { category: item.category, quantity: item.quantity }).catch(() => {});
       bumpCounter(user.uid, householdId, actorName, 'itemsAdded').catch(() => {});
       return { data, error: null };
     } catch (err) {
@@ -212,10 +216,19 @@ export function usePantry(shopping?: ShoppingBridge) {
       if (updates.location_id !== undefined) {
         patch.storageLocation = locs.find((l) => l.id === updates.location_id)?.name ?? 'Pantry';
       }
-      if (updates.purchase_price !== undefined) patch.pricePerUnit = updates.purchase_price ?? 0;
+      const existing = items.find((i) => i.id === id);
+      if (updates.purchase_price !== undefined) {
+        const nextPrice = updates.purchase_price ?? 0;
+        patch.pricePerUnit = nextPrice;
+        if (nextPrice !== (existing?.purchase_price ?? 0)) {
+          patch.priceHistory = [
+            ...(existing?.priceHistory ?? []),
+            { price: nextPrice, recordedAt: new Date().toISOString() },
+          ].slice(-12);
+        }
+      }
 
       await updateDoc(doc(db, 'households', householdId, 'inventory', id), patch);
-      const existing = items.find((i) => i.id === id);
       const data: PantryItem | null = existing
         ? { ...existing, ...updates, updated_at: new Date().toISOString() }
         : null;

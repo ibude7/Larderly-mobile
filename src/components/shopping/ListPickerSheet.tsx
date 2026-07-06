@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import Modal from '../ui/Modal';
+import BottomSheet from '../ui/BottomSheet';
 import { ShoppingListMeta } from '../../types/household';
 import { formatCurrency } from '../../lib/format';
 import { usePrefs } from '../../contexts/PreferencesContext';
@@ -34,7 +34,7 @@ export default function ListPickerSheet({
   const displayLists = tab === 'active' ? activeLists : tab === 'history' ? historyLists : templates;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Your lists">
+    <BottomSheet isOpen={isOpen} onClose={onClose} title="Your lists">
       <View className="mb-3 flex-row gap-2">
         {(['active', 'history', 'templates'] as const).map((t) => (
           <Pressable
@@ -67,6 +67,6 @@ export default function ListPickerSheet({
           ) : null}
         </Pressable>
       ))}
-    </Modal>
+    </BottomSheet>
   );
 }

@@ -40,6 +40,7 @@ import { getLocationIcon } from '../lib/appIcons';
 import { StorageLocation } from '../types';
 import { useAppColors } from '../hooks/useAppColors';
 import { pickProfilePhoto, uploadUserAvatar } from '../lib/avatar';
+import { exportPantryAsCSV, exportShoppingHistoryAsCSV } from '../lib/export';
 
 const LOCATION_COLORS = [
   '#3b82f6',
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
     updateUserProfile,
   } = useProfile();
   const { locations, refetch, items } = useInventory();
-  const { shoppingList } = useShopping();
+  const { shoppingList, lists } = useShopping();
   const { showToast } = useToast();
   const { online, syncing, lastSyncedAt } = useSync();
   const confirm = useConfirm();
@@ -286,6 +287,35 @@ export default function SettingsScreen() {
     }
   };
 
+  const shareCsv = async (fileName: string, csv: string) => {
+    const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+    await FileSystem.writeAsStringAsync(fileUri, csv);
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri, { mimeType: 'text/csv', UTI: 'public.comma-separated-values-text' });
+    }
+  };
+
+  const handleExportPantryCsv = async () => {
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+      await shareCsv(`larderly-pantry-${stamp}.csv`, exportPantryAsCSV(items, locations));
+      showToast('Export complete', 'success');
+    } catch {
+      showToast('Could not export pantry CSV', 'error');
+    }
+  };
+
+  const handleExportShoppingCsv = async () => {
+    try {
+      const archivedLists = lists.filter((list) => Boolean(list.archivedAt));
+      const stamp = new Date().toISOString().slice(0, 10);
+      await shareCsv(`larderly-shopping-history-${stamp}.csv`, exportShoppingHistoryAsCSV(archivedLists));
+      showToast('Export complete', 'success');
+    } catch {
+      showToast('Could not export shopping history CSV', 'error');
+    }
+  };
+
   const handleRevokeSessions = async () => {
     const ok = await confirm({
       title: 'Sign out everywhere?',
@@ -323,30 +353,30 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]" edges={['top']}>
-      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#2A2A35] px-4 pb-3">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]" edges={['top']}>
+      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#303541] px-4 pb-3">
         <Pressable
           onPress={() => navigation.goBack()}
           hitSlop={8}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
         >
           <Icon name="chevron-left" size={20} color={c.ink} />
         </Pressable>
-        <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Settings</Text>
+        <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Settings</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
+        <View className="rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
           <View className="mb-1 flex-row items-center gap-1.5">
             <Icon name="sparkles" size={14} color={c.primary} />
-            <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
+            <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
               Workspace settings
             </Text>
           </View>
-          <Text className="text-2xl font-bold text-ink dark:text-[#F0EEE9]">Tune your pantry</Text>
+          <Text className="text-2xl font-bold text-ink dark:text-[#F6F1EA]">Tune your pantry</Text>
           <View className="mt-3 flex-row flex-wrap gap-2">
             <Chip label={`${locations.length} locations`} />
             <Chip label={providerLabel} highlight />
@@ -362,7 +392,7 @@ export default function SettingsScreen() {
 
         {isAnonymous ? (
           <Section title="Upgrade guest session" icon="sparkles" iconBg="bg-primary">
-            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#6B6878]">
+            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
               Create an account to keep your items, meals, and shopping list backed up.
             </Text>
             {googleAvailable ? (
@@ -429,8 +459,8 @@ export default function SettingsScreen() {
 
         {needsVerification ? (
           <Section title="Verify your email" icon="mail" iconBg="bg-warning/10">
-            <Text className="mb-3 text-sm text-muted dark:text-[#6B6878]">
-              We sent a link to <Text className="font-bold text-ink dark:text-[#F0EEE9]">{user?.email}</Text>. Tap the
+            <Text className="mb-3 text-sm text-muted dark:text-[#9A948D]">
+              We sent a link to <Text className="font-bold text-ink dark:text-[#F6F1EA]">{user?.email}</Text>. Tap the
               link to confirm your address.
             </Text>
             <Button
@@ -445,9 +475,9 @@ export default function SettingsScreen() {
         <Section title="Profile" icon="user" iconBg="bg-primary/10">
           <View className="mb-4 items-center gap-3">
             {photoUrl ? (
-              <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-[#2A2A35]" />
+              <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-[#303541]" />
             ) : (
-              <View className="h-20 w-20 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13]">
+              <View className="h-20 w-20 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]">
                 <Icon name="user" size={28} color={c.muted} />
               </View>
             )}
@@ -477,7 +507,7 @@ export default function SettingsScreen() {
               }}
             />
           </View>
-          <Text className="mb-4 text-sm text-muted dark:text-[#6B6878]">
+          <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">
             {isAnonymous ? 'Guest session — no email on file' : user?.email || 'Signed in'}
           </Text>
           <TextField
@@ -509,20 +539,20 @@ export default function SettingsScreen() {
 
         <Section title="Security & sync" icon="lock" iconBg="bg-warning/10">
           <SecuritySection />
-          <View className="mt-4 rounded-xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3">
-            <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">Sync status</Text>
-            <Text className="mt-1 text-xs text-muted dark:text-[#6B6878]">
+          <View className="mt-4 rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
+            <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Sync status</Text>
+            <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">
               {online ? (syncing ? 'Syncing…' : 'Online') : 'Offline'}
               {lastSyncedAt ? ` · Last sync ${new Date(lastSyncedAt).toLocaleString()}` : ''}
             </Text>
           </View>
           {loginEvents.length > 0 && (
             <View className="mt-4">
-              <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F0EEE9]">Recent sign-ins</Text>
+              <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F6F1EA]">Recent sign-ins</Text>
               {loginEvents.map((ev) => (
-                <View key={ev.id} className="mb-1 rounded-lg bg-canvas dark:bg-[#0F0F13] px-3 py-2">
-                  <Text className="text-xs text-ink dark:text-[#F0EEE9]">{ev.device} · {ev.platform}</Text>
-                  {ev.at ? <Text className="text-[10px] text-muted dark:text-[#6B6878]">{new Date(ev.at).toLocaleString()}</Text> : null}
+                <View key={ev.id} className="mb-1 rounded-lg bg-canvas dark:bg-[#090A0D] px-3 py-2">
+                  <Text className="text-xs text-ink dark:text-[#F6F1EA]">{ev.device} · {ev.platform}</Text>
+                  {ev.at ? <Text className="text-xs text-muted dark:text-[#9A948D]">{new Date(ev.at).toLocaleString()}</Text> : null}
                 </View>
               ))}
             </View>
@@ -536,7 +566,7 @@ export default function SettingsScreen() {
 
         <Section title="Storage locations" icon="shelf" iconBg="bg-info/10">
           <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-sm text-muted dark:text-[#6B6878]">Pantry, Fridge, Freezer, etc.</Text>
+            <Text className="text-sm text-muted dark:text-[#9A948D]">Pantry, Fridge, Freezer, etc.</Text>
             <Button
               label={addingLoc ? 'Cancel' : 'Add'}
               icon={addingLoc ? 'close' : 'plus'}
@@ -546,7 +576,7 @@ export default function SettingsScreen() {
             />
           </View>
           {addingLoc ? (
-            <View className="mb-4 gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3">
+            <View className="mb-4 gap-3 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
               <TextField
                 value={newLocName}
                 onChangeText={setNewLocName}
@@ -554,7 +584,7 @@ export default function SettingsScreen() {
                 autoFocus
               />
               <View>
-                <Text className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
                   Color
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
@@ -579,7 +609,7 @@ export default function SettingsScreen() {
             </View>
           ) : null}
           {locations.length === 0 ? (
-            <Text className="rounded-2xl border border-dashed border-line dark:border-[#2A2A35] p-4 text-center text-xs text-muted dark:text-[#6B6878]">
+            <Text className="rounded-2xl border border-dashed border-line dark:border-[#303541] p-4 text-center text-xs text-muted dark:text-[#9A948D]">
               No storage locations yet. Tap Add to create one.
             </Text>
           ) : (
@@ -606,7 +636,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Progress" icon="star" iconBg="bg-primary/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#6B6878]">
+          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
             Track streaks, badges, and milestones as you use Larderly.
           </Text>
           <Button
@@ -618,20 +648,34 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Your data" icon="download" iconBg="bg-success/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#6B6878]">
-            Download a JSON copy of your pantry, shopping list, meal plans, and storage locations.
+          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
+            Download a copy of your pantry, shopping history, meal plans, and storage locations.
           </Text>
-          <Button
-            label={exporting ? 'Preparing export…' : 'Export data'}
-            icon="download"
-            variant="secondary"
-            onPress={handleExport}
-            loading={exporting}
-          />
+          <View className="gap-2">
+            <Button
+              label={exporting ? 'Preparing export…' : 'Export data'}
+              icon="download"
+              variant="secondary"
+              onPress={handleExport}
+              loading={exporting}
+            />
+            <Button
+              label="Export Pantry (CSV)"
+              icon="download"
+              variant="secondary"
+              onPress={handleExportPantryCsv}
+            />
+            <Button
+              label="Export Shopping History (CSV)"
+              icon="download"
+              variant="secondary"
+              onPress={handleExportShoppingCsv}
+            />
+          </View>
         </Section>
 
         <Section title="Account" icon="logout" iconBg="bg-danger/10">
-          <Text className="mb-4 text-sm text-muted dark:text-[#6B6878]">
+          <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">
             {isAnonymous
               ? 'Signing out clears this guest session.'
               : 'Securely end your session on this device.'}
@@ -645,7 +689,7 @@ export default function SettingsScreen() {
         </Section>
 
         <View className="items-center pt-2">
-          <Text className="text-[11px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
+          <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
             Larderly · v1.0
           </Text>
         </View>
@@ -678,12 +722,12 @@ function Section({
 }) {
   const c = useAppColors();
   return (
-    <View className="rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
+    <View className="rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
       <View className="mb-4 flex-row items-center gap-3">
         <View className={`h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>
           <Icon name={icon} size={22} color={c.ink} />
         </View>
-        <Text className="text-base font-bold text-ink dark:text-[#F0EEE9]">{title}</Text>
+        <Text className="text-base font-bold text-ink dark:text-[#F6F1EA]">{title}</Text>
       </View>
       {children}
     </View>
@@ -709,7 +753,7 @@ function Chip({
           ? 'border-ink bg-ink'
           : warn
             ? 'border-warning/40 bg-warning/10'
-            : 'border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13]'
+            : 'border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]'
       }`}
     >
       {icon ? (
@@ -717,8 +761,8 @@ function Chip({
       ) : null}
       <Text
         numberOfLines={1}
-        className={`max-w-[180px] text-[11px] font-bold ${
-          highlight ? 'text-white' : warn ? 'text-warning' : 'text-muted dark:text-[#6B6878]'
+        className={`max-w-[180px] text-xs font-bold ${
+          highlight ? 'text-white' : warn ? 'text-warning' : 'text-muted dark:text-[#9A948D]'
         }`}
       >
         {label}
@@ -736,7 +780,7 @@ function LocationRow({
 }) {
   const c = useAppColors();
   return (
-    <View className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-3">
+    <View className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
       <View
         className="h-11 w-11 items-center justify-center rounded-2xl border"
         style={{
@@ -746,7 +790,7 @@ function LocationRow({
       >
         <Icon name={getLocationIcon(location.name)} size={18} color={location.color} />
       </View>
-      <Text className="flex-1 text-sm font-bold text-ink dark:text-[#F0EEE9]">{location.name}</Text>
+      <Text className="flex-1 text-sm font-bold text-ink dark:text-[#F6F1EA]">{location.name}</Text>
       <View
         className="h-3.5 w-3.5 rounded-full"
         style={{ backgroundColor: location.color }}

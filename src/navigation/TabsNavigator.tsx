@@ -5,7 +5,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import PantryScreen from '../screens/PantryScreen';
 import ScannerScreen from '../screens/ScannerScreen';
 import ShoppingScreen from '../screens/ShoppingScreen';
-import RecipesScreen from '../screens/RecipesScreen';
+import ComingSoonScreen from '../screens/ComingSoonScreen';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -27,7 +27,7 @@ export default function TabsNavigator() {
       <Tab.Screen name="Pantry" component={PantryScreen} />
       <Tab.Screen name="Scanner" component={ScannerScreen} />
       <Tab.Screen name="Shopping" component={ShoppingScreen} />
-      <Tab.Screen name="Meals" component={RecipesScreen} />
+      <Tab.Screen name="Meals" component={ComingSoonScreen} />
     </Tab.Navigator>
   );
 }

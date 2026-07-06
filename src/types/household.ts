@@ -34,6 +34,7 @@ export interface InventoryItem {
   brand?: string;
   category?: string;
   pricePerUnit?: number;
+  priceHistory?: Array<{ price: number; recordedAt: string }>;
   unit?: string;
   notes?: string;
   imageUrl?: string;
@@ -56,6 +57,11 @@ export interface ShoppingListMeta {
   recurringFrequency?: 'weekly' | 'biweekly' | 'monthly' | '';
   store?: string;
   archivedAt?: number | null;
+  createdAt?: number | null;
+  /** Server timestamp of the last auto-regenerated instance for a recurring list. */
+  lastRunAt?: number | null;
+  /** Server timestamp of the last archived recurring-list regeneration. */
+  lastGeneratedAt?: number | null;
 }
 
 export interface HouseholdShoppingItem {

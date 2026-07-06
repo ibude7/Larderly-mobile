@@ -4,7 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type TabParamList = {
   Dashboard: undefined;
-  Pantry: { openAdd?: boolean } | undefined;
+  Pantry: { openAdd?: boolean; filterExpiration?: string } | undefined;
   Scanner: { mode?: 'add' | 'consume' } | undefined;
   Shopping: undefined;
   Meals: undefined;

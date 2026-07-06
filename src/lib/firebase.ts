@@ -40,6 +40,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { getFunctions } from '@react-native-firebase/functions';
 import { getStorage } from '@react-native-firebase/storage';
+import firebaseCrashlytics from '@react-native-firebase/crashlytics';
+import firebaseAnalytics from '@react-native-firebase/analytics';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 
 export const app = getApp();
@@ -72,6 +74,8 @@ export const dbReady: Promise<Firestore> = initializeFirestore(
 export const db: Firestore = getFirestore(app, 'larderly');
 
 export const storage = getStorage(app);
+export const crashlytics = () => firebaseCrashlytics();
+export const analytics = () => firebaseAnalytics();
 
 /**
  * Firebase Cloud Functions client, routed to the us-central1 region where

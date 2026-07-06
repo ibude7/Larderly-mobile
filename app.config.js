@@ -16,8 +16,8 @@ function withoutPaidTeamEntitlements(config) {
 // app (see SETUP.md). They are conditionally referenced so `expo prebuild`
 // still works before you've added them — Firebase just won't initialize until
 // the matching file is present.
-const IOS_GOOGLE_SERVICES = './GoogleService-Info.plist';
-const ANDROID_GOOGLE_SERVICES = './google-services.json';
+const IOS_GOOGLE_SERVICES = process.env.GOOGLE_SERVICES_PLIST || './GoogleService-Info.plist';
+const ANDROID_GOOGLE_SERVICES = process.env.GOOGLE_SERVICES_JSON || './google-services.json';
 
 // The iOS URL scheme is the REVERSED_CLIENT_ID from GoogleService-Info.plist.
 // Set EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME in .env once you have it so native
@@ -35,6 +35,12 @@ module.exports = () => ({
   slug: 'larderly',
   scheme: 'larderly',
   version: '1.0.0',
+  runtimeVersion: { policy: 'appVersion' },
+  updates: {
+    enabled: true,
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 0,
+  },
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
@@ -42,6 +48,7 @@ module.exports = () => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     bundleIdentifier: 'com.larderly.app',
+    buildNumber: '1',
     supportsTablet: true,
     usesAppleSignIn: false,
     googleServicesFile: fs.existsSync(IOS_GOOGLE_SERVICES) ? IOS_GOOGLE_SERVICES : undefined,
@@ -51,6 +58,7 @@ module.exports = () => ({
   },
   android: {
     package: 'com.larderly.app',
+    versionCode: 1,
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
@@ -63,6 +71,8 @@ module.exports = () => ({
   plugins: [
     '@react-native-firebase/app',
     '@react-native-firebase/auth',
+    '@react-native-firebase/crashlytics',
+    '@react-native-firebase/analytics',
     [
       'expo-build-properties',
       {

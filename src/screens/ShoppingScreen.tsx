@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,6 +7,8 @@ import AppHeader from '../components/layout/AppHeader';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
+import BottomSheet from '../components/ui/BottomSheet';
+import ProgressBar from '../components/ui/ProgressBar';
 import SelectField from '../components/ui/SelectField';
 import TextField from '../components/ui/TextField';
 import VoiceInputButton from '../components/ui/VoiceInputButton';
@@ -30,6 +32,7 @@ import { parseReceiptImage } from '../lib/receiptScan';
 import { parseShoppingVoiceCommand } from '../lib/voiceCommands';
 import { pantryItemToInventory } from '../lib/pantryInsights';
 import { colors } from '../theme';
+import { trackEvent } from '../lib/analytics';
 
 export default function ShoppingScreen() {
   const navigation = useNavigation<any>();
@@ -54,6 +57,9 @@ export default function ShoppingScreen() {
     deleteShoppingItem,
     clearCheckedItems,
     checkoutToPantry,
+    templates,
+    saveAsTemplate,
+    deleteTemplate,
   } = useShopping();
   const activity = useActivity();
   const { showToast } = useToast();
@@ -78,6 +84,8 @@ export default function ShoppingScreen() {
   const [settingsBudget, setSettingsBudget] = useState('');
   const [settingsStore, setSettingsStore] = useState('');
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState('');
   const [scanningReceipt, setScanningReceipt] = useState(false);
 
   // ── Derived data ─────────────────────────────────────────────────────────────
@@ -88,7 +96,6 @@ export default function ShoppingScreen() {
   const inventory = useMemo(() => pantryItems.map(pantryItemToInventory), [pantryItems]);
   const activeLists = lists.filter((l) => !l.isTemplate && !l.archivedAt);
   const historyLists = lists.filter((l) => !l.isTemplate && l.archivedAt);
-  const templates = lists.filter((l) => l.isTemplate);
   const unchecked = useMemo(() => shoppingList.filter((i) => !i.is_checked), [shoppingList]);
   const checked = useMemo(() => shoppingList.filter((i) => i.is_checked), [shoppingList]);
   const spent = checked.reduce((s, i) => s + (i.estimatedPrice || 0) * i.quantity, 0);
@@ -102,7 +109,7 @@ export default function ShoppingScreen() {
   }, [unchecked]);
 
   const budget = activeList?.budget ?? 0;
-  const overBudget = budget > 0 && spent > budget;
+  const budgetProgress = budget > 0 ? spent / budget : 0;
 
   // ── Budget notification ───────────────────────────────────────────────────
   useEffect(() => {
@@ -123,7 +130,7 @@ export default function ShoppingScreen() {
   }, [spent, budget, activeListId, user, prefs.notifications.budget, activeList?.name, showToast]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
-  const handleCreateList = async () => {
+  const handleCreateList = useCallback(async () => {
     if (!newListName.trim()) return;
     const { error } = await createList(newListName.trim(), {
       isTemplate: newListTemplate,
@@ -133,6 +140,7 @@ export default function ShoppingScreen() {
     });
     if (error) showToast('Could not create list', 'error');
     else {
+      trackEvent('list_created', { recurring: newListRecurring ? 1 : 0, template: newListTemplate ? 1 : 0 }).catch(() => {});
       showToast(newListTemplate ? 'Template saved' : 'List created', 'success');
       setNewListName('');
       setNewListBudget('');
@@ -140,9 +148,9 @@ export default function ShoppingScreen() {
       setNewListRecurring(false);
       setShowNewList(false);
     }
-  };
+  }, [createList, newListBudget, newListFrequency, newListName, newListRecurring, newListTemplate, showToast]);
 
-  const handleAddItem = async () => {
+  const handleAddItem = useCallback(async () => {
     if (!addName.trim()) return;
     const { error } = await addShoppingItem({
       pantry_item_id: null,
@@ -163,9 +171,9 @@ export default function ShoppingScreen() {
       setAddQty('1');
       setAdding(false);
     }
-  };
+  }, [addName, addPrice, addQty, addShoppingItem, showToast]);
 
-  const handleVoice = async (transcript: string) => {
+  const handleVoice = useCallback(async (transcript: string) => {
     try {
       const parsed = await parseShoppingVoiceCommand(transcript);
       await addShoppingItem({
@@ -180,13 +188,14 @@ export default function ShoppingScreen() {
         notes: 'voice',
         estimatedPrice: 0,
       });
+      trackEvent('voice_command_used', { target: 'shopping' }).catch(() => {});
       showToast(`Added ${parsed.productName}`, 'success');
     } catch {
       showToast('Could not parse voice command', 'error');
     }
-  };
+  }, [addShoppingItem, showToast]);
 
-  const handleReceiptScan = async () => {
+  const handleReceiptScan = useCallback(async () => {
     if (!activeListId) return;
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
@@ -208,15 +217,16 @@ export default function ShoppingScreen() {
           category: categoryFromName(p.name).id,
         })),
       );
+      trackEvent('receipt_scanned', { item_count: parsed.length }).catch(() => {});
       showToast(`Added ${parsed.length} items from receipt`, 'success');
     } catch {
       showToast('Receipt scan failed', 'error');
     } finally {
       setScanningReceipt(false);
     }
-  };
+  }, [activeListId, bulkAddItems, showToast]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = useCallback(async () => {
     const ok = await confirm({
       title: 'Move to pantry?',
       message: `Add ${checked.length} purchased items to your household inventory?`,
@@ -241,8 +251,11 @@ export default function ShoppingScreen() {
       });
     });
     if (error) showToast('Checkout failed', 'error');
-    else showToast('Items added to pantry', 'success');
-  };
+    else {
+      trackEvent('checkout_completed', { item_count: checked.length }).catch(() => {});
+      showToast('Items added to pantry', 'success');
+    }
+  }, [addItem, checked.length, checkoutToPantry, confirm, showToast]);
 
   const handleSaveSettings = async () => {
     if (!activeListId) return;
@@ -273,6 +286,17 @@ export default function ShoppingScreen() {
     setShowListSettings(true);
   };
 
+  const handleSaveAsTemplate = async () => {
+    if (!activeListId || !saveTemplateName.trim()) return;
+    const { error } = await saveAsTemplate(activeListId, saveTemplateName.trim());
+    if (error) showToast('Could not save as template', 'error');
+    else {
+      showToast('Template saved', 'success');
+      setSaveTemplateName('');
+      setShowSaveTemplate(false);
+    }
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <View className="flex-1 bg-canvas">
@@ -286,11 +310,15 @@ export default function ShoppingScreen() {
               <Text className="text-3xl font-bold text-ink">{activeList?.name ?? 'Shopping'}</Text>
               <Icon name="chevron-down" size={18} color={colors.muted} />
             </Pressable>
-            <Text className={`mt-1 text-sm ${overBudget ? 'font-bold text-danger' : 'text-muted'}`}>
-              {budget > 0
-                ? `Budget ${formatCurrency(budget, prefs.currency)} · Spent ${formatCurrency(spent, prefs.currency)} · Est. ${formatCurrency(listTotal, prefs.currency)}`
-                : `Est. ${formatCurrency(listTotal, prefs.currency)}`}
-            </Text>
+            {budget > 0 ? (
+              <View className="mt-2">
+                <ProgressBar
+                  value={budgetProgress}
+                  showLabel
+                  labelText={`Spent ${formatCurrency(spent, prefs.currency)} of ${formatCurrency(budget, prefs.currency)} · Est. ${formatCurrency(listTotal, prefs.currency)}`}
+                />
+              </View>
+            ) : null}
             {activeList?.isRecurring && (
               <Text className="text-xs text-primary">Recurring · {activeList.recurringFrequency || 'weekly'}</Text>
             )}
@@ -307,6 +335,12 @@ export default function ShoppingScreen() {
         <View className="mb-4 flex-row flex-wrap gap-2">
           <Button label="New list" icon="plus" size="sm" variant="secondary" onPress={() => setShowNewList(true)} />
           <Button label="Templates" icon="box" size="sm" variant="ghost" onPress={() => setShowTemplatePicker(true)} />
+          {canEdit && activeListId && !activeList?.isTemplate && (
+            <Button label="Save as template" icon="box" size="sm" variant="ghost" onPress={() => {
+              setSaveTemplateName(activeList?.name ? `${activeList.name} template` : '');
+              setShowSaveTemplate(true);
+            }} />
+          )}
           {canEdit && activeListId && (
             <>
               <Button label="Settings" icon="settings" size="sm" variant="ghost" onPress={openSettings} />
@@ -395,8 +429,8 @@ export default function ShoppingScreen() {
         )}
       </ScrollView>
 
-      {/* New list modal */}
-      <Modal isOpen={showNewList} onClose={() => setShowNewList(false)} title="New shopping list">
+      {/* New list sheet */}
+      <BottomSheet isOpen={showNewList} onClose={() => setShowNewList(false)} title="New shopping list">
         <TextField label="List name" value={newListName} onChangeText={setNewListName} placeholder="Weekly groceries" />
         <TextField label="Budget (optional)" value={newListBudget} onChangeText={setNewListBudget} keyboardType="decimal-pad" />
         <View className="mt-3 flex-row gap-2">
@@ -426,7 +460,7 @@ export default function ShoppingScreen() {
           />
         )}
         <Button label="Create" onPress={handleCreateList} className="mt-4" />
-      </Modal>
+      </BottomSheet>
 
       {/* Template picker modal */}
       <Modal isOpen={showTemplatePicker} onClose={() => setShowTemplatePicker(false)} title="Use a template">
@@ -434,23 +468,47 @@ export default function ShoppingScreen() {
           <Text className="text-sm text-muted">No templates yet. Create a list and mark it as a template.</Text>
         ) : (
           templates.map((t) => (
-            <Pressable
-              key={t.id}
-              onPress={async () => {
-                const name = `${t.name} copy`;
-                const { error } = await createFromTemplate(t.id, name);
-                if (error) showToast('Could not create from template', 'error');
-                else {
-                  showToast('List created from template', 'success');
-                  setShowTemplatePicker(false);
-                }
-              }}
-              className="mb-2 rounded-xl border border-line px-4 py-3"
-            >
-              <Text className="font-semibold text-ink">{t.name}</Text>
-            </Pressable>
+            <View key={t.id} className="mb-2 flex-row items-center gap-2">
+              <Pressable
+                className="flex-1 rounded-xl border border-line px-4 py-3"
+                onPress={async () => {
+                  const name = `${t.name} copy`;
+                  const { error } = await createFromTemplate(t.id, name);
+                  if (error) showToast('Could not create from template', 'error');
+                  else {
+                    showToast('List created from template', 'success');
+                    setShowTemplatePicker(false);
+                  }
+                }}
+              >
+                <Text className="font-semibold text-ink">{t.name}</Text>
+              </Pressable>
+              <Pressable
+                onPress={async () => {
+                  const ok = await confirm({
+                    title: `Delete template "${t.name}"?`,
+                    message: 'This cannot be undone.',
+                    destructive: true,
+                    confirmLabel: 'Delete',
+                  });
+                  if (!ok) return;
+                  const { error } = await deleteTemplate(t.id);
+                  if (error) showToast('Could not delete template', 'error');
+                  else showToast('Template deleted', 'info');
+                }}
+                className="h-10 w-10 items-center justify-center rounded-lg border border-line"
+              >
+                <Icon name="trash" size={16} color={colors.muted} />
+              </Pressable>
+            </View>
           ))
         )}
+      </Modal>
+
+      {/* Save as template modal */}
+      <Modal isOpen={showSaveTemplate} onClose={() => setShowSaveTemplate(false)} title="Save as template">
+        <TextField label="Template name" value={saveTemplateName} onChangeText={setSaveTemplateName} placeholder="e.g. Weekly groceries" />
+        <Button label="Save template" onPress={handleSaveAsTemplate} className="mt-4" />
       </Modal>
 
       {/* List picker sheet */}
@@ -478,6 +536,10 @@ export default function ShoppingScreen() {
         onChangeStore={setSettingsStore}
         onSave={handleSaveSettings}
         onDelete={handleDeleteList}
+        isRecurring={activeList?.isRecurring}
+        recurringFrequency={activeList?.recurringFrequency}
+        archivedAt={activeList?.archivedAt}
+        lastGeneratedAt={activeList?.lastGeneratedAt}
       />
 
       {/* Shop mode overlay */}

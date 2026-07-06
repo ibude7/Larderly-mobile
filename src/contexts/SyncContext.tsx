@@ -1,7 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type SyncEventType = 'connected' | 'disconnected' | 'synced';
+export type SyncEventType = 'connected' | 'disconnected' | 'synced' | 'error';
+export type SyncStatus = 'synced' | 'syncing' | 'error' | 'offline';
 
 export interface SyncEvent {
   type: SyncEventType;
@@ -9,10 +10,17 @@ export interface SyncEvent {
   detail?: string;
 }
 
+export interface SyncState {
+  status: SyncStatus;
+  lastSyncedAt: number | null;
+}
+
 interface SyncContextType {
   online: boolean;
   syncing: boolean;
+  status: SyncStatus;
   lastSyncedAt: number | null;
+  syncState: SyncState;
   syncLog: SyncEvent[];
   recordSync: (type: SyncEventType, detail?: string) => void;
 }
@@ -34,6 +42,7 @@ async function readLog(): Promise<SyncEvent[]> {
 export function SyncProvider({ children }: { children: ReactNode }) {
   const [online, setOnline] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [syncLog, setSyncLog] = useState<SyncEvent[]>([]);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,8 +55,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     readLog().then(setSyncLog).catch(() => {});
   }, []);
 
+  const status: SyncStatus = !online ? 'offline' : syncError ? 'error' : syncing ? 'syncing' : 'synced';
+  const syncState = useMemo(
+    () => ({
+      status,
+      lastSyncedAt,
+    }),
+    [lastSyncedAt, status],
+  );
+
   const recordSync = useCallback((type: SyncEventType, detail?: string) => {
     const now = Date.now();
+    setSyncError(type === 'error');
     if (type === 'synced') {
       AsyncStorage.setItem(LAST_SYNC_KEY, String(now)).catch(() => {});
       setLastSyncedAt(now);
@@ -100,7 +119,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [recordSync]);
 
   return (
-    <SyncContext.Provider value={{ online, syncing, lastSyncedAt, syncLog, recordSync }}>
+    <SyncContext.Provider value={{ online, syncing, status, lastSyncedAt, syncState, syncLog, recordSync }}>
       {children}
     </SyncContext.Provider>
   );
@@ -110,4 +129,8 @@ export function useSync() {
   const ctx = useContext(SyncContext);
   if (!ctx) throw new Error('useSync must be used within SyncProvider');
   return ctx;
+}
+
+export function useSyncContext() {
+  return useSync();
 }

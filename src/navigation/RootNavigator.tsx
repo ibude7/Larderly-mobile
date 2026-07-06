@@ -19,7 +19,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import RemindersScreen from '../screens/RemindersScreen';
 import NutritionScreen from '../screens/NutritionScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
-import MealPlannerScreen from '../screens/MealPlannerScreen';
+import ComingSoonScreen from '../screens/ComingSoonScreen';
 import AnonymousUpgradeBanner from '../components/auth/AnonymousUpgradeBanner';
 import EmailVerificationBanner from '../components/auth/EmailVerificationBanner';
 import OfflineBanner from '../components/layout/OfflineBanner';
@@ -83,7 +83,7 @@ export default function RootNavigator() {
             <Stack.Screen name="Reminders" component={RemindersScreen} options={{ presentation: 'card' }} />
             <Stack.Screen name="Nutrition" component={NutritionScreen} options={{ presentation: 'card' }} />
             <Stack.Screen name="Analytics" component={AnalyticsScreen} options={{ presentation: 'card' }} />
-            <Stack.Screen name="MealPlanner" component={MealPlannerScreen} options={{ presentation: 'card' }} />
+            <Stack.Screen name="MealPlanner" component={ComingSoonScreen} options={{ presentation: 'card' }} />
             <Stack.Screen name="Join" component={JoinScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="HouseholdSetup" component={HouseholdSetupScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ presentation: 'card' }} />

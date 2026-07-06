@@ -8,6 +8,7 @@
 
 import { httpsCallable } from '@react-native-firebase/functions';
 import { functions } from './firebase';
+import { sanitizeAIProduct, sanitizeString } from './sanitize';
 
 export interface ParsedVoiceCommand {
   productName: string;
@@ -34,10 +35,19 @@ const _parsePantryVoice = httpsCallable<
 
 export async function parseShoppingVoiceCommand(transcript: string): Promise<ParsedVoiceCommand> {
   const result = await _parseShoppingVoice({ transcript });
-  return result.data;
+  const sanitized = sanitizeAIProduct(result.data);
+  return {
+    productName: sanitized.name,
+    quantity: sanitized.quantity || 1,
+  };
 }
 
 export async function parsePantryVoiceCommand(transcript: string): Promise<ParsedPantryVoice> {
   const result = await _parsePantryVoice({ transcript });
-  return result.data;
+  const sanitized = sanitizeAIProduct(result.data);
+  return {
+    ...sanitized,
+    quantity: sanitized.quantity || 1,
+    storageLocation: sanitizeString((result.data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
+  };
 }

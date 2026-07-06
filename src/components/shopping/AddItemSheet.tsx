@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import TextField from '../ui/TextField';
 import Button from '../ui/Button';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
 interface AddItemSheetProps {
   name: string;
@@ -24,8 +25,13 @@ export default function AddItemSheet({
   onAdd,
   onCancel,
 }: AddItemSheetProps) {
+  const { keyboardHeight } = useKeyboard();
+
   return (
-    <View className="mt-6 rounded-2xl border border-line bg-surface p-4">
+    <View
+      className="mt-6 rounded-2xl border border-line bg-surface p-4"
+      style={{ paddingBottom: keyboardHeight ? Math.min(keyboardHeight, 180) : 16 }}
+    >
       <TextField label="Item name" value={name} onChangeText={onChangeName} />
       <View className="flex-row gap-3">
         <View className="flex-1">

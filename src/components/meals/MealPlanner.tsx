@@ -97,10 +97,10 @@ export default function MealPlanner({
     <>
       <View className="mb-5 flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="text-3xl font-bold text-ink dark:text-[#F0EEE9]">Meal Planner</Text>
+          <Text className="text-3xl font-bold text-ink dark:text-[#F6F1EA]">Meal Planner</Text>
           <View className="mt-1 flex-row items-center gap-1.5">
             <Icon name="sparkles" size={14} color={c.primary} />
-            <Text className="font-medium text-muted dark:text-[#6B6878]">AI meal planning</Text>
+            <Text className="font-medium text-muted dark:text-[#9A948D]">AI meal planning</Text>
           </View>
         </View>
         <View className="flex-row gap-2">
@@ -123,13 +123,13 @@ export default function MealPlanner({
       <View className="mb-5 flex-row items-center gap-2">
         <Pressable
           onPress={prevWeek}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
         >
           <Icon name="chevron-left" size={18} color={c.ink} />
         </Pressable>
         <Pressable
           onPress={nextWeek}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
         >
           <Icon name="chevron-right" size={18} color={c.ink} />
         </Pressable>
@@ -151,37 +151,37 @@ export default function MealPlanner({
           return (
             <View
               key={dateStr}
-              className={`overflow-hidden rounded-card border bg-surface dark:bg-[#1A1A22] ${
-                isToday ? 'border-primary/40' : 'border-line dark:border-[#2A2A35]'
+              className={`overflow-hidden rounded-card border bg-surface dark:bg-[#171A21] ${
+                isToday ? 'border-primary/40' : 'border-line dark:border-[#303541]'
               }`}
             >
               <View
-                className={`flex-row items-center justify-between border-b border-line dark:border-[#2A2A35] px-4 py-3 ${
-                  isToday ? 'bg-primary/5' : 'bg-canvas dark:bg-[#0F0F13]'
+                className={`flex-row items-center justify-between border-b border-line dark:border-[#303541] px-4 py-3 ${
+                  isToday ? 'bg-primary/5' : 'bg-canvas dark:bg-[#090A0D]'
                 }`}
               >
                 <View className="flex-row items-center gap-3">
                   <View
                     className={`h-10 w-10 items-center justify-center rounded-2xl ${
-                      isToday ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'
+                      isToday ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'
                     }`}
                   >
                     <Text
-                      className={`text-sm font-black ${isToday ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}
+                      className={`text-sm font-black ${isToday ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}
                     >
                       {day.getDate()}
                     </Text>
                   </View>
                   <View>
-                    <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
+                    <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
                       {DAY_LABELS[dayIndex]}
                     </Text>
-                    <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">{dayLabel}</Text>
+                    <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">{dayLabel}</Text>
                   </View>
                 </View>
                 {isToday ? (
                   <View className="rounded-full bg-primary/10 px-2.5 py-0.5">
-                    <Text className="text-[10px] font-bold uppercase text-primary">Today</Text>
+                    <Text className="text-xs font-bold uppercase text-primary">Today</Text>
                   </View>
                 ) : null}
               </View>
@@ -192,13 +192,13 @@ export default function MealPlanner({
                   return (
                     <View
                       key={mealType}
-                      className="flex-row items-center gap-3 border-b border-line dark:border-[#2A2A35] px-4 py-3 last:border-b-0"
+                      className="flex-row items-center gap-3 border-b border-line dark:border-[#303541] px-4 py-3 last:border-b-0"
                     >
                       <View className="h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
                         <Icon name={getMealTypeIcon(mealType)} size={18} color={c.primary} />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-xs font-bold text-muted dark:text-[#6B6878]">
+                        <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">
                           {MEAL_TYPE_LABELS[mealType]}
                         </Text>
                         {slotMeals.length > 0 ? (
@@ -207,13 +207,13 @@ export default function MealPlanner({
                               <Pressable
                                 key={meal.id}
                                 onPress={() => setSelectedMeal(meal)}
-                                className="rounded-xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] px-2.5 py-1.5"
+                                className="rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-2.5 py-1.5"
                               >
-                                <Text numberOfLines={1} className="text-sm font-bold text-ink dark:text-[#F0EEE9]">
+                                <Text numberOfLines={1} className="text-sm font-bold text-ink dark:text-[#F6F1EA]">
                                   {meal.name}
                                 </Text>
                                 {meal.ingredients?.length > 0 ? (
-                                  <Text className="text-[10px] font-semibold text-muted dark:text-[#6B6878]">
+                                  <Text className="text-xs font-semibold text-muted dark:text-[#9A948D]">
                                     {meal.ingredients.length} ingr.
                                   </Text>
                                 ) : null}
@@ -221,13 +221,13 @@ export default function MealPlanner({
                             ))}
                           </View>
                         ) : (
-                          <Text className="mt-0.5 text-xs text-muted dark:text-[#6B6878]">No meal planned</Text>
+                          <Text className="mt-0.5 text-xs text-muted dark:text-[#9A948D]">No meal planned</Text>
                         )}
                       </View>
                       <Pressable
                         onPress={() => setSelectedSlot({ date: dateStr, mealType })}
                         hitSlop={8}
-                        className="h-9 w-9 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+                        className="h-9 w-9 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
                       >
                         <Icon name="plus" size={18} color={c.muted} />
                       </Pressable>

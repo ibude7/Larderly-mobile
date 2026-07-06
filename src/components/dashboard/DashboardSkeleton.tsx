@@ -33,7 +33,7 @@ export default function DashboardSkeleton() {
     transform: [{ translateX: translateX.value }],
   }));
 
-  const placeholderBg = theme === 'dark' ? '#2A2A35' : '#EAE8E3';
+  const placeholderBg = theme === 'dark' ? '#303541' : '#EAE8E3';
   const shimmerColors = theme === 'dark'
     ? (['rgba(42, 42, 53, 0)', 'rgba(255, 255, 255, 0.08)', 'rgba(42, 42, 53, 0)'] as const)
     : (['rgba(234, 232, 227, 0)', 'rgba(255, 255, 255, 0.6)', 'rgba(234, 232, 227, 0)'] as const);

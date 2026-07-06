@@ -2,17 +2,28 @@ export interface ColorTokens {
   readonly primary: string;
   readonly primaryDark: string;
   readonly canvas: string;
+  readonly canvasRaised: string;
   readonly surface: string;
   readonly surfaceMuted: string;
+  readonly surfaceGlass: string;
+  readonly surfaceElevated: string;
   readonly ink: string;
+  readonly inkSoft: string;
   readonly line: string;
+  readonly glassLine: string;
   readonly muted: string;
   readonly success: string;
   readonly warning: string;
   readonly danger: string;
   readonly info: string;
+  readonly teal: string;
+  readonly amber: string;
   readonly primaryGlow: string;
+  readonly tealGlow: string;
+  readonly dangerGlow: string;
   readonly violetGlow: string;
+  readonly shadow: string;
+  readonly scrim: string;
   readonly blurIntensity: number;
   readonly blurTint: 'light' | 'dark';
   readonly lineStrong: string;
@@ -20,45 +31,67 @@ export interface ColorTokens {
 }
 
 export const lightColors: ColorTokens = {
-  primary: '#E87A3D',
-  primaryDark: '#D96B2E',
-  canvas: '#F4F2EE',
-  surface: '#FFFFFF',
-  surfaceMuted: '#FDFCFB',
-  ink: '#2C2C2C',
-  line: '#EAE8E3',
-  muted: '#A09C96',
-  success: '#3B9E6E',
-  warning: '#E0A63B',
-  danger: '#D9524A',
-  info: '#3B82F6',
-  primaryGlow: 'rgba(232, 122, 61, 0.15)',
-  violetGlow: 'rgba(139, 92, 246, 0.12)',
-  blurIntensity: 80,
+  primary: '#EA7A3C',
+  primaryDark: '#C85D24',
+  canvas: '#F5F2EC',
+  canvasRaised: '#FBF8F2',
+  surface: '#FFFDF8',
+  surfaceMuted: '#ECE7DD',
+  surfaceGlass: 'rgba(255, 253, 248, 0.74)',
+  surfaceElevated: '#FFFFFF',
+  ink: '#27231F',
+  inkSoft: '#4A443D',
+  line: '#E2DACE',
+  glassLine: 'rgba(255, 255, 255, 0.82)',
+  muted: '#7D766E',
+  success: '#287A55',
+  warning: '#B7791F',
+  danger: '#C9463D',
+  info: '#256D85',
+  teal: '#1F9A8A',
+  amber: '#F59E0B',
+  primaryGlow: 'rgba(234, 122, 60, 0.22)',
+  tealGlow: 'rgba(31, 154, 138, 0.18)',
+  dangerGlow: 'rgba(201, 70, 61, 0.16)',
+  violetGlow: 'rgba(112, 84, 173, 0.12)',
+  shadow: 'rgba(62, 45, 30, 0.16)',
+  scrim: 'rgba(18, 15, 12, 0.46)',
+  blurIntensity: 82,
   blurTint: 'light',
-  lineStrong: '#D1CFC9',
-  subtle: '#8A8680',
+  lineStrong: '#CFC3B5',
+  subtle: '#6F6860',
 };
 
 export const darkColors: ColorTokens = {
-  primary: '#F08C52',
-  primaryDark: '#E87A3D',
-  canvas: '#0F0F13',
-  surface: '#1A1A22',
-  surfaceMuted: '#14141C',
-  ink: '#F0EEE9',
-  line: '#2A2A35',
-  muted: '#6B6878',
-  success: '#4DB87F',
-  warning: '#F0B84A',
-  danger: '#E8605A',
-  info: '#5B9CF8',
-  primaryGlow: 'rgba(240, 140, 82, 0.18)',
-  violetGlow: 'rgba(167, 139, 250, 0.15)',
-  blurIntensity: 70,
+  primary: '#F28A4B',
+  primaryDark: '#DB6D2F',
+  canvas: '#090A0D',
+  canvasRaised: '#101217',
+  surface: '#171A21',
+  surfaceMuted: '#20242D',
+  surfaceGlass: 'rgba(23, 26, 33, 0.72)',
+  surfaceElevated: '#222733',
+  ink: '#F6F1EA',
+  inkSoft: '#D7D0C7',
+  line: '#303541',
+  glassLine: 'rgba(255, 255, 255, 0.10)',
+  muted: '#9A948D',
+  success: '#55C28A',
+  warning: '#F2B84B',
+  danger: '#FF6A61',
+  info: '#62B8D3',
+  teal: '#44D0BE',
+  amber: '#F59E0B',
+  primaryGlow: 'rgba(242, 138, 75, 0.28)',
+  tealGlow: 'rgba(68, 208, 190, 0.20)',
+  dangerGlow: 'rgba(255, 106, 97, 0.20)',
+  violetGlow: 'rgba(146, 121, 255, 0.18)',
+  shadow: 'rgba(0, 0, 0, 0.46)',
+  scrim: 'rgba(0, 0, 0, 0.58)',
+  blurIntensity: 76,
   blurTint: 'dark',
-  lineStrong: '#3E3D4A',
-  subtle: '#9E9BA8',
+  lineStrong: '#474D5D',
+  subtle: '#B9B1A8',
 };
 
 export const colors = lightColors;

@@ -80,7 +80,7 @@ export default function AIIdeasCard({
 
   return (
     <>
-      <View className="mt-6 overflow-hidden rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+      <View className="mt-6 overflow-hidden rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
         <Pressable
           onPress={() => setExpanded((e) => !e)}
           className="flex-row items-center gap-3 p-4"
@@ -89,23 +89,23 @@ export default function AIIdeasCard({
             <Icon name="sparkles" size={22} color="#FFFFFF" />
           </View>
           <View className="flex-1">
-            <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-[#6B6878]">
+            <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
               AI suggestions {loading ? '…' : ''}
             </Text>
-            <Text className="text-[15px] font-bold text-ink dark:text-[#F0EEE9]">What can I make right now?</Text>
+            <Text className="text-[15px] font-bold text-ink dark:text-[#F6F1EA]">What can I make right now?</Text>
           </View>
           {ideas.length > 0 ? (
             <View className="rounded-full bg-primary/10 px-2.5 py-0.5">
-              <Text className="text-[10px] font-bold text-primary">{ideas.length} ideas</Text>
+              <Text className="text-xs font-bold text-primary">{ideas.length} ideas</Text>
             </View>
           ) : null}
           <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={c.muted} />
         </Pressable>
 
         {expanded ? (
-          <View className="border-t border-line dark:border-[#2A2A35] p-4">
+          <View className="border-t border-line dark:border-[#303541] p-4">
             <View className="mb-3 flex-row items-center justify-between gap-3">
-              <Text className="flex-1 text-xs text-muted dark:text-[#6B6878]">
+              <Text className="flex-1 text-xs text-muted dark:text-[#9A948D]">
                 Based on {pantryItems.length} pantry{' '}
                 {pantryItems.length === 1 ? 'item' : 'items'}. Tap an idea for a full recipe.
               </Text>
@@ -122,14 +122,14 @@ export default function AIIdeasCard({
 
             {error ? (
               <View className="rounded-2xl border border-danger/30 bg-danger/10 p-4">
-                <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">Hmm.</Text>
-                <Text className="mt-1 text-sm text-ink/70 dark:text-[#F0EEE9]">{error}</Text>
+                <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Hmm.</Text>
+                <Text className="mt-1 text-sm text-ink/70 dark:text-[#F6F1EA]">{error}</Text>
               </View>
             ) : null}
 
             {showEmpty ? (
-              <View className="rounded-2xl border border-dashed border-line dark:border-[#2A2A35] p-6">
-                <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
+              <View className="rounded-2xl border border-dashed border-line dark:border-[#303541] p-6">
+                <Text className="text-center text-sm text-muted dark:text-[#9A948D]">
                   No ideas came back. Try regenerating.
                 </Text>
               </View>
@@ -146,7 +146,7 @@ export default function AIIdeasCard({
             {loading && ideas.length === 0 && !error ? (
               <View className="items-center py-8">
                 <LoadingSpinner />
-                <Text className="mt-3 text-sm text-muted dark:text-[#6B6878]">Cooking up ideas…</Text>
+                <Text className="mt-3 text-sm text-muted dark:text-[#9A948D]">Cooking up ideas…</Text>
               </View>
             ) : null}
           </View>
@@ -176,14 +176,14 @@ function IdeaCard({ idea, onSelect }: { idea: AIMealIdea; onSelect: () => void }
   return (
     <Pressable
       onPress={onSelect}
-      className="rounded-3xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-4"
+      className="rounded-3xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-4"
     >
       <View className="flex-row items-start justify-between gap-2">
         <View className="min-w-0 flex-1 flex-row items-center gap-2">
           <View className="h-8 w-8 items-center justify-center rounded-xl bg-primary">
             <Icon name="chef" size={16} color="#FFFFFF" />
           </View>
-          <Text numberOfLines={1} className="flex-1 text-sm font-bold text-ink dark:text-[#F0EEE9]">
+          <Text numberOfLines={1} className="flex-1 text-sm font-bold text-ink dark:text-[#F6F1EA]">
             {idea.name}
           </Text>
         </View>
@@ -197,7 +197,7 @@ function IdeaCard({ idea, onSelect }: { idea: AIMealIdea; onSelect: () => void }
           }`}
         >
           <Text
-            className={`text-[10px] font-bold ${
+            className={`text-xs font-bold ${
               coveragePct >= 80
                 ? 'text-success'
                 : coveragePct >= 50
@@ -210,25 +210,25 @@ function IdeaCard({ idea, onSelect }: { idea: AIMealIdea; onSelect: () => void }
         </View>
       </View>
       {idea.description ? (
-        <Text numberOfLines={2} className="mt-2 text-xs leading-relaxed text-muted dark:text-[#6B6878]">
+        <Text numberOfLines={2} className="mt-2 text-xs leading-relaxed text-muted dark:text-[#9A948D]">
           {idea.description}
         </Text>
       ) : null}
       <View className="mt-3 flex-row flex-wrap gap-1.5">
         {totalMin > 0 ? (
-          <View className="flex-row items-center gap-1 rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-2 py-0.5">
+          <View className="flex-row items-center gap-1 rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-2 py-0.5">
             <Icon name="clock" size={12} color={c.muted} />
-            <Text className="text-[10px] font-bold text-ink dark:text-[#F0EEE9]">{totalMin} min</Text>
+            <Text className="text-xs font-bold text-ink dark:text-[#F6F1EA]">{totalMin} min</Text>
           </View>
         ) : null}
         <View className="rounded-full bg-success/10 px-2 py-0.5">
-          <Text className="text-[10px] font-bold text-success">
+          <Text className="text-xs font-bold text-success">
             {idea.ingredients.length - missing} in pantry
           </Text>
         </View>
         {missing > 0 ? (
           <View className="rounded-full bg-primary/10 px-2 py-0.5">
-            <Text className="text-[10px] font-bold text-primary">{missing} to buy</Text>
+            <Text className="text-xs font-bold text-primary">{missing} to buy</Text>
           </View>
         ) : null}
       </View>

@@ -24,6 +24,27 @@ function toExpirationMs(expiryDate: string | null): number | undefined {
   return Number.isNaN(ms) ? undefined : ms;
 }
 
+function toIsoString(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return new Date(value).toISOString();
+  if (hasToMillis(value)) return new Date(value.toMillis()).toISOString();
+  return null;
+}
+
+function mapPriceHistory(value: unknown): Array<{ price: number; recordedAt: string }> | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const data = entry as Record<string, unknown>;
+      const price = typeof data.price === 'number' ? data.price : Number(data.price);
+      const recordedAt = toIsoString(data.recordedAt);
+      if (!Number.isFinite(price) || !recordedAt) return null;
+      return { price, recordedAt };
+    })
+    .filter((entry): entry is { price: number; recordedAt: string } => Boolean(entry));
+}
+
 /** Fallback virtual locations when household storageLocations haven't loaded yet. */
 export function defaultStorageLocations(userId: string): StorageLocation[] {
   const colors: Record<string, string> = {
@@ -92,6 +113,7 @@ export function inventoryToPantryItem(
     category: cat,
     unit: item.unit ?? mapped.unit ?? 'pcs',
     purchase_price: item.pricePerUnit ?? mapped.purchase_price,
+    priceHistory: item.priceHistory ?? mapped.priceHistory,
     expiry_date: toExpiryIso(item.expirationDate) ?? mapped.expiry_date,
   };
 }
@@ -141,6 +163,7 @@ export function mapInventoryDoc(id: string, data: Record<string, unknown>): Inve
     brand: data.brand as string | undefined,
     category: data.category as string | undefined,
     pricePerUnit: (data.pricePerUnit as number | undefined) ?? (data.purchasePrice as number | undefined),
+    priceHistory: mapPriceHistory(data.priceHistory),
     unit: data.unit as string | undefined,
     notes: data.notes as string | undefined,
     imageUrl: (data.imageUrl as string) ?? (data.customImage as string | undefined),

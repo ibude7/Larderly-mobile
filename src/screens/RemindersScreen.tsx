@@ -78,12 +78,12 @@ export default function RemindersScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
       <AppHeader title="Reminders" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <Button label={showAdd ? 'Cancel' : 'Add reminder'} onPress={() => setShowAdd(!showAdd)} className="mb-4" />
         {showAdd && (
-          <View className="mb-6 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
+          <View className="mb-6 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
             <TextField label="Title" value={title} onChangeText={setTitle} placeholder="Check expiry dates" />
             <SelectField
               label="Type"
@@ -103,13 +103,13 @@ export default function RemindersScreen() {
           <EmptyState icon="clock" title="No reminders" description="Add a reminder to stay on top of your kitchen." />
         ) : (
           reminders.map((r) => (
-            <View key={r.id} className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
+            <View key={r.id} className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
               <Pressable onPress={() => toggleComplete(r)}>
                 <Icon name={r.completed ? 'success' : 'clock'} size={22} color={r.completed ? c.success : c.muted} />
               </Pressable>
               <View className="flex-1">
-                <Text className={`font-semibold ${r.completed ? 'text-muted dark:text-[#6B6878] line-through' : 'text-ink dark:text-[#F0EEE9]'}`}>{r.title}</Text>
-                <Text className="text-xs capitalize text-muted dark:text-[#6B6878]">{r.type}</Text>
+                <Text className={`font-semibold ${r.completed ? 'text-muted dark:text-[#9A948D] line-through' : 'text-ink dark:text-[#F6F1EA]'}`}>{r.title}</Text>
+                <Text className="text-xs capitalize text-muted dark:text-[#9A948D]">{r.type}</Text>
               </View>
               <Pressable onPress={() => deleteReminder(r.id)}>
                 <Icon name="trash" size={18} color={c.danger} />

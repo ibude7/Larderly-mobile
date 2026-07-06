@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 import { View, Text } from 'react-native';
-import { Icon, IconName } from './Icon';
+import { IconName } from './Icon';
 import Button from './Button';
-import { colors } from '../../theme';
+import EmptyIllustration from './EmptyIllustration';
+import { GlassCard } from './Surface';
 
 interface EmptyStateProps {
   icon: IconName;
@@ -17,7 +18,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export default function EmptyState({
+function EmptyState({
   icon,
   title,
   description,
@@ -29,21 +30,23 @@ export default function EmptyState({
   extra,
   className = '',
 }: EmptyStateProps) {
-  const container =
-    variant === 'card'
-      ? 'items-center rounded-card border border-line bg-surface px-6 py-12'
-      : variant === 'inline'
-        ? 'items-center py-8'
-        : 'items-center rounded-card border border-dashed border-line bg-canvas px-6 py-10';
+  const artVariant =
+    icon === 'shopping' || icon === 'cart'
+      ? 'shopping'
+      : icon === 'chef' || icon === 'meals'
+        ? 'meals'
+        : icon === 'pantry' || icon === 'shelf'
+          ? 'pantry'
+          : 'default';
 
-  return (
-    <View className={`${container} ${className}`}>
-      <View className="mb-5 h-20 w-20 items-center justify-center rounded-full border border-line bg-surface-muted">
-        <Icon name={icon} size={32} color={colors.primary} />
+  const body = (
+    <View className={`items-center px-6 py-10 ${variant === 'inline' ? 'py-8' : ''} ${className}`}>
+      <View className="mb-4">
+        <EmptyIllustration variant={artVariant} size={variant === 'inline' ? 112 : 144} />
       </View>
-      <Text className="text-center text-lg font-bold text-ink">{title}</Text>
+      <Text className="text-center text-xl font-bold text-ink dark:text-[#F6F1EA]">{title}</Text>
       {description ? (
-        <Text className="mt-2 max-w-xs text-center text-sm leading-relaxed text-muted">
+        <Text className="mt-2 max-w-xs text-center text-sm leading-relaxed text-muted dark:text-[#9A948D]">
           {description}
         </Text>
       ) : null}
@@ -60,4 +63,14 @@ export default function EmptyState({
       {extra ? <View className="mt-4">{extra}</View> : null}
     </View>
   );
+
+  if (variant === 'inline') return body;
+
+  return (
+    <GlassCard padded={false}>
+      {body}
+    </GlassCard>
+  );
 }
+
+export default memo(EmptyState);

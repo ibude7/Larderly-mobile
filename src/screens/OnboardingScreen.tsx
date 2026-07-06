@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Share } from 'react-native';
 import { Image } from 'expo-image';
+import LottieView from 'lottie-react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackNavigationProp } from '../navigation/types';
@@ -19,6 +27,16 @@ import { requestNotificationPermission } from '../lib/push';
 import { pickProfilePhoto, uploadUserAvatar } from '../lib/avatar';
 
 const TOTAL_STEPS = 8;
+const STEP_ANIMATIONS = [
+  require('../../assets/lottie/household.json'),
+  require('../../assets/lottie/household.json'),
+  require('../../assets/lottie/pantry.json'),
+  require('../../assets/lottie/shopping.json'),
+  require('../../assets/lottie/pantry.json'),
+  require('../../assets/lottie/scan.json'),
+  require('../../assets/lottie/pantry.json'),
+  require('../../assets/lottie/household.json'),
+] as const;
 const DIET_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Pescatarian', 'Halal', 'Kosher'];
 const STORES = ["Whole Foods", "Trader Joe's", 'Costco', 'Target', 'Walmart', 'Kroger', 'Safeway', 'Publix', 'Aldi'];
 
@@ -40,6 +58,25 @@ interface ScannedItem {
   storageLocation: string;
   category: string;
   barcode: string;
+}
+
+function StepDot({ active, complete }: { active: boolean; complete: boolean }) {
+  const width = useSharedValue(active ? 24 : 8);
+
+  useEffect(() => {
+    width.value = withSpring(active ? 24 : 8, { damping: 15, stiffness: 180 });
+  }, [active, width]);
+
+  const style = useAnimatedStyle(() => ({
+    width: width.value,
+  }));
+
+  return (
+    <Animated.View
+      style={style}
+      className={`h-2 rounded-full ${active ? 'bg-primary' : complete ? 'bg-primary/40' : 'bg-line'}`}
+    />
+  );
 }
 
 export default function OnboardingScreen() {
@@ -65,6 +102,25 @@ export default function OnboardingScreen() {
   const [addedToSync, setAddedToSync] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(userProfile?.profilePictureUrl ?? user?.photoURL ?? '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const stepX = useSharedValue(24);
+  const stepOpacity = useSharedValue(0);
+  const continueScale = useSharedValue(1);
+
+  useEffect(() => {
+    stepX.value = 24;
+    stepOpacity.value = 0;
+    stepX.value = withTiming(0, { duration: 250 });
+    stepOpacity.value = withTiming(1, { duration: 250 });
+  }, [step, stepOpacity, stepX]);
+
+  const stepStyle = useAnimatedStyle(() => ({
+    opacity: stepOpacity.value,
+    transform: [{ translateX: stepX.value }],
+  }));
+
+  const continueStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: continueScale.value }],
+  }));
 
   useEffect(() => {
     if (!householdId) return;
@@ -162,29 +218,44 @@ export default function OnboardingScreen() {
     else await finish();
   };
 
+  const handleContinue = () => {
+    continueScale.value = withSequence(
+      withTiming(0.97, { duration: 90 }),
+      withSpring(1, { damping: 12, stiffness: 240 }),
+    );
+    void next();
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]">
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
         <View className="mb-6 flex-row justify-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <View
-              key={i}
-              className={`h-2 rounded-full ${i === step ? 'w-8 bg-primary' : i < step ? 'w-2 bg-primary/40' : 'w-2 bg-line'}`}
-            />
+            <StepDot key={i} active={i === step} complete={i < step} />
           ))}
         </View>
 
-        <Text className="text-sm font-semibold text-primary">Step {step + 1} of {TOTAL_STEPS}</Text>
-        <Text className="mb-1 mt-2 text-2xl font-bold text-ink dark:text-[#F0EEE9]">{STEP_TITLES[step]}</Text>
+        <View className="h-56 items-center justify-center">
+          <LottieView
+            source={STEP_ANIMATIONS[step]}
+            autoPlay
+            loop
+            style={{ width: 220, height: 220 }}
+          />
+        </View>
 
+        <Text className="text-sm font-semibold text-primary">Step {step + 1} of {TOTAL_STEPS}</Text>
+        <Text className="mb-1 mt-2 text-2xl font-bold text-ink dark:text-[#F6F1EA]">{STEP_TITLES[step]}</Text>
+
+        <Animated.View style={stepStyle}>
         {step === 0 && (
           <View className="mt-4 gap-3">
             <View className="items-center gap-3">
               {photoUrl ? (
-                <Image source={{ uri: photoUrl }} className="h-24 w-24 rounded-full border border-line dark:border-[#2A2A35]" />
+                <Image source={{ uri: photoUrl }} className="h-24 w-24 rounded-full border border-line dark:border-[#303541]" />
               ) : (
-                <View className="h-24 w-24 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
-                  <Text className="text-3xl text-muted dark:text-[#6B6878]">?</Text>
+                <View className="h-24 w-24 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
+                  <Text className="text-3xl text-muted dark:text-[#9A948D]">?</Text>
                 </View>
               )}
               <Button
@@ -217,8 +288,8 @@ export default function OnboardingScreen() {
         {step === 1 && (
           <View className="mt-4 gap-4">
             <View className="items-center rounded-2xl border border-primary/20 bg-primary/5 p-6">
-              <Text className="text-xs font-bold uppercase text-muted dark:text-[#6B6878]">Your invite code</Text>
-              <Text className="mt-2 font-mono text-3xl font-black tracking-widest text-ink dark:text-[#F0EEE9]">
+              <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">Your invite code</Text>
+              <Text className="mt-2 font-mono text-3xl font-black tracking-widest text-ink dark:text-[#F6F1EA]">
                 {inviteCode || '——'}
               </Text>
               <Button
@@ -229,7 +300,7 @@ export default function OnboardingScreen() {
                 onPress={() => inviteCode && Share.share({ message: `Join my Larderly household: ${inviteCode}` })}
               />
             </View>
-            <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
+            <Text className="text-center text-sm text-muted dark:text-[#9A948D]">
               Family can join via Settings → Join household. You can invite people later too.
             </Text>
           </View>
@@ -242,9 +313,9 @@ export default function OnboardingScreen() {
                 <Pressable
                   key={d}
                   onPress={() => toggleDiet(d)}
-                  className={`rounded-full px-4 py-2 ${dietaryPrefs.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
+                  className={`rounded-full px-4 py-2 ${dietaryPrefs.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
                 >
-                  <Text className={dietaryPrefs.includes(d) ? 'font-semibold text-white' : 'text-ink dark:text-[#F0EEE9]'}>{d}</Text>
+                  <Text className={dietaryPrefs.includes(d) ? 'font-semibold text-white' : 'text-ink dark:text-[#F6F1EA]'}>{d}</Text>
                 </Pressable>
               ))}
             </View>
@@ -259,9 +330,9 @@ export default function OnboardingScreen() {
                 <Pressable
                   key={s}
                   onPress={() => toggleStore(s)}
-                  className={`rounded-full px-4 py-2 ${stores.includes(s) ? 'bg-ink' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
+                  className={`rounded-full px-4 py-2 ${stores.includes(s) ? 'bg-ink' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
                 >
-                  <Text className={stores.includes(s) ? 'font-semibold text-white' : 'text-ink dark:text-[#F0EEE9]'}>{s}</Text>
+                  <Text className={stores.includes(s) ? 'font-semibold text-white' : 'text-ink dark:text-[#F6F1EA]'}>{s}</Text>
                 </Pressable>
               ))}
             </View>
@@ -287,7 +358,7 @@ export default function OnboardingScreen() {
 
         {step === 4 && (
           <View className="mt-4 gap-3">
-            <Text className="text-sm text-muted dark:text-[#6B6878]">
+            <Text className="text-sm text-muted dark:text-[#9A948D]">
               Get alerts about expiring items, low stock, and household activity.
             </Text>
             <Button
@@ -306,7 +377,7 @@ export default function OnboardingScreen() {
           <View className="mt-4 gap-3">
             <View className="items-center rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6">
               <Text className="text-4xl">📷</Text>
-              <Text className="mt-3 text-center text-sm text-muted dark:text-[#6B6878]">
+              <Text className="mt-3 text-center text-sm text-muted dark:text-[#9A948D]">
                 Scan any food barcode or try a demo product below.
               </Text>
             </View>
@@ -330,8 +401,8 @@ export default function OnboardingScreen() {
         {step === 6 && scannedItem && (
           <View className="mt-4 gap-3">
             <View className="rounded-2xl border border-success/30 bg-success/10 p-4">
-              <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{scannedItem.name}</Text>
-              <Text className="font-mono text-xs text-muted dark:text-[#6B6878]">{scannedItem.barcode}</Text>
+              <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">{scannedItem.name}</Text>
+              <Text className="font-mono text-xs text-muted dark:text-[#9A948D]">{scannedItem.barcode}</Text>
             </View>
             <TextField label="Quantity" value={editQty} onChangeText={setEditQty} keyboardType="numeric" />
             <SelectField
@@ -353,7 +424,7 @@ export default function OnboardingScreen() {
                 {scannedItem.name} has been added to your pantry and synced.
               </Text>
             )}
-            <Text className="text-center text-sm text-muted dark:text-[#6B6878]">
+            <Text className="text-center text-sm text-muted dark:text-[#9A948D]">
               {scanSkipped
                 ? "You're all set! Add items anytime from Pantry or Scanner."
                 : 'Your data is safely stored. Head to your dashboard to manage inventory.'}
@@ -364,7 +435,9 @@ export default function OnboardingScreen() {
 
         {step < 4 && (
           <View className="mt-8 gap-2">
-            <Button label="Continue" onPress={next} loading={saving} />
+            <Animated.View style={continueStyle}>
+              <Button label="Continue" onPress={handleContinue} loading={saving} />
+            </Animated.View>
             {step > 0 ? (
               <Button label="Back" variant="ghost" onPress={() => setStep((s) => s - 1)} />
             ) : (
@@ -372,6 +445,7 @@ export default function OnboardingScreen() {
             )}
           </View>
         )}
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

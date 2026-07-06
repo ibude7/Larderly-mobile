@@ -1,8 +1,10 @@
-import { Pressable, Text, View, ActivityIndicator, PressableProps } from 'react-native';
+import { memo } from 'react';
+import { Pressable, Text, View, ActivityIndicator, PressableProps, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
 import type { AppColors } from '../../theme';
+import { useHaptics } from '../../hooks/useHaptics';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 
@@ -20,20 +22,12 @@ interface ButtonProps {
   hitSlop?: PressableProps['hitSlop'];
 }
 
-const CONTAINER: Record<Variant, string> = {
-  primary: 'bg-primary',
-  secondary: 'bg-surface dark:bg-[#1A1A22] border border-line dark:border-[#2A2A35]',
-  ghost: 'bg-transparent',
-  danger: 'bg-danger',
-  outline: 'bg-transparent',
-};
-
 const LABEL: Record<Variant, string> = {
   primary: 'text-white',
-  secondary: 'text-ink dark:text-[#F0EEE9]',
-  ghost: 'text-muted dark:text-[#6B6878]',
+  secondary: 'text-ink dark:text-[#F6F1EA]',
+  ghost: 'text-muted dark:text-[#9A948D]',
   danger: 'text-white',
-  outline: 'text-ink dark:text-[#F0EEE9]',
+  outline: 'text-ink dark:text-[#F6F1EA]',
 };
 
 function getIconColor(variant: Variant, c: AppColors): string {
@@ -49,7 +43,7 @@ function getIconColor(variant: Variant, c: AppColors): string {
   }
 }
 
-export default function Button({
+function Button({
   label,
   onPress,
   variant = 'primary',
@@ -62,6 +56,7 @@ export default function Button({
   hitSlop,
 }: ButtonProps) {
   const c = useAppColors();
+  const haptics = useHaptics();
   const scale = useSharedValue(1);
   const pad = size === 'sm' ? 'px-4 py-2' : 'px-5 py-3';
   const isDisabled = disabled || loading;
@@ -76,15 +71,28 @@ export default function Button({
     variant === 'primary' && !isDisabled
       ? {
           shadowColor: c.primary,
-          shadowOpacity: 0.4,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: 4 as const },
-          elevation: 8,
+          shadowOpacity: 0.36,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 10 as const },
+          elevation: 9,
         }
       : undefined;
 
-  const outlineBorder =
-    variant === 'outline' ? { borderWidth: 1, borderColor: c.line } : undefined;
+  const backgroundColor =
+    variant === 'primary'
+      ? c.primary
+      : variant === 'danger'
+        ? c.danger
+        : variant === 'secondary'
+          ? c.surfaceGlass
+          : 'transparent';
+
+  const borderColor =
+    variant === 'outline' || variant === 'secondary'
+      ? variant === 'secondary'
+        ? c.glassLine
+        : c.line
+      : 'transparent';
 
   return (
     <Animated.View
@@ -92,7 +100,10 @@ export default function Button({
       className={full ? 'w-full' : undefined}
     >
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          haptics.tap();
+          onPress();
+        }}
         onPressIn={() => {
           if (!isDisabled) scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
         }}
@@ -101,8 +112,16 @@ export default function Button({
         }}
         disabled={isDisabled}
         hitSlop={hitSlop}
-        style={{ opacity: isDisabled ? 0.55 : 1, ...outlineBorder }}
-        className={`flex-row items-center justify-center gap-2 rounded-full ${pad} ${CONTAINER[variant]} ${
+        style={[
+          styles.button,
+          {
+            opacity: isDisabled ? 0.55 : 1,
+            backgroundColor,
+            borderColor,
+            shadowColor: variant === 'secondary' ? c.shadow : 'transparent',
+          },
+        ]}
+        className={`flex-row items-center justify-center gap-2 rounded-full ${pad} ${
           full ? 'w-full' : ''
         } ${className}`}
       >
@@ -124,3 +143,14 @@ export default function Button({
     </Animated.View>
   );
 }
+
+export default memo(Button);
+
+const styles = StyleSheet.create({
+  button: {
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+  },
+});

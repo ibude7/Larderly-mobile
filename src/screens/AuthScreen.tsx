@@ -331,7 +331,7 @@ export default function AuthScreen() {
             }}
           >
             {mode !== 'reset' ? (
-              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#2A2A35] bg-line/60 p-1.5">
+              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#303541] bg-line/60 p-1.5">
                 {(['signin', 'signup'] as const).map((m) => {
                   const isActive = mode === m;
                   return (
@@ -357,21 +357,21 @@ export default function AuthScreen() {
                 className="mb-4 flex-row items-center gap-1.5"
               >
                 <Icon name="chevron-left" size={16} color={c.muted} />
-                <Text className="text-xs font-semibold text-muted dark:text-[#6B6878]">Back to sign in</Text>
+                <Text className="text-xs font-semibold text-muted dark:text-[#9A948D]">Back to sign in</Text>
               </Pressable>
             )}
 
             <View className="mb-6">
-              <Text className="text-2xl font-bold text-ink dark:text-[#F0EEE9]">{heading}</Text>
-              <Text className="mt-1 text-sm leading-relaxed text-muted dark:text-[#6B6878]">{subheading}</Text>
+              <Text className="text-2xl font-bold text-ink dark:text-[#F6F1EA]">{heading}</Text>
+              <Text className="mt-1 text-sm leading-relaxed text-muted dark:text-[#9A948D]">{subheading}</Text>
             </View>
 
             {verificationSent && mode === 'signup' ? (
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
                 <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Check your email</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
+                  <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Check your email</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F6F1EA]">
                     We sent a verification link to {verificationSent}. Tap it to activate your
                     account.
                   </Text>
@@ -383,8 +383,8 @@ export default function AuthScreen() {
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
                 <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">Reset link sent</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F0EEE9]">
+                  <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Reset link sent</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F6F1EA]">
                     If an account exists for {resetSent}, you’ll receive an email with instructions
                     shortly.
                   </Text>
@@ -501,12 +501,12 @@ export default function AuthScreen() {
                       {mode !== 'reset' ? (
                         <View>
                           <View className="flex-row items-center justify-between">
-                            <Text className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+                            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
                               Password
                             </Text>
                             {mode === 'signin' ? (
                               <Pressable onPress={() => setMode('reset')}>
-                                <Text className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                                <Text className="text-xs font-semibold uppercase tracking-wide text-primary">
                                   Forgot?
                                 </Text>
                               </Pressable>
@@ -591,7 +591,7 @@ export default function AuthScreen() {
                   </Pressable>
                 ) : mode === 'phone' ? (
                   <Pressable onPress={() => setMode('signin')} className="mt-4">
-                    <Text className="text-center text-sm font-semibold text-muted dark:text-[#6B6878]">Back to email sign in</Text>
+                    <Text className="text-center text-sm font-semibold text-muted dark:text-[#9A948D]">Back to email sign in</Text>
                   </Pressable>
                 ) : null}
 

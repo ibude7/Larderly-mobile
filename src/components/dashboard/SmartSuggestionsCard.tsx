@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { TabScreenNavigationProp } from '../../navigation/types';
@@ -26,7 +26,7 @@ interface SmartSuggestionsCardProps {
   shoppingItems: { productName: string }[];
 }
 
-export default function SmartSuggestionsCard({
+function SmartSuggestionsCard({
   inventory,
   activity,
   shoppingItems,
@@ -45,10 +45,10 @@ export default function SmartSuggestionsCard({
   if (visible.length === 0) return null;
 
   return (
-    <View className="mt-6 rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
+    <View className="mt-6 rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
       <View className="mb-4 flex-row items-center gap-2">
         <Icon name="sparkles" size={20} color={c.primary} />
-        <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Smart Suggestions</Text>
+        <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Smart Suggestions</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
         <View className="flex-row gap-3 px-1">
@@ -73,7 +73,7 @@ export default function SmartSuggestionsCard({
                     </Text>
                   </Pressable>
                 </View>
-                <Text className="text-xs leading-5 text-ink/80 dark:text-[#F0EEE9]">{s.body}</Text>
+                <Text className="text-xs leading-5 text-ink/80 dark:text-[#F6F1EA]">{s.body}</Text>
                 {s.kind === 'predictive' || s.kind === 'bundle' ? (
                   <Pressable
                     onPress={() => navigation.navigate('Shopping')}
@@ -92,3 +92,9 @@ export default function SmartSuggestionsCard({
     </View>
   );
 }
+
+export default memo(SmartSuggestionsCard, (prev, next) => (
+  prev.inventory.length === next.inventory.length
+  && prev.activity.length === next.activity.length
+  && prev.shoppingItems.length === next.shoppingItems.length
+));

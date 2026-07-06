@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react';
-import { View, Text, TextInput, TextInputProps, Pressable } from 'react-native';
+import { View, Text, TextInput, TextInputProps, Pressable, StyleSheet } from 'react-native';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
 
@@ -42,15 +42,21 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   return (
     <View className={containerClassName}>
       {label ? (
-        <Text className="mb-1.5 text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
+        <Text className="mb-2 text-xs font-bold uppercase text-muted dark:text-[#9A948D]">
           {label}
         </Text>
       ) : null}
       <View
-        className={`flex-row items-center rounded-field border bg-surface dark:bg-[#1A1A22] px-3.5 ${
-          borderColor ? '' : 'border-line dark:border-[#2A2A35]'
-        }`}
-        style={borderColor ? { borderWidth: 1, borderColor } : undefined}
+        className="flex-row items-center rounded-field border px-3.5"
+        style={[
+          styles.field,
+          {
+            backgroundColor: c.surfaceGlass,
+            borderColor: borderColor ?? c.glassLine,
+            shadowColor: focused ? c.primary : c.shadow,
+            shadowOpacity: focused ? 0.18 : 0.08,
+          },
+        ]}
       >
         {icon ? (
           <View className="mr-2.5">
@@ -60,7 +66,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
         <TextInput
           ref={ref}
           placeholderTextColor={c.muted}
-          className="flex-1 py-3 text-sm text-ink dark:text-[#F0EEE9]"
+          className="flex-1 py-3.5 text-sm text-ink dark:text-[#F6F1EA]"
           onFocus={(e) => {
             setFocused(true);
             inputProps.onFocus?.(e);
@@ -84,9 +90,17 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
       {error ? (
         <Text style={{ color: c.danger, fontSize: 12, marginTop: 6 }}>{error}</Text>
       ) : null}
-      {hint ? <Text className="mt-1.5 text-xs text-muted dark:text-[#6B6878]">{hint}</Text> : null}
+      {hint ? <Text className="mt-1.5 text-xs text-muted dark:text-[#9A948D]">{hint}</Text> : null}
     </View>
   );
 });
 
 export default TextField;
+
+const styles = StyleSheet.create({
+  field: {
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 18,
+  },
+});

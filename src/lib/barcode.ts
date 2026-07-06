@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc } from '@react-native-firebase/firestore';
 import { db } from './firebase';
 import { PantryItem, StorageLocation } from '../types';
+import { sanitizeString } from './sanitize';
 
 /**
  * Barcode → product lookup and inference helpers.
@@ -11,6 +12,7 @@ import { PantryItem, StorageLocation } from '../types';
  */
 
 export interface ScannedProduct {
+  source?: 'cache' | 'external';
   barcode: string;
   name: string;
   brand: string;
@@ -365,21 +367,25 @@ export async function lookupBarcode(barcode: string): Promise<ScannedProduct | n
         nutri_score?: string | null;
         dietary?: string[] | null;
       };
-      if (cached.brand && cached.category !== 'Other') {
+      const name = sanitizeString(cached.name, 200);
+      if (name) {
+        const brand = sanitizeString(cached.brand, 200);
+        const category = sanitizeString(cached.category, 200) || 'Other';
         return {
-          barcode: cached.barcode,
-          name: cached.name,
-          brand: cached.brand,
-          image_url: cached.image_url,
-          category: cached.category,
+          source: 'cache',
+          barcode: sanitizeString(cached.barcode || barcode, 80) || barcode,
+          name,
+          brand,
+          image_url: sanitizeString(cached.image_url, 500),
+          category,
           nutrition_data: cached.nutrition_data,
-          unit: inferUnit(cached.category, undefined, cached.quantity_text, cached.name),
-          quantity_text: cached.quantity_text ?? '',
-          labels_text: cached.labels_text ?? '',
-          description: cached.description ?? '',
+          unit: inferUnit(category, undefined, cached.quantity_text, name),
+          quantity_text: sanitizeString(cached.quantity_text ?? '', 120),
+          labels_text: sanitizeString(cached.labels_text ?? '', 300),
+          description: sanitizeString(cached.description ?? '', 500),
           allergens: cached.allergens ?? undefined,
           traces: cached.traces ?? undefined,
-          nutri_score: cached.nutri_score ?? undefined,
+          nutri_score: sanitizeString(cached.nutri_score ?? '', 8) || undefined,
           dietary: cached.dietary ?? undefined,
         };
       }
@@ -394,13 +400,16 @@ export async function lookupBarcode(barcode: string): Promise<ScannedProduct | n
     if (json.status !== 1 || !json.product) return null;
 
     const p = json.product;
-    const productName = p.product_name || p.product_name_en || '';
-    let category = mapOffCategory(p.categories || '', p.pnns_groups_1 || '', p.pnns_groups_2 || '');
+    const productName = sanitizeString(p.product_name || p.product_name_en || '', 200);
+    let category = sanitizeString(
+      mapOffCategory(p.categories || '', p.pnns_groups_1 || '', p.pnns_groups_2 || ''),
+      200,
+    );
     if (category === 'Other') {
       category = inferCategoryFromName(productName) ?? 'Other';
     }
-    let brand = (p.brands || '').split(',')[0].trim();
-    if (!brand) brand = (p.brand_owner || '').split(',')[0].trim();
+    let brand = sanitizeString((p.brands || '').split(',')[0], 200);
+    if (!brand) brand = sanitizeString((p.brand_owner || '').split(',')[0], 200);
     if (!brand && productName) {
       const firstWord = productName.split(/\s+/)[0];
       if (
@@ -412,21 +421,21 @@ export async function lookupBarcode(barcode: string): Promise<ScannedProduct | n
         brand = firstWord;
       }
     }
-    const rawLabels: string = p.labels || '';
+    const rawLabels: string = sanitizeString(p.labels || '', 500);
     const labels_text = rawLabels
       .split(',')
       .map((l: string) => l.trim())
       .filter(Boolean)
       .join(', ');
 
-    const rawAllergens: string = p.allergens || '';
+    const rawAllergens: string = sanitizeString(p.allergens || '', 500);
     const allergens = rawAllergens
       .split(',')
       .map((a: string) => a.replace(/^en:/, '').replace(/-/g, ' ').trim())
       .filter(Boolean)
       .slice(0, 6);
 
-    const rawTraces: string = p.traces || '';
+    const rawTraces: string = sanitizeString(p.traces || '', 500);
     const traces = rawTraces
       .split(',')
       .map((t: string) => t.replace(/^en:/, '').replace(/-/g, ' ').trim())
@@ -448,16 +457,17 @@ export async function lookupBarcode(barcode: string): Promise<ScannedProduct | n
     }
 
     const product: ScannedProduct = {
+      source: 'external',
       barcode,
       name: productName,
       brand,
-      image_url: p.image_front_url || p.image_url || '',
+      image_url: sanitizeString(p.image_front_url || p.image_url || '', 500),
       category,
       nutrition_data: p.nutriments || {},
       unit: inferUnit(category, p.packaging || '', p.quantity || '', productName),
-      quantity_text: p.quantity || '',
+      quantity_text: sanitizeString(p.quantity || '', 120),
       labels_text,
-      description: p.generic_name_en || p.generic_name || '',
+      description: sanitizeString(p.generic_name_en || p.generic_name || '', 500),
       allergens: allergens.length > 0 ? allergens : undefined,
       traces: traces.length > 0 ? traces : undefined,
       nutri_score,

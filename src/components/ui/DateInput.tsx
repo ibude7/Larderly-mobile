@@ -42,9 +42,9 @@ export default function DateInput({ value, onChange, placeholder = 'Select date'
     <View>
       <Pressable
         onPress={() => setShow(true)}
-        className="flex-row items-center justify-between rounded-field border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3.5 py-3"
+        className="flex-row items-center justify-between rounded-field border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3.5 py-3"
       >
-        <Text className={value ? 'text-sm text-ink dark:text-[#F0EEE9]' : 'text-sm text-muted dark:text-[#6B6878]'}>
+        <Text className={value ? 'text-sm text-ink dark:text-[#F6F1EA]' : 'text-sm text-muted dark:text-[#9A948D]'}>
           {value ? displayDate(value) : placeholder}
         </Text>
         <View className="flex-row items-center gap-3">

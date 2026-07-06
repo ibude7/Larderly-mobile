@@ -27,13 +27,13 @@ function PantryResultRow({ item, locations }: { item: PantryItem; locations: Sto
   const c = useAppColors();
   const locName = locations.find((l) => l.id === item.location_id)?.name || '—';
   return (
-    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
+    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
         <Icon name={getCategoryIcon(item.category)} size={18} color={c.primary} />
       </View>
       <View className="flex-1">
-        <Text className="font-semibold text-ink dark:text-[#F0EEE9]">{item.name}</Text>
-        <Text className="text-xs text-muted dark:text-[#6B6878] mt-0.5">
+        <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{item.name}</Text>
+        <Text className="text-xs text-muted dark:text-[#9A948D] mt-0.5">
           {item.quantity} {item.unit} · {locName}
         </Text>
       </View>
@@ -55,13 +55,13 @@ function RecipeResultRow({ recipe, pantryItems }: { recipe: Recipe; pantryItems:
   }, [recipe.ingredients, pantryItems]);
 
   return (
-    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
+    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-success/10">
         <Icon name="chef" size={18} color={c.success} />
       </View>
       <View className="flex-1">
-        <Text className="font-semibold text-ink dark:text-[#F0EEE9]">{recipe.title}</Text>
-        <Text className="text-xs text-muted dark:text-[#6B6878] mt-0.5">
+        <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{recipe.title}</Text>
+        <Text className="text-xs text-muted dark:text-[#9A948D] mt-0.5">
           {availableCount} ingredients available
         </Text>
       </View>
@@ -72,13 +72,13 @@ function RecipeResultRow({ recipe, pantryItems }: { recipe: Recipe; pantryItems:
 function ShoppingResultRow({ item, listName }: { item: ShoppingListItem; listName: string }) {
   const c = useAppColors();
   return (
-    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
+    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-info/10">
         <Icon name="cart" size={18} color={c.info} />
       </View>
       <View className="flex-1">
-        <Text className="font-semibold text-ink dark:text-[#F0EEE9]">{item.name}</Text>
-        <Text className="text-xs text-muted dark:text-[#6B6878] mt-0.5">{listName}</Text>
+        <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{item.name}</Text>
+        <Text className="text-xs text-muted dark:text-[#9A948D] mt-0.5">{listName}</Text>
       </View>
     </View>
   );
@@ -92,13 +92,13 @@ function ActivityResultRow({ activity }: { activity: ActivityEvent }) {
   const actionText = `${activity.actorName || 'Someone'} ${activity.verb.replace('item.', '')} ${activity.target || ''}`;
 
   return (
-    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
+    <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-line/20 dark:bg-line/10">
         <Icon name="clock" size={18} color={c.muted} />
       </View>
       <View className="flex-1">
-        <Text className="font-semibold text-ink dark:text-[#F0EEE9]">{actionText}</Text>
-        {dateStr ? <Text className="text-xs text-muted dark:text-[#6B6878] mt-0.5">{dateStr}</Text> : null}
+        <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{actionText}</Text>
+        {dateStr ? <Text className="text-xs text-muted dark:text-[#9A948D] mt-0.5">{dateStr}</Text> : null}
       </View>
     </View>
   );
@@ -217,12 +217,12 @@ export default function SearchScreen() {
     activityResults.length > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]" edges={['top']}>
       {/* Top Search Input */}
-      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#2A2A35] px-5 py-4">
+      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#303541] px-5 py-4">
         <Pressable
           onPress={() => navigation.goBack()}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
         >
           <Icon name="chevron-left" size={20} color={c.ink} />
         </Pressable>
@@ -237,14 +237,14 @@ export default function SearchScreen() {
       </View>
 
       {/* Segmented Control Tabs */}
-      <View className="flex-row gap-2 px-5 py-3 border-b border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
+      <View className="flex-row gap-2 px-5 py-3 border-b border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
         {(['All', 'Pantry', 'Recipes', 'Shopping'] as Tab[]).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
-            className={`rounded-full px-4 py-1.5 ${activeTab === tab ? 'bg-primary' : 'border border-line dark:border-[#2A2A35]'}`}
+            className={`rounded-full px-4 py-1.5 ${activeTab === tab ? 'bg-primary' : 'border border-line dark:border-[#303541]'}`}
           >
-            <Text className={activeTab === tab ? 'text-xs font-bold text-white' : 'text-xs font-semibold text-muted dark:text-[#6B6878]'}>
+            <Text className={activeTab === tab ? 'text-xs font-bold text-white' : 'text-xs font-semibold text-muted dark:text-[#9A948D]'}>
               {tab}
             </Text>
           </Pressable>
@@ -260,7 +260,7 @@ export default function SearchScreen() {
             variant="inline"
           />
         ) : recipesLoading && !hasAnyResults ? (
-          <Text className="text-sm text-muted dark:text-[#6B6878] italic text-center mt-10">Searching...</Text>
+          <Text className="text-sm text-muted dark:text-[#9A948D] italic text-center mt-10">Searching...</Text>
         ) : !hasAnyResults ? (
           <EmptyState
             icon="sad"
@@ -271,7 +271,7 @@ export default function SearchScreen() {
         ) : (
           <>
             {recipesLoading && (
-              <Text className="text-xs text-muted dark:text-[#6B6878] italic mb-3">Syncing cloud recipes...</Text>
+              <Text className="text-xs text-muted dark:text-[#9A948D] italic mb-3">Syncing cloud recipes...</Text>
             )}
 
             {/* Render Tab Results */}
@@ -280,7 +280,7 @@ export default function SearchScreen() {
               <>
                 {pantryResults.length > 0 && (
                   <View className="mb-5">
-                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Pantry Items</Text>
+                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Pantry Items</Text>
                     {pantryResults.map((item) => (
                       <PantryResultRow key={item.id} item={item} locations={locations} />
                     ))}
@@ -289,7 +289,7 @@ export default function SearchScreen() {
 
                 {mergedRecipes.length > 0 && (
                   <View className="mb-5">
-                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Recipes</Text>
+                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Recipes</Text>
                     {mergedRecipes.map((recipe) => (
                       <RecipeResultRow key={recipe.id} recipe={recipe} pantryItems={items} />
                     ))}
@@ -298,7 +298,7 @@ export default function SearchScreen() {
 
                 {shoppingResults.length > 0 && (
                   <View className="mb-5">
-                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Shopping List</Text>
+                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Shopping List</Text>
                     {shoppingResults.map((item) => (
                       <ShoppingResultRow key={item.id} item={item} listName={activeList?.name || 'Active list'} />
                     ))}
@@ -307,7 +307,7 @@ export default function SearchScreen() {
 
                 {activityResults.length > 0 && (
                   <View className="mb-5">
-                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Activity</Text>
+                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Activity</Text>
                     {activityResults.map((act, index) => (
                       <ActivityResultRow
                         key={act.createdAt && typeof act.createdAt.toMillis === 'function' ? `act-${act.createdAt.toMillis()}-${index}` : `act-${index}`}
@@ -321,36 +321,36 @@ export default function SearchScreen() {
 
             {activeTab === 'Pantry' && (
               <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Pantry Items</Text>
+                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Pantry Items</Text>
                 {pantryResults.map((item) => (
                   <PantryResultRow key={item.id} item={item} locations={locations} />
                 ))}
                 {pantryResults.length === 0 && (
-                  <Text className="text-sm text-muted dark:text-[#6B6878] italic mt-2">No matching pantry items.</Text>
+                  <Text className="text-sm text-muted dark:text-[#9A948D] italic mt-2">No matching pantry items.</Text>
                 )}
               </View>
             )}
 
             {activeTab === 'Recipes' && (
               <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Recipes</Text>
+                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Recipes</Text>
                 {mergedRecipes.map((recipe) => (
                   <RecipeResultRow key={recipe.id} recipe={recipe} pantryItems={items} />
                 ))}
                 {mergedRecipes.length === 0 && (
-                  <Text className="text-sm text-muted dark:text-[#6B6878] italic mt-2">No matching recipes.</Text>
+                  <Text className="text-sm text-muted dark:text-[#9A948D] italic mt-2">No matching recipes.</Text>
                 )}
               </View>
             )}
 
             {activeTab === 'Shopping' && (
               <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">Shopping List</Text>
+                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Shopping List</Text>
                 {shoppingResults.map((item) => (
                   <ShoppingResultRow key={item.id} item={item} listName={activeList?.name || 'Active list'} />
                 ))}
                 {shoppingResults.length === 0 && (
-                  <Text className="text-sm text-muted dark:text-[#6B6878] italic mt-2">No matching shopping list items.</Text>
+                  <Text className="text-sm text-muted dark:text-[#9A948D] italic mt-2">No matching shopping list items.</Text>
                 )}
               </View>
             )}

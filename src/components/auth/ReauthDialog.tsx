@@ -91,7 +91,7 @@ function ReauthForm({
   return (
     <Modal isOpen onClose={() => onResult(false)} title="Confirm it's you" scroll={false}>
       <View className="p-2">
-        {reason ? <Text className="mb-4 text-sm text-muted dark:text-[#6B6878]">{reason}</Text> : null}
+        {reason ? <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">{reason}</Text> : null}
         {error ? <Text className="mb-3 text-sm text-danger">{error}</Text> : null}
         {hasPassword && (
           <>

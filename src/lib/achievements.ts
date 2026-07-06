@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { db } from './firebase';
 import { recordActivity } from './activity';
+import { trackEvent } from './analytics';
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold';
 export type AchievementId =
@@ -124,6 +125,7 @@ async function notifyUnlocks(
   for (const id of newlyUnlocked) {
     const def = ACHIEVEMENTS.find((a) => a.id === id);
     if (def) {
+      trackEvent('achievement_unlocked', { achievement: id, tier: def.tier }).catch(() => {});
       await recordActivity(householdId, {
         verb: 'achievement.unlocked',
         target: def.title,
@@ -175,10 +177,12 @@ export async function recordDailyVisit(userId: string): Promise<{ streak: number
   if (newStreak >= 7 && !counters.unlocked.includes('streak_7')) {
     counters.unlocked.push('streak_7');
     unlocked.push('streak_7');
+    trackEvent('achievement_unlocked', { achievement: 'streak_7', tier: 'silver' }).catch(() => {});
   }
   if (newStreak >= 30 && !counters.unlocked.includes('streak_30')) {
     counters.unlocked.push('streak_30');
     unlocked.push('streak_30');
+    trackEvent('achievement_unlocked', { achievement: 'streak_30', tier: 'gold' }).catch(() => {});
   }
 
   await setDoc(

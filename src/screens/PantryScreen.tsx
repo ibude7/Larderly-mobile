@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useReducer } from 'react';
-import { View, Text, FlatList, Pressable, ScrollView } from 'react-native';
+import { useState, useMemo, useEffect, useReducer, useDeferredValue, useCallback } from 'react';
+import { View, Text, FlatList, Pressable, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import AppHeader from '../components/layout/AppHeader';
@@ -8,12 +8,13 @@ import Button from '../components/ui/Button';
 import TextField from '../components/ui/TextField';
 import SelectField from '../components/ui/SelectField';
 import Chip from '../components/ui/Chip';
+import SwipeableRow from '../components/ui/SwipeableRow';
 import VoiceInputButton from '../components/ui/VoiceInputButton';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
 import ItemDetailModal from '../components/pantry/ItemDetailModal';
-import InventoryCard from '../components/pantry/InventoryCard';
-import PantrySkeletonCard from '../components/pantry/PantrySkeletonCard';
+import InventoryCard, { INVENTORY_LIST_ROW_HEIGHT } from '../components/pantry/InventoryCard';
+import PantryCardSkeleton from '../components/pantry/PantryCardSkeleton';
 import { useInventory } from '../contexts/InventoryContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
@@ -22,7 +23,9 @@ import { locationIdFromName } from '../lib/inventoryMapper';
 import { parsePantryVoiceCommand } from '../lib/voiceCommands';
 import { identifyFoodFromImage } from '../lib/foodIdentify';
 import { TabParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { PantryItem } from '../types';
+import { useAppColors } from '../hooks/useAppColors';
+import { useDebounce } from '../hooks/useDebounce';
 import {
   useFilteredPantry,
   ExpirationFilter,
@@ -32,6 +35,8 @@ import {
 } from '../hooks/useFilteredPantry';
 
 type ViewMode = 'grid' | 'list';
+
+const GRID_CARD_HEIGHT = 220;
 
 type FilterAction =
   | { type: 'SET_SEARCH'; payload: string }
@@ -102,6 +107,7 @@ export default function PantryScreen() {
   const confirm = useConfirm();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<TabParamList, 'Pantry'>>();
+  const c = useAppColors();
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -110,7 +116,11 @@ export default function PantryScreen() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [identifying, setIdentifying] = useState(false);
 
-  const [state, dispatch] = useReducer(filterReducer, initialFilterState);
+  const [state, dispatch] = useReducer(filterReducer, initialFilterState, (base) => {
+    const fromRoute = route.params?.filterExpiration;
+    if (!fromRoute) return base;
+    return { ...base, filterExpiration: fromRoute as FilterState['filterExpiration'] };
+  });
   const {
     search,
     activeLocation,
@@ -127,6 +137,11 @@ export default function PantryScreen() {
     () => (selectedItemId ? items.find((i) => i.id === selectedItemId) ?? null : null),
     [items, selectedItemId],
   );
+  const debouncedSearch = useDebounce(search);
+  const debouncedFilterState = useMemo(
+    () => ({ ...state, search: debouncedSearch }),
+    [debouncedSearch, state],
+  );
 
   useEffect(() => {
     if (route.params?.openAdd) {
@@ -136,7 +151,8 @@ export default function PantryScreen() {
   }, [route.params?.openAdd, navigation]);
 
   // Use the custom hook for filtering and sorting
-  const filtered = useFilteredPantry(items, locations, state);
+  const filtered = useFilteredPantry(items, locations, debouncedFilterState);
+  const deferredFiltered = useDeferredValue(filtered);
 
   const hasActiveFilters =
     filterExpiration !== 'All' ||
@@ -146,16 +162,16 @@ export default function PantryScreen() {
     activeLocation !== 'All' ||
     activeCategory !== 'All';
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     if (!selected.size) return;
     const ok = await confirm({
       title: `Delete ${selected.size} items?`,
@@ -168,18 +184,36 @@ export default function PantryScreen() {
     setSelected(new Set());
     setSelectMode(false);
     showToast('Items removed', 'info');
-  };
+  }, [confirm, deleteItem, selected, showToast]);
 
-  const handleBulkMove = async (locName: string) => {
+  const handleBulkMove = useCallback(async (locName: string) => {
     const locId = locationIdFromName(locName, locations);
     if (!locId) return;
     for (const id of selected) await updateItem(id, { location_id: locId });
     setSelected(new Set());
     setSelectMode(false);
     showToast(`Moved to ${locName}`, 'success');
-  };
+  }, [locations, selected, showToast, updateItem]);
 
-  const handleVoice = async (transcript: string) => {
+  const handleSwipeConsume = useCallback(async (item: PantryItem) => {
+    if (item.quantity <= 0) return;
+    await consumeItem(item.id, 1);
+    showToast(`Used 1 ${item.unit} of ${item.name}`, 'success');
+  }, [consumeItem, showToast]);
+
+  const handleSwipeDelete = useCallback(async (item: PantryItem) => {
+    const ok = await confirm({
+      title: `Delete ${item.name}?`,
+      message: 'This item will be removed from your pantry.',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    await deleteItem(item.id);
+    showToast(`${item.name} removed`, 'info');
+  }, [confirm, deleteItem, showToast]);
+
+  const handleVoice = useCallback(async (transcript: string) => {
     try {
       const parsed = await parsePantryVoiceCommand(transcript);
       await addItem({
@@ -201,9 +235,9 @@ export default function PantryScreen() {
     } catch {
       showToast('Could not parse voice command', 'error');
     }
-  };
+  }, [addItem, locations, showToast]);
 
-  const handlePhotoIdentify = async () => {
+  const handlePhotoIdentify = useCallback(async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
       showToast('Camera permission required', 'error');
@@ -235,7 +269,20 @@ export default function PantryScreen() {
     } finally {
       setIdentifying(false);
     }
-  };
+  }, [addItem, locations, showToast]);
+
+  const getItemLayout = useCallback(
+    (_: ArrayLike<PantryItem> | null | undefined, index: number) => {
+      const length = viewMode === 'list' ? INVENTORY_LIST_ROW_HEIGHT : GRID_CARD_HEIGHT;
+      const rowIndex = viewMode === 'list' ? index : Math.floor(index / 2);
+      return {
+        length,
+        offset: length * rowIndex,
+        index,
+      };
+    },
+    [viewMode],
+  );
 
   return (
     <View className="flex-1 bg-canvas">
@@ -249,23 +296,28 @@ export default function PantryScreen() {
           columnWrapperStyle={viewMode === 'grid' ? { gap: 12, paddingHorizontal: 20 } : undefined}
           contentContainerStyle={{ paddingBottom: 120, gap: 12, paddingTop: 20 }}
           showsVerticalScrollIndicator={false}
-          renderItem={() => <PantrySkeletonCard listMode={viewMode === 'list'} />}
+          renderItem={() => <PantryCardSkeleton listMode={viewMode === 'list'} />}
         />
       ) : (
         <FlatList
-          data={filtered}
+          data={deferredFiltered}
         keyExtractor={(item) => item.id}
         numColumns={viewMode === 'grid' ? 2 : 1}
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12, paddingHorizontal: 20 } : undefined}
         contentContainerStyle={{ paddingBottom: 120, gap: 12 }}
         showsVerticalScrollIndicator={false}
+        getItemLayout={getItemLayout}
+        windowSize={5}
+        maxToRenderPerBatch={8}
+        initialNumToRender={10}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListHeaderComponent={
           <View className="px-5 pb-4 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-3xl font-bold text-ink">Pantry</Text>
               <View className="flex-row gap-2">
                 <Pressable onPress={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))} className="h-9 w-9 items-center justify-center rounded-full border border-line bg-surface">
-                  <Icon name={viewMode === 'grid' ? 'grid' : 'shelf'} size={16} color={colors.ink} />
+                  <Icon name={viewMode === 'grid' ? 'grid' : 'shelf'} size={16} color={c.ink} />
                 </Pressable>
                 <Button label="Add" icon="plus" size="sm" onPress={() => setAddOpen(true)} />
               </View>
@@ -304,7 +356,7 @@ export default function PantryScreen() {
             </ScrollView>
             <View className="mt-3 flex-row items-center justify-between">
               <Text className="font-semibold text-muted">
-                {filtered.length} of {items.length} items
+                {deferredFiltered.length} of {items.length} items
               </Text>
               <Pressable onPress={() => dispatch({ type: 'TOGGLE_FILTERS' })}>
                 <Text className="text-sm font-bold text-primary">
@@ -399,18 +451,48 @@ export default function PantryScreen() {
             />
           </View>
         }
-        renderItem={({ item }) => (
-          <InventoryCard
-            item={item}
-            locations={locations}
-            listMode={viewMode === 'list'}
-            selected={selected.has(item.id)}
-            selectMode={selectMode}
-            onToggleSelect={() => toggleSelect(item.id)}
-            onAddStock={() => updateItem(item.id, { quantity: item.quantity + 1 })}
-            onPress={() => (selectMode ? toggleSelect(item.id) : setSelectedItemId(item.id))}
-          />
-        )}
+        renderItem={({ item }) => {
+          const isListMode = viewMode === 'list';
+          const card = (
+            <InventoryCard
+              item={item}
+              c={c}
+              listMode={isListMode && selectMode}
+              selected={selected.has(item.id)}
+              selectMode={selectMode}
+              onToggleSelect={() => toggleSelect(item.id)}
+              onAddStock={() => updateItem(item.id, { quantity: item.quantity + 1 })}
+              onPress={() => (selectMode ? toggleSelect(item.id) : setSelectedItemId(item.id))}
+            />
+          );
+
+          if (!isListMode || selectMode) return card;
+
+          return (
+            <View className="mx-5 mb-3">
+              <SwipeableRow
+                leftAction={{
+                  label: 'Consume',
+                  icon: 'minus',
+                  color: c.success,
+                  onPress: () => {
+                    void handleSwipeConsume(item);
+                  },
+                }}
+                rightAction={{
+                  label: 'Delete',
+                  icon: 'trash',
+                  color: c.danger,
+                  onPress: () => {
+                    void handleSwipeDelete(item);
+                  },
+                }}
+              >
+                {card}
+              </SwipeableRow>
+            </View>
+          );
+        }}
       />
       )}
 

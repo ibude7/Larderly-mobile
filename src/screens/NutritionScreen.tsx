@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Share } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackNavigationProp } from '../navigation/types';
 import { onSnapshot } from '@react-native-firebase/firestore';
@@ -8,6 +15,7 @@ import Button from '../components/ui/Button';
 import TextField from '../components/ui/TextField';
 import Modal from '../components/ui/Modal';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ProgressBar from '../components/ui/ProgressBar';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../contexts/ProfileContext';
 import { useToast } from '../contexts/ToastContext';
@@ -30,15 +38,122 @@ import {
 import { useAppColors } from '../hooks/useAppColors';
 
 function MacroBar({ label, current, goal, color }: { label: string; current: number; goal: number; color: string }) {
-  const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
   return (
     <View className="mb-3">
       <View className="mb-1 flex-row justify-between">
-        <Text className="text-sm font-semibold text-ink dark:text-[#F0EEE9]">{label}</Text>
-        <Text className="text-xs text-muted dark:text-[#6B6878]">{Math.round(current)} / {goal}</Text>
+        <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">{label}</Text>
+        <Text className="text-xs text-muted dark:text-[#9A948D]">{Math.round(current)} / {goal}</Text>
       </View>
-      <View className="h-2 overflow-hidden rounded-full bg-line">
-        <View className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+      <ProgressBar value={goal > 0 ? current / goal : 0} color={color} height={7} />
+    </View>
+  );
+}
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function DonutSegment({
+  radius,
+  strokeWidth,
+  value,
+  total,
+  color,
+  rotation,
+}: {
+  radius: number;
+  strokeWidth: number;
+  value: number;
+  total: number;
+  color: string;
+  rotation: number;
+}) {
+  const circumference = 2 * Math.PI * radius;
+  const dash = total > 0 ? (value / total) * circumference : 0;
+  const animatedOffset = useSharedValue(circumference);
+
+  useEffect(() => {
+    animatedOffset.value = withTiming(circumference - dash, {
+      duration: 700,
+      easing: Easing.out(Easing.quad),
+    });
+  }, [animatedOffset, circumference, dash]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: animatedOffset.value,
+  }));
+
+  return (
+    <AnimatedCircle
+      cx={90}
+      cy={90}
+      r={radius}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      fill="transparent"
+      strokeDasharray={`${dash} ${circumference - dash}`}
+      animatedProps={animatedProps}
+      originX={90}
+      originY={90}
+      rotation={rotation - 90}
+    />
+  );
+}
+
+function MacroDonut({ intake, goals }: { intake: DailyIntake; goals: NutritionGoals }) {
+  const c = useAppColors();
+  const radius = 68;
+  const strokeWidth = 14;
+  const segments = [
+    { label: 'Protein', value: intake.proteinG * 4, color: c.info },
+    { label: 'Carbs', value: intake.carbsG * 4, color: c.primary },
+    { label: 'Fat', value: intake.fatG * 9, color: c.warning },
+    { label: 'Fiber', value: intake.fiberG * 2, color: c.success },
+  ];
+  const total = Math.max(1, segments.reduce((sum, segment) => sum + segment.value, 0));
+  let rotation = 0;
+
+  return (
+    <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+      <View className="items-center">
+        <View className="h-[180px] w-[180px] items-center justify-center">
+          <Svg width={180} height={180}>
+            <Circle cx={90} cy={90} r={radius} stroke={c.line} strokeWidth={strokeWidth} fill="transparent" />
+            {segments.map((segment) => {
+              const currentRotation = rotation;
+              rotation += (segment.value / total) * 360;
+              return (
+                <DonutSegment
+                  key={segment.label}
+                  radius={radius}
+                  strokeWidth={strokeWidth}
+                  value={segment.value}
+                  total={total}
+                  color={segment.color}
+                  rotation={currentRotation}
+                />
+              );
+            })}
+          </Svg>
+          <View className="absolute items-center">
+            <Text className="text-3xl font-black text-ink dark:text-[#F6F1EA]">
+              {Math.round(intake.calories)}
+            </Text>
+            <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">kcal today</Text>
+          </View>
+        </View>
+      </View>
+      <View className="mt-4 flex-row flex-wrap gap-2">
+        {[
+          ['Protein', c.info],
+          ['Carbs', c.primary],
+          ['Fat', c.warning],
+          ['Fiber', c.success],
+        ].map(([label, color]) => (
+          <View key={label} className="flex-row items-center gap-2 rounded-full border border-line dark:border-[#303541] px-3 py-1.5">
+            <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+            <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">{label}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -79,6 +194,10 @@ export default function NutritionScreen() {
       unsubI();
     };
   }, [user]);
+
+  useEffect(() => {
+    setDraftGoals(goals);
+  }, [goals]);
 
   const progress = useMemo(() => goalProgress(intake, goals), [intake, goals]);
   const trendMaxCal = Math.max(goals.dailyCalories, ...trend.map((d) => d.calories), 1);
@@ -158,7 +277,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
       <AppHeader title="Nutrition" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <View className="mb-4 flex-row gap-2">
@@ -166,8 +285,10 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
           <Button label="Export" variant="ghost" size="sm" onPress={exportReport} className="flex-1" />
         </View>
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5">
-          <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">Today</Text>
+        <MacroDonut intake={intake} goals={goals} />
+
+        <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+          <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Today</Text>
           <Text className="mt-2 text-3xl font-bold text-primary">
             {Math.round(intake.calories)} / {goals.dailyCalories} kcal
           </Text>
@@ -177,16 +298,16 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
           <MacroBar label="Protein (g)" current={intake.proteinG} goal={goals.proteinG} color={c.info} />
           <MacroBar label="Carbs (g)" current={intake.carbsG} goal={goals.carbsG} color={c.warning} />
           <MacroBar label="Fat (g)" current={intake.fatG} goal={goals.fatG} color={c.danger} />
-          <Text className="text-sm text-muted dark:text-[#6B6878]">
+          <Text className="text-sm text-muted dark:text-[#9A948D]">
             Fiber {intake.fiberG}g / {goals.fiberG}g · Sodium {intake.sodiumMg}mg / {goals.sodiumMg}mg
           </Text>
-          <Text className="mt-1 text-sm text-muted dark:text-[#6B6878]">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
+          <Text className="mt-1 text-sm text-muted dark:text-[#9A948D]">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
         </View>
 
         {(aiLoading || aiTip) && (
           <View className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <Text className="text-xs font-bold uppercase text-primary">AI coach</Text>
-            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-[#F0EEE9]">{aiTip}</Text>}
+            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-[#F6F1EA]">{aiTip}</Text>}
           </View>
         )}
 
@@ -196,8 +317,8 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
         </View>
 
         {trend.length > 0 && (
-          <View className="mb-4 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-4">
-            <Text className="mb-3 font-semibold text-ink dark:text-[#F0EEE9]">7-day calories</Text>
+          <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
+            <Text className="mb-3 font-semibold text-ink dark:text-[#F6F1EA]">7-day calories</Text>
             <View className="h-28 flex-row items-end gap-1">
               {trend.map((day) => {
                 const h = Math.max(4, (day.calories / trendMaxCal) * 100);
@@ -205,7 +326,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
                 return (
                   <View key={day.date} className="flex-1 items-center">
                     <View className={`w-full rounded-t-md ${isToday ? 'bg-primary' : 'bg-primary/40'}`} style={{ height: h }} />
-                    <Text className="mt-1 text-[10px] text-muted dark:text-[#6B6878]">
+                    <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">
                       {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                     </Text>
                   </View>
@@ -217,17 +338,47 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
         {intake.meals.length > 0 && (
           <View className="mt-2">
-            <Text className="mb-2 font-semibold text-ink dark:text-[#F0EEE9]">Meals today</Text>
+            <Text className="mb-2 font-semibold text-ink dark:text-[#F6F1EA]">Meals today</Text>
             {[...intake.meals].reverse().map((m, i) => (
-              <View key={i} className="mb-2 rounded-xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-4 py-3">
-                <Text className="font-medium text-ink dark:text-[#F0EEE9]">{m.label}</Text>
-                <Text className="text-sm text-muted dark:text-[#6B6878]">
+              <View key={i} className="mb-2 rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
+                <Text className="font-medium text-ink dark:text-[#F6F1EA]">{m.label}</Text>
+                <Text className="text-sm text-muted dark:text-[#9A948D]">
                   {m.calories} kcal · P {m.proteinG}g · C {m.carbsG}g · F {m.fatG}g
                 </Text>
               </View>
             ))}
           </View>
         )}
+
+        <View className="mt-2 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+          <Text className="mb-3 text-lg font-bold text-ink dark:text-[#F6F1EA]">Daily Goal</Text>
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <TextField label="Calories" value={String(draftGoals.dailyCalories)} onChangeText={(v) => setDraftGoals({ ...draftGoals, dailyCalories: Number(v) || 0 })} keyboardType="numeric" />
+            </View>
+            <View className="flex-1">
+              <TextField label="Protein" value={String(draftGoals.proteinG)} onChangeText={(v) => setDraftGoals({ ...draftGoals, proteinG: Number(v) || 0, ratioPreset: 'custom' })} keyboardType="numeric" />
+            </View>
+          </View>
+          <View className="mt-3 flex-row gap-3">
+            <View className="flex-1">
+              <TextField label="Carbs" value={String(draftGoals.carbsG)} onChangeText={(v) => setDraftGoals({ ...draftGoals, carbsG: Number(v) || 0, ratioPreset: 'custom' })} keyboardType="numeric" />
+            </View>
+            <View className="flex-1">
+              <TextField label="Fat" value={String(draftGoals.fatG)} onChangeText={(v) => setDraftGoals({ ...draftGoals, fatG: Number(v) || 0, ratioPreset: 'custom' })} keyboardType="numeric" />
+            </View>
+          </View>
+          <Button
+            label="Save daily goal"
+            className="mt-4"
+            onPress={async () => {
+              if (!user) return;
+              await saveGoals(user.uid, draftGoals);
+              setGoals(draftGoals);
+              showToast('Goals saved', 'success');
+            }}
+          />
+        </View>
       </ScrollView>
 
       <Modal isOpen={showLog} onClose={() => setShowLog(false)} title="Log meal">
@@ -241,15 +392,15 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
       <Modal isOpen={showGoals} onClose={() => setShowGoals(false)} title="Nutritional goals">
         <ScrollView style={{ maxHeight: 420 }}>
-          <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F0EEE9]">Macro preset</Text>
+          <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F6F1EA]">Macro preset</Text>
           <View className="mb-4 flex-row flex-wrap gap-2">
             {(Object.keys(RATIO_PRESETS) as NutritionGoals['ratioPreset'][]).map((p) => (
               <Pressable
                 key={p}
                 onPress={() => applyPreset(p)}
-                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}
+                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
               >
-                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-[#F0EEE9]'}>{p}</Text>
+                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-[#F6F1EA]'}>{p}</Text>
               </Pressable>
             ))}
           </View>

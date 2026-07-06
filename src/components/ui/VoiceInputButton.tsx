@@ -87,7 +87,7 @@ export default function VoiceInputButton({
 
       <Modal isOpen={open} onClose={close} title="Voice command" scroll={false}>
         <View className="p-6">
-          <Text className="mb-4 text-sm text-muted dark:text-[#6B6878]">
+          <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">
             {speechAvailable
               ? 'Tap the mic and say what to add, e.g. "2 gallons of milk". You can edit the transcript below.'
               : 'Speech recognition is unavailable. Type your command below.'}
@@ -103,10 +103,10 @@ export default function VoiceInputButton({
                 <Icon name={listening ? 'close' : 'mic'} size={24} color="#FFFFFF" />
               </Pressable>
               <View className="flex-1">
-                <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">
+                <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">
                   {listening ? 'Listening…' : 'Tap to speak'}
                 </Text>
-                <Text className="text-xs text-muted dark:text-[#6B6878]">
+                <Text className="text-xs text-muted dark:text-[#9A948D]">
                   {listening ? 'Tap again to stop' : 'Uses native speech recognition'}
                 </Text>
               </View>
@@ -114,9 +114,9 @@ export default function VoiceInputButton({
           ) : (
             <Pressable
               onPress={() => Linking.openSettings()}
-              className="mb-4 rounded-xl border border-line dark:border-[#2A2A35] px-4 py-3"
+              className="mb-4 rounded-xl border border-line dark:border-[#303541] px-4 py-3"
             >
-              <Text className="text-sm text-muted dark:text-[#6B6878]">
+              <Text className="text-sm text-muted dark:text-[#9A948D]">
                 Enable microphone and speech recognition in Settings to use voice input.
               </Text>
             </Pressable>

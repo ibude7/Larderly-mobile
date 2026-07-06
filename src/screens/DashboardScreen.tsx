@@ -9,28 +9,27 @@ import { doc, onSnapshot } from '@react-native-firebase/firestore';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedReaction,
-  withSpring,
   withRepeat,
   withSequence,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
 import AppHeader from '../components/layout/AppHeader';
-import { BlurView } from 'expo-blur';
 import AnimatedNumber from '../components/ui/AnimatedNumber';
-import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
+import DashboardStatSkeleton from '../components/dashboard/DashboardStatSkeleton';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
-import { Icon, IconName } from '../components/ui/Icon';
+import { Icon } from '../components/ui/Icon';
 import SmartSuggestionsCard from '../components/dashboard/SmartSuggestionsCard';
+import StatTileRow from '../components/dashboard/StatTileRow';
+import ExpiryAlertBanner from '../components/dashboard/ExpiryAlertBanner';
+import HouseholdBanner from '../components/dashboard/HouseholdBanner';
+import ActivityFeedCard from '../components/dashboard/ActivityFeedCard';
 import { useInventory } from '../contexts/InventoryContext';
 import { useShopping } from '../contexts/ShoppingContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useActivity } from '../hooks/useActivity';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useAppColors } from '../hooks/useAppColors';
-import { useTheme } from '../hooks/useTheme';
 import { db } from '../lib/firebase';
 import { getCategoryIcon, getLocationIcon } from '../lib/appIcons';
 import { pantryItemToInventory } from '../lib/pantryInsights';
@@ -38,21 +37,14 @@ import { generateDashboardTip } from '../lib/recipeGen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PantryItem, StorageLocation } from '../types';
 
-const STAT_ICONS: Record<string, IconName> = {
-  'Total Items': 'pantry',
-  'Shopping List': 'cart',
-  'Low Stock': 'warning',
-  'Expiring Soon': 'calendar',
-};
-
 export default function DashboardScreen() {
   const navigation = useNavigation<TabScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const c = useAppColors();
   const { householdId } = useHousehold();
-  const { itemCount, lowStockItems, expiringSoonItems, uncheckedCount, totalValue } =
-    useDashboardStats();
-  const { items, locations, isLoading } = useInventory();
+  const stats = useDashboardStats();
+  const { itemCount, lowStockItems, expiringSoonItems, uncheckedCount, totalValue, loading: statsLoading } = stats;
+  const { items, locations } = useInventory();
   const { shoppingList } = useShopping();
   const activity = useActivity();
 
@@ -74,10 +66,10 @@ export default function DashboardScreen() {
 
   const itemsTrend = itemsAddedToday > 0 ? `+${itemsAddedToday} today` : 'Stable today';
   const shoppingTrend = shoppingAddedToday > 0 ? `+${shoppingAddedToday} today` : 'No new items';
-  const lowStockTrend = lowStockItems.length > 0 ? 'Needs attention' : 'Healthy stock';
-  const expiringTrend = expiringSoonItems.length > 0 ? 'Consume soon' : 'All fresh';
   const [householdName, setHouseholdName] = useState('Your household');
-  const [memberCount, setMemberCount] = useState(1);
+  const [householdMembers, setHouseholdMembers] = useState<string[]>([]);
+  const [householdMemberNames, setHouseholdMemberNames] = useState<Record<string, string>>({});
+  const [inviteCode, setInviteCode] = useState<string | undefined>(undefined);
   const [aiTip, setAiTip] = useState<string | null>(null);
   const [aiTipLoading, setAiTipLoading] = useState(false);
 
@@ -87,7 +79,9 @@ export default function DashboardScreen() {
       if (!snap.exists()) return;
       const data = snap.data() ?? {};
       setHouseholdName((data.name as string) ?? 'Your household');
-      setMemberCount(((data.members as string[]) ?? []).length || 1);
+      setHouseholdMembers((data.members as string[]) ?? []);
+      setHouseholdMemberNames((data.memberNames as Record<string, string>) ?? {});
+      setInviteCode((data.inviteCode as string) ?? undefined);
     });
     return unsub;
   }, [householdId]);
@@ -150,16 +144,14 @@ export default function DashboardScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 90 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-bold text-ink dark:text-[#F0EEE9]">{householdName}</Text>
+        <HouseholdBanner
+          name={householdName}
+          memberNames={householdMemberNames}
+          members={householdMembers}
+          inviteCode={inviteCode}
+          itemCount={itemCount}
+        />
         <Text className="mt-1 font-medium text-muted dark:text-[#6B6878]">{subtitle}</Text>
-        <View className="mt-2 flex-row gap-2">
-          <View className="rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3 py-1">
-            <Text className="text-[11px] font-bold text-muted dark:text-[#6B6878]">{memberCount} member{memberCount === 1 ? '' : 's'}</Text>
-          </View>
-          <View className="rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3 py-1">
-            <Text className="text-[11px] font-bold text-muted dark:text-[#6B6878]">{itemCount} items tracked</Text>
-          </View>
-        </View>
 
         <View className="mt-5 flex-row gap-3">
           <Button
@@ -180,36 +172,13 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {isLoading ? (
-          <DashboardSkeleton />
+        {statsLoading ? (
+          <View className="mt-6">
+            <DashboardStatSkeleton />
+          </View>
         ) : (
-          <View className="mt-6 flex-row flex-wrap gap-3">
-            <StatCard
-              label="Total Items"
-              value={itemCount}
-              trendText={itemsTrend}
-              onPress={() => navigation.navigate('Pantry')}
-            />
-            <StatCard
-              label="Shopping List"
-              value={uncheckedCount}
-              trendText={shoppingTrend}
-              onPress={() => navigation.navigate('Shopping')}
-            />
-            <StatCard
-              label="Low Stock"
-              value={lowStockItems.length}
-              alert={lowStockItems.length > 0}
-              trendText={lowStockTrend}
-              onPress={() => navigation.navigate('Pantry')}
-            />
-            <StatCard
-              label="Expiring Soon"
-              value={expiringSoonItems.length}
-              alert={expiringSoonItems.length > 0}
-              trendText={expiringTrend}
-              onPress={() => navigation.navigate('Pantry')}
-            />
+          <View className="mt-6">
+            <StatTileRow stats={stats} itemsTrend={itemsTrend} shoppingTrend={shoppingTrend} />
           </View>
         )}
 
@@ -220,7 +189,7 @@ export default function DashboardScreen() {
             end={{ x: 1, y: 1 }}
             style={{ borderRadius: 24, padding: 24, marginTop: 24 }}
           >
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
+            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/80">
               Pantry Value
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -239,32 +208,21 @@ export default function DashboardScreen() {
           </LinearGradient>
         ) : null}
 
+        <ExpiryAlertBanner
+          items={expiringSoonItems}
+          onPress={() => navigation.navigate('Pantry', { filterExpiration: 'Expiring Soon' })}
+        />
+
         <SmartSuggestionsCard inventory={inventory} activity={activity} shoppingItems={shoppingNames} />
 
         {(aiTip || aiTipLoading) && (
           <Card className="mt-6">
             <CardHeader icon="sparkles" iconColor={c.primary} title="AI insight" />
-            {aiTipLoading ? <AiTipSkeleton /> : <Text className="text-sm text-muted dark:text-[#6B6878]">{aiTip}</Text>}
+            {aiTipLoading ? <AiTipSkeleton /> : <Text className="text-sm text-muted dark:text-[#9A948D]">{aiTip}</Text>}
           </Card>
         )}
 
-        {activity.length > 0 ? (
-          <Card className="mt-6">
-            <CardHeader icon="trending-down" iconColor={c.primary} title="Recent activity" />
-            <View className="gap-2">
-              {activity.slice(0, 6).map((ev, i) => (
-                <View key={`${ev.actorId}-${ev.target}-${i}`} className="flex-row items-center gap-3 rounded-xl bg-canvas dark:bg-[#0F0F13] px-3 py-2">
-                  <Icon name="sparkles" size={14} color={c.muted} />
-                  <View className="flex-1">
-                    <Text className="text-sm text-ink dark:text-[#F0EEE9]">
-                      <Text className="font-bold">{ev.actorName}</Text> {ev.verb} {ev.target}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </Card>
-        ) : null}
+        <ActivityFeedCard activities={activity} />
 
         {lowStockItems.length > 0 ? (
           <Card className="mt-6">
@@ -332,114 +290,6 @@ export default function DashboardScreen() {
         </Card>
       </ScrollView>
     </View>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  alert,
-  trendText,
-  onPress,
-}: {
-  label: string;
-  value: number;
-  alert?: boolean;
-  trendText?: string;
-  onPress: () => void;
-}) {
-  const c = useAppColors();
-  const theme = useTheme();
-  const highlight = alert && value > 0;
-
-  const iconName = STAT_ICONS[label];
-
-  const glassBg = theme === 'dark' ? 'rgba(26, 26, 34, 0.5)' : 'rgba(255, 255, 255, 0.4)';
-  const accentColor = highlight ? c.danger : c.primary;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1, width: '47.5%' }]}
-    >
-      <View
-        style={{
-          borderRadius: 20,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-          shadowColor: theme === 'dark' ? '#000' : '#A09C96',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: theme === 'dark' ? 0.4 : 0.12,
-          shadowRadius: 8,
-          elevation: 4,
-        }}
-      >
-        <BlurView
-          intensity={theme === 'dark' ? 65 : 70}
-          tint={theme}
-          style={{
-            width: '100%',
-            padding: 20,
-            backgroundColor: glassBg,
-            flexDirection: 'row',
-          }}
-        >
-          {/* Left accent bar */}
-          <View
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 4,
-              backgroundColor: accentColor,
-            }}
-          />
-
-          <View className="flex-1 min-h-[85px] justify-between pl-2">
-            <View className="mt-1">
-              <AnimatedNumber
-                value={value}
-                duration={800}
-                style={{
-                  fontSize: 30,
-                  fontWeight: '900',
-                  color: theme === 'dark' ? '#F0EEE9' : c.ink,
-                }}
-              />
-              <Text className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
-                {label}
-              </Text>
-            </View>
-
-            {trendText ? (
-              <Text className="text-[10px] font-semibold text-muted dark:text-[#6B6878] mt-3">
-                {trendText}
-              </Text>
-            ) : null}
-          </View>
-
-          {iconName ? (
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: highlight ? `${c.danger}15` : `${c.primary}15`,
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'absolute',
-                top: 16,
-                right: 16,
-              }}
-            >
-              <Icon name={iconName} size={16} color={accentColor} />
-            </View>
-          ) : null}
-        </BlurView>
-      </View>
-    </Pressable>
   );
 }
 
@@ -539,7 +389,7 @@ function ItemRow({ item }: { item: PantryItem }) {
       </View>
       <Text className="text-sm font-black text-ink dark:text-[#F0EEE9]">
         {item.quantity}
-        <Text className="text-[10px] font-bold uppercase text-muted dark:text-[#6B6878]"> {item.unit}</Text>
+        <Text className="text-[11px] font-bold uppercase text-muted dark:text-[#6B6878]"> {item.unit}</Text>
       </Text>
     </View>
   );

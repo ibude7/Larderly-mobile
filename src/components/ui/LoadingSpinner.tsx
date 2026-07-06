@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAppColors } from '../../hooks/useAppColors';
 
@@ -19,7 +20,7 @@ const SIZE_MAP: Record<NonNullable<LoadingSpinnerProps['size']>, number> = {
  * orbital ring; on RN we use the platform ActivityIndicator tinted in the
  * Larderly amber, which reads as native and performant.
  */
-export default function LoadingSpinner({
+function LoadingSpinner({
   size = 'md',
   color,
   className,
@@ -31,3 +32,5 @@ export default function LoadingSpinner({
     </View>
   );
 }
+
+export default memo(LoadingSpinner);

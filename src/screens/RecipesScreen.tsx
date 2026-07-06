@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { TabScreenNavigationProp } from '../navigation/types';
@@ -24,6 +23,7 @@ import Modal from '../components/ui/Modal';
 import TextField from '../components/ui/TextField';
 import SelectField from '../components/ui/SelectField';
 import { Icon } from '../components/ui/Icon';
+import RecipeCard from '../components/meals/RecipeCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useProfile } from '../contexts/ProfileContext';
@@ -33,12 +33,14 @@ import { useShopping } from '../contexts/ShoppingContext';
 import { db } from '../lib/firebase';
 import { BUILTIN_RECIPES, type Recipe, type Cuisine, type MealType, type Difficulty } from '../lib/recipes';
 import { generatePantryRecipes, generatePersonalizedRecipes } from '../lib/recipeGen';
+import { trackEvent } from '../lib/analytics';
 import { recordActivity } from '../lib/activity';
 import { bumpCounter } from '../lib/achievements';
 import { isAllergenRisk } from '../lib/nutrition';
 import { useAppColors } from '../hooks/useAppColors';
 
 type Tab = 'browse' | 'expiring' | 'favorites' | 'mine' | 'trending';
+type QuickFilter = 'all' | 'canMake' | 'quick' | 'vegetarian' | 'favorites';
 
 type FavoriteRecipe = Recipe & { collection?: string };
 
@@ -69,6 +71,7 @@ export default function RecipesScreen() {
   const [filterCuisine, setFilterCuisine] = useState<string>('all');
   const [filterMeal, setFilterMeal] = useState<string>('all');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [userRating, setUserRating] = useState(5);
 
   useEffect(() => {
@@ -137,6 +140,20 @@ export default function RecipesScreen() {
 
   const allergies = userProfile?.personalAllergies ?? '';
   const dietaryPrefs = userProfile?.dietaryPreferences ?? [];
+  const pantryNames = useMemo(() => items.map((item) => item.name.toLowerCase()), [items]);
+
+  const ingredientAvailable = useCallback(
+    (ingredient: string) => {
+      const token = ingredient.toLowerCase().split(/\s+/)[0];
+      return pantryNames.some((name) => name.includes(token) || token.includes(name.split(/\s+/)[0]));
+    },
+    [pantryNames],
+  );
+
+  const availabilityForRecipe = useCallback(
+    (recipe: Recipe) => recipe.ingredients.filter(ingredientAvailable).length,
+    [ingredientAvailable],
+  );
 
   const allRecipes = useMemo(() => [...BUILTIN_RECIPES, ...myRecipes, ...aiRecipes], [myRecipes, aiRecipes]);
 
@@ -162,8 +179,12 @@ export default function RecipesScreen() {
     if (filterCuisine !== 'all') list = list.filter((r) => r.cuisine === filterCuisine);
     if (filterMeal !== 'all') list = list.filter((r) => r.mealType === filterMeal);
     if (filterDifficulty !== 'all') list = list.filter((r) => r.difficulty === filterDifficulty);
+    if (quickFilter === 'canMake') list = list.filter((r) => availabilityForRecipe(r) === r.ingredients.length);
+    if (quickFilter === 'quick') list = list.filter((r) => r.prepTime + r.cookTime < 30);
+    if (quickFilter === 'vegetarian') list = list.filter((r) => r.tags.some((tag) => tag.toLowerCase().includes('vegetarian')));
+    if (quickFilter === 'favorites') list = list.filter((r) => favoriteIds.has(r.id));
     return list;
-  }, [tab, favorites, myRecipes, trendingRecipes, allRecipes, expiringNames, activeCollection, filterCuisine, filterMeal, filterDifficulty]);
+  }, [tab, favorites, myRecipes, trendingRecipes, allRecipes, expiringNames, activeCollection, filterCuisine, filterMeal, filterDifficulty, quickFilter, availabilityForRecipe, favoriteIds]);
 
   const toggleFavorite = async (recipe: Recipe, collection?: string) => {
     if (!user) return;
@@ -238,6 +259,7 @@ export default function RecipesScreen() {
       );
       setAiRecipes(generated);
       setActiveRecipe(generated[0] ?? null);
+      trackEvent('recipe_generated', { source: 'pantry', count: generated.length }).catch(() => {});
       showToast(`${generated.length} AI recipes ready`, 'success');
     } catch {
       showToast('Could not generate recipes', 'error');
@@ -255,6 +277,7 @@ export default function RecipesScreen() {
       const generated = await generatePersonalizedRecipes(recent, dietaryPrefs, allergies);
       setAiRecipes((prev) => [...generated, ...prev]);
       setActiveRecipe(generated[0] ?? null);
+      trackEvent('recipe_generated', { source: 'personalized', count: generated.length }).catch(() => {});
       showToast('Personalized recipes ready', 'success');
     } catch {
       showToast('Could not generate personalized recipes', 'error');
@@ -271,12 +294,12 @@ export default function RecipesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
       <AppHeader
         onOpenSettings={() => navigation.navigate('Settings')}
         right={
-          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] px-3 py-1.5">
-            <Text className="text-xs font-semibold text-ink dark:text-[#F0EEE9]">Planner</Text>
+          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3 py-1.5">
+            <Text className="text-xs font-semibold text-ink dark:text-[#F6F1EA]">Planner</Text>
           </Pressable>
         }
       />
@@ -284,8 +307,8 @@ export default function RecipesScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 py-3">
         <View className="flex-row gap-2">
           {(['browse', 'expiring', 'favorites', 'mine', 'trending'] as Tab[]).map((t) => (
-            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]'}`}>
-              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{t}</Text>
+            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}>
+              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{t}</Text>
             </Pressable>
           ))}
         </View>
@@ -295,6 +318,28 @@ export default function RecipesScreen() {
         <Button label={generating ? 'Generating…' : 'AI from pantry'} icon="sparkles" size="sm" onPress={handleGenerateAI} loading={generating} className="flex-1" />
         <Button label="For you" icon="star" size="sm" variant="secondary" onPress={handleGenerateML} loading={mlGenerating} className="flex-1" />
       </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 pb-3">
+        <View className="flex-row gap-2">
+          {[
+            ['all', 'All'],
+            ['canMake', 'Can Make Now'],
+            ['quick', 'Quick (<30 min)'],
+            ['vegetarian', 'Vegetarian'],
+            ['favorites', 'Favorites'],
+          ].map(([value, label]) => (
+            <Pressable
+              key={value}
+              onPress={() => setQuickFilter(value as QuickFilter)}
+              className={`rounded-full px-4 py-2 ${quickFilter === value ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+            >
+              <Text className={`text-xs font-bold ${quickFilter === value ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>
+                {label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
 
       <View className="flex-row gap-2 px-5 pb-2">
         <View className="flex-1">
@@ -315,8 +360,8 @@ export default function RecipesScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 pb-2">
           <View className="flex-row gap-2">
             {collections.map((c) => (
-              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line dark:border-[#2A2A35]'}`}>
-                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink dark:text-[#F0EEE9]'}`}>{c}</Text>
+              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line dark:border-[#303541]'}`}>
+                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{c}</Text>
               </Pressable>
             ))}
           </View>
@@ -331,40 +376,54 @@ export default function RecipesScreen() {
             const risky = isAllergenRisk(recipe.title, allergies) || recipe.ingredients.some((i) => isAllergenRisk(i, allergies));
             const views = viewCounts[recipe.id] ?? 0;
             const rating = ratings[recipe.id] ?? recipe.rating;
+            const available = availabilityForRecipe(recipe);
             return (
-              <Pressable key={recipe.id} onPress={() => { setActiveRecipe(recipe); setUserRating(ratings[recipe.id] ?? 5); }} className="mb-3 overflow-hidden rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]">
-                {recipe.imageUrl ? <Image source={{ uri: recipe.imageUrl }} className="h-36 w-full" contentFit="cover" /> : null}
-                <View className="p-4">
-                  <View className="flex-row items-start justify-between">
-                    <View className="flex-1">
-                      <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{recipe.title}</Text>
-                      <Text className="text-sm text-muted dark:text-[#6B6878]">{recipe.prepTime + recipe.cookTime} min · {recipe.difficulty} · ★ {rating.toFixed(1)}</Text>
-                      {views > 0 && <Text className="text-xs text-muted dark:text-[#6B6878]">{views} views</Text>}
-                    </View>
-                    <Pressable onPress={() => toggleFavorite(recipe)} hitSlop={8}>
-                      <Icon name="star" size={20} color={favoriteIds.has(recipe.id) ? c.primary : c.muted} />
-                    </Pressable>
-                  </View>
-                  {risky && <Text className="mt-1 text-xs font-semibold text-danger">⚠ Allergen check</Text>}
-                  {recipe.source === 'ai' && <Text className="mt-1 text-xs font-bold text-primary">AI generated</Text>}
-                </View>
-              </Pressable>
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                availableCount={available}
+                totalIngredients={recipe.ingredients.length}
+                favorite={favoriteIds.has(recipe.id)}
+                risky={risky}
+                rating={rating}
+                views={views}
+                onPress={() => { setActiveRecipe(recipe); setUserRating(ratings[recipe.id] ?? 5); }}
+                onFavorite={() => toggleFavorite(recipe)}
+                onCook={() => { setActiveRecipe(recipe); setUserRating(ratings[recipe.id] ?? 5); }}
+              />
             );
           })
         )}
       </ScrollView>
 
+      <Pressable
+        onPress={handleGenerateAI}
+        accessibilityRole="button"
+        accessibilityLabel="Generate recipes with AI"
+        className="absolute right-5 h-16 w-16 items-center justify-center rounded-full bg-primary"
+        style={{
+          bottom: insets.bottom + 22,
+          shadowColor: c.primary,
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.35,
+          shadowRadius: 20,
+          elevation: 10,
+        }}
+      >
+        <Icon name="sparkles" size={24} color="#FFFFFF" />
+      </Pressable>
+
       <Modal isOpen={!!activeRecipe} onClose={() => setActiveRecipe(null)} title={activeRecipe?.title ?? 'Recipe'}>
         {activeRecipe && (
           <ScrollView style={{ maxHeight: 420 }}>
-            <Text className="mb-3 text-sm text-muted dark:text-[#6B6878]">{activeRecipe.description}</Text>
-            <Text className="mb-1 font-semibold text-ink dark:text-[#F0EEE9]">Ingredients</Text>
+            <Text className="mb-3 text-sm text-muted dark:text-[#9A948D]">{activeRecipe.description}</Text>
+            <Text className="mb-1 font-semibold text-ink dark:text-[#F6F1EA]">Ingredients</Text>
             {activeRecipe.ingredients.map((ing, i) => (
-              <Text key={i} className="text-sm text-ink dark:text-[#F0EEE9]">• {ing}</Text>
+              <Text key={i} className="text-sm text-ink dark:text-[#F6F1EA]">• {ing}</Text>
             ))}
-            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-[#F0EEE9]">Steps</Text>
+            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-[#F6F1EA]">Steps</Text>
             {activeRecipe.instructions.map((step, i) => (
-              <Text key={i} className="mb-1 text-sm text-ink dark:text-[#F0EEE9]">{i + 1}. {step}</Text>
+              <Text key={i} className="mb-1 text-sm text-ink dark:text-[#F6F1EA]">{i + 1}. {step}</Text>
             ))}
             <View className="mt-4 gap-2">
               <TextField label="Your rating (1-5)" value={String(userRating)} onChangeText={(v) => setUserRating(Number(v) || 5)} keyboardType="numeric" />

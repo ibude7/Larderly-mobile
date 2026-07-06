@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
 } from 'expo-camera';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { TabNavigationProp, TabParamList } from '../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,8 +28,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
+import BottomSheet from '../components/ui/BottomSheet';
 import { Icon } from '../components/ui/Icon';
 import AddItemModal from '../components/pantry/AddItemModal';
+import ItemDetailModal from '../components/pantry/ItemDetailModal';
 import ScannedProductModal, { ScannedItem } from '../components/pantry/ScannedProductModal';
 import { useInventory } from '../contexts/InventoryContext';
 import { useToast } from '../contexts/ToastContext';
@@ -46,17 +48,17 @@ import { searchProductByBarcode } from '../lib/productDb';
 import type { ProductData } from '../lib/productDb';
 import { locationIdFromName } from '../lib/inventoryMapper';
 import { PantryItem } from '../types';
+import { trackEvent } from '../lib/analytics';
 
 type ScanMode = 'add' | 'consume';
 
 interface ScanHistoryEntry {
   id: string;
+  pantryItemId: string;
   name: string;
   unit: string;
   mode: ScanMode;
 }
-
-const RECENT_SCANS_KEY = 'larderly:recentScans';
 
 const BARCODE_TYPES: BarcodeType[] = [
   'ean13',
@@ -112,49 +114,50 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const c = useAppColors();
   const theme = useTheme();
-  const { items, locations, addItem, updateItem, consumeItem } = useInventory();
+  const { items, locations, addItem, updateItem, deleteItem, consumeItem } = useInventory();
   const { showToast } = useToast();
 
   const [permission, requestPermission] = useCameraPermissions();
   const [scanMode, setScanMode] = useState<ScanMode>(route.params?.mode ?? 'add');
   const [cameraActive, setCameraActive] = useState(false);
   const [looking, setLooking] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const [recentScans, setRecentScans] = useState<ScanHistoryEntry[]>([]);
+  const [historyItemId, setHistoryItemId] = useState<string | null>(null);
   const [addPrefill, setAddPrefill] = useState<Partial<PantryItem> | null>(null);
   const [scannedProduct, setScannedProduct] = useState<ProductData | null>(null);
   const [productLoading, setProductLoading] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
 
   const processingRef = useRef(false);
-  const recentHydratedRef = useRef(false);
+  const recentScansRef = useRef<ScanHistoryEntry[]>([]);
 
   const scanY = useSharedValue(0);
+  const cornerOpacity = useSharedValue(1);
+  const successOpacity = useSharedValue(0);
 
   useEffect(() => {
     scanY.value = withRepeat(withTiming(104, { duration: 1600 }), -1, true);
-  }, [scanY]);
+    cornerOpacity.value = withRepeat(withTiming(0.5, { duration: 900 }), -1, true);
+  }, [cornerOpacity, scanY]);
 
   const beamStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: scanY.value }],
   }));
 
-  useEffect(() => {
-    AsyncStorage.getItem(RECENT_SCANS_KEY).then((raw) => {
-      if (raw) {
-        try {
-          setRecentScans(JSON.parse(raw) as ScanHistoryEntry[]);
-        } catch {
-          // ignore corrupt cache
-        }
-      }
-      recentHydratedRef.current = true;
-    });
-  }, []);
+  const cornerStyle = useAnimatedStyle(() => ({
+    opacity: cornerOpacity.value,
+  }));
 
-  useEffect(() => {
-    if (!recentHydratedRef.current) return;
-    AsyncStorage.setItem(RECENT_SCANS_KEY, JSON.stringify(recentScans)).catch(() => {});
-  }, [recentScans]);
+  const successFlashStyle = useAnimatedStyle(() => ({
+    opacity: successOpacity.value,
+  }));
+
+  const flashSuccess = useCallback(() => {
+    successOpacity.value = 0.3;
+    successOpacity.value = withTiming(0, { duration: 400 });
+  }, [successOpacity]);
 
   useEffect(() => {
     if (route.params?.mode) {
@@ -177,13 +180,18 @@ export default function ScannerScreen() {
   }, [permission, requestPermission]);
 
   const pushRecent = useCallback((item: PantryItem, mode: ScanMode) => {
-    setRecentScans((prev) =>
-      [{ id: `${item.id}-${Date.now()}`, name: item.name, unit: item.unit, mode }, ...prev].slice(
-        0,
-        8,
-      ),
-    );
+    const next = [
+      { id: `${item.id}-${mode}-${Date.now()}`, pantryItemId: item.id, name: item.name, unit: item.unit, mode },
+      ...recentScansRef.current.filter((entry) => entry.pantryItemId !== item.id),
+    ].slice(0, 3);
+    recentScansRef.current = next;
+    setRecentScans(next);
   }, []);
+
+  const historyItem = useMemo(
+    () => (historyItemId ? items.find((item) => item.id === historyItemId) ?? null : null),
+    [historyItemId, items],
+  );
 
   const applyInventoryChange = useCallback(
     async (item: PantryItem, mode: ScanMode) => {
@@ -195,6 +203,7 @@ export default function ScannerScreen() {
           return false;
         }
         pushRecent(item, mode);
+        flashSuccess();
         showToast(`Added 1 ${item.unit} to ${item.name}`, 'success');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         return true;
@@ -206,11 +215,12 @@ export default function ScannerScreen() {
         return false;
       }
       pushRecent(item, mode);
+      flashSuccess();
       showToast(`Removed 1 ${item.unit} from ${item.name}`, 'success');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return true;
     },
-    [updateItem, consumeItem, showToast, pushRecent],
+    [updateItem, consumeItem, showToast, pushRecent, flashSuccess],
   );
 
   const handleBarcode = useCallback(
@@ -228,6 +238,7 @@ export default function ScannerScreen() {
       setScannedProduct(null);
       try {
         const rich = await searchProductByBarcode(barcode);
+        if (rich.imageUrl) Image.prefetch(rich.imageUrl).catch(() => {});
         setProductLoading(false);
         setLooking(false);
         const matched = findMatchingPantryItem(items, barcode, {
@@ -248,6 +259,7 @@ export default function ScannerScreen() {
           setManualBarcode(barcode);
           return { resume: false };
         }
+        flashSuccess();
         setScannedProduct({ ...rich, barcode });
         return { resume: false };
       } catch {
@@ -267,6 +279,7 @@ export default function ScannerScreen() {
         setAddPrefill({ barcode });
         return { resume: false };
       }
+      if (product.image_url) Image.prefetch(product.image_url).catch(() => {});
 
       const matched = findMatchingPantryItem(items, barcode, product);
       if (matched) {
@@ -281,10 +294,11 @@ export default function ScannerScreen() {
         return { resume: false };
       }
 
+      flashSuccess();
       setAddPrefill(await productToPrefillWithAI(product, locations));
       return { resume: false };
     },
-    [items, locations, scanMode, applyInventoryChange, showToast],
+    [items, locations, scanMode, applyInventoryChange, showToast, flashSuccess],
   );
 
   const handleScannedConfirm = async (item: ScannedItem) => {
@@ -326,6 +340,7 @@ export default function ScannerScreen() {
       if (!code) return;
       processingRef.current = true;
       setCameraActive(false);
+      trackEvent('item_scanned', { mode: scanMode }).catch(() => {});
       const { resume } = await handleBarcode(code);
       setTimeout(() => {
         processingRef.current = false;
@@ -338,6 +353,7 @@ export default function ScannerScreen() {
   const handleManualLookup = async () => {
     const code = manualBarcode.trim();
     if (!code || processingRef.current) return;
+    setManualOpen(false);
     processingRef.current = true;
     setCameraActive(false);
     const { resume } = await handleBarcode(code);
@@ -346,7 +362,7 @@ export default function ScannerScreen() {
   };
 
   const topBarHeight = 100 + insets.top;
-  const bottomSheetHeight = 280 + insets.bottom;
+  const bottomSheetHeight = 156 + insets.bottom;
   const permissionDenied = permission && !permission.granted && !permission.canAskAgain;
 
   return (
@@ -357,8 +373,18 @@ export default function ScannerScreen() {
           facing="back"
           barcodeScannerSettings={{ barcodeTypes: BARCODE_TYPES }}
           onBarcodeScanned={onBarcodeScanned}
+          enableTorch={torchOn}
         />
       ) : null}
+
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: c.success },
+          successFlashStyle,
+        ]}
+      />
 
       {looking ? (
         <View
@@ -388,8 +414,8 @@ export default function ScannerScreen() {
           >
             <View className="items-center">
               <Icon name="camera" size={40} color={c.muted} />
-              <Text className="mt-4 text-center text-lg font-bold text-ink dark:text-[#F0EEE9]">Camera access needed</Text>
-              <Text className="mt-2 text-center text-sm text-muted dark:text-[#6B6878]">
+              <Text className="mt-4 text-center text-lg font-bold text-ink dark:text-[#F6F1EA]">Camera access needed</Text>
+              <Text className="mt-2 text-center text-sm text-muted dark:text-[#9A948D]">
                 Larderly needs your camera to scan barcodes. Enable it in Settings to continue.
               </Text>
               <Button
@@ -418,13 +444,13 @@ export default function ScannerScreen() {
         }}
       >
         <View className="flex-row items-center justify-between">
-          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/60 p-1">
+          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]/60 p-1">
             {(['add', 'consume'] as const).map((m) => (
               <Pressable
                 key={m}
                 onPress={() => setScanMode(m)}
                 className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${
-                  scanMode === m ? 'bg-surface dark:bg-[#1A1A22]' : ''
+                  scanMode === m ? 'bg-surface dark:bg-[#171A21]' : ''
                 }`}
               >
                 <Icon
@@ -433,7 +459,7 @@ export default function ScannerScreen() {
                   color={scanMode === m ? c.primary : c.muted}
                 />
                 <Text
-                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-[#6B6878]'}`}
+                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-[#9A948D]'}`}
                 >
                   {m === 'add' ? 'Add' : 'Consume'}
                 </Text>
@@ -443,7 +469,7 @@ export default function ScannerScreen() {
           <Pressable
             onPress={() => navigation.navigate('Dashboard')}
             hitSlop={8}
-            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/80"
+            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]/80"
           >
             <Icon name="close" size={18} color={c.ink} />
           </Pressable>
@@ -464,11 +490,20 @@ export default function ScannerScreen() {
               width: 256,
               height: 128,
               borderRadius: 16,
-              borderWidth: 2,
-              borderColor: 'rgba(255,255,255,0.85)',
               overflow: 'hidden',
             }}
           >
+            {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const).map((corner) => (
+              <Animated.View
+                key={corner}
+                style={[
+                  styles.corner,
+                  styles[corner],
+                  { borderColor: c.primary },
+                  cornerStyle,
+                ]}
+              />
+            ))}
             <Animated.View
               style={[
                 beamStyle,
@@ -487,74 +522,139 @@ export default function ScannerScreen() {
         </View>
       ) : null}
 
-      <BlurView
-        intensity={theme === 'dark' ? 75 : 80}
-        tint={theme}
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: bottomSheetHeight,
-          paddingBottom: insets.bottom + 90,
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          borderTopWidth: 1,
-          borderTopColor: c.line,
-        }}
-      >
-        <Text className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
-          Enter barcode manually
-        </Text>
-        <View className="flex-row gap-2">
-          <View className="flex-1">
-            <TextField
-              value={manualBarcode}
-              onChangeText={setManualBarcode}
-              placeholder="e.g. 0123456789012"
-              keyboardType="number-pad"
-              icon="search"
-            />
+      {!permissionDenied ? (
+        <Pressable
+          onPress={() => setTorchOn((value) => !value)}
+          accessibilityRole="button"
+          accessibilityLabel={torchOn ? 'Turn torch off' : 'Turn torch on'}
+          style={{
+            position: 'absolute',
+            left: 18,
+            bottom: bottomSheetHeight + 18,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.22)',
+            backgroundColor: torchOn ? c.primary : 'rgba(0,0,0,0.36)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="flash" size={20} color="#FFFFFF" />
+        </Pressable>
+      ) : null}
+
+      {!permissionDenied ? (
+        <Pressable
+          onPress={() => setManualOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Enter barcode manually"
+          style={{
+            position: 'absolute',
+            alignSelf: 'center',
+            bottom: bottomSheetHeight + 24,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.22)',
+            backgroundColor: 'rgba(0,0,0,0.38)',
+            paddingHorizontal: 16,
+            paddingVertical: 11,
+          }}
+        >
+          <Text className="text-xs font-bold text-white">Enter barcode manually</Text>
+        </Pressable>
+      ) : null}
+
+      {!permissionDenied ? (
+        <BlurView
+          intensity={theme === 'dark' ? 75 : 80}
+          tint={theme}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: bottomSheetHeight,
+            paddingBottom: insets.bottom + 18,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            borderTopWidth: 1,
+            borderTopColor: c.line,
+          }}
+        >
+          <View className="flex-row items-center justify-between">
+            <Text className="text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+              Recent scans
+            </Text>
+            <Text className="text-xs text-muted dark:text-[#9A948D]">Session only</Text>
           </View>
+
+          {recentScans.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mt-3"
+              contentContainerStyle={{ gap: 10, paddingRight: 16 }}
+            >
+              {recentScans.map((s) => (
+                <Pressable
+                  key={s.id}
+                  onPress={() => setHistoryItemId(s.pantryItemId)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${s.name}`}
+                  className="min-w-[148px] flex-row items-center gap-3 rounded-2xl border border-white/15 bg-black/25 px-3 py-3"
+                >
+                  <View
+                    className="h-8 w-8 items-center justify-center rounded-full"
+                    style={{ backgroundColor: s.mode === 'add' ? c.success : c.primary }}
+                  >
+                    <Icon
+                      name={s.mode === 'add' ? 'plus' : 'minus'}
+                      size={15}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text numberOfLines={1} className="text-sm font-bold text-white">{s.name}</Text>
+                    <Text className="mt-0.5 text-xs text-white/65">
+                      {s.mode === 'add' ? '+1' : '-1'} {s.unit}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : (
+            <View className="mt-3 rounded-2xl border border-dashed border-white/15 bg-black/20 px-4 py-4">
+              <Text className="text-sm font-semibold text-white/80">
+                Scan a pantry item to pin it here.
+              </Text>
+            </View>
+          )}
+        </BlurView>
+      ) : null}
+
+      <BottomSheet
+        isOpen={manualOpen}
+        onClose={() => setManualOpen(false)}
+        title="Enter barcode"
+        snapPoints={['34%']}
+      >
+        <View className="gap-3">
+          <TextField
+            value={manualBarcode}
+            onChangeText={setManualBarcode}
+            placeholder="e.g. 0123456789012"
+            keyboardType="number-pad"
+            icon="search"
+          />
           <Button
-            label="Look up"
+            label="Look up barcode"
             onPress={handleManualLookup}
             disabled={!manualBarcode.trim() || looking}
           />
         </View>
-
-        {recentScans.length > 0 ? (
-          <>
-            <Text className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
-              Recent
-            </Text>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              className="flex-1"
-              contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
-            >
-              <View className="gap-2">
-                {recentScans.map((s) => (
-                  <View
-                    key={s.id}
-                    className="flex-row items-center gap-3 rounded-xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]/70 px-3 py-2.5"
-                  >
-                    <Icon
-                      name={s.mode === 'add' ? 'plus' : 'minus'}
-                      size={16}
-                      color={s.mode === 'add' ? c.success : c.primary}
-                    />
-                    <Text className="flex-1 text-sm font-semibold text-ink dark:text-[#F0EEE9]">{s.name}</Text>
-                    <Text className="text-xs text-muted dark:text-[#6B6878]">
-                      {s.mode === 'add' ? '+1' : '-1'} {s.unit}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </>
-        ) : null}
-      </BlurView>
+      </BottomSheet>
 
       <ScannedProductModal
         isOpen={!!scannedProduct || productLoading}
@@ -593,6 +693,48 @@ export default function ScannerScreen() {
           return res;
         }}
       />
+
+      <ItemDetailModal
+        item={historyItem}
+        isOpen={!!historyItem}
+        onClose={() => setHistoryItemId(null)}
+        locations={locations}
+        onUpdate={updateItem}
+        onDelete={deleteItem}
+        onConsume={consumeItem}
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  corner: {
+    position: 'absolute',
+    height: 28,
+    width: 28,
+  },
+  topLeft: {
+    borderLeftWidth: 3,
+    borderTopWidth: 3,
+    left: 0,
+    top: 0,
+  },
+  topRight: {
+    borderRightWidth: 3,
+    borderTopWidth: 3,
+    right: 0,
+    top: 0,
+  },
+  bottomLeft: {
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    bottom: 0,
+    left: 0,
+  },
+  bottomRight: {
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    bottom: 0,
+    right: 0,
+  },
+});

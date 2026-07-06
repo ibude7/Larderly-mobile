@@ -43,6 +43,7 @@ export interface PantryItem {
   expiry_date: string | null;
   low_stock_threshold: number;
   purchase_price: number | null;
+  priceHistory?: Array<{ price: number; recordedAt: string }>;
   notes: string;
   created_at: string;
   updated_at: string;

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, Text } from 'react-native';
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 import { useAppColors } from '../../hooks/useAppColors';
@@ -13,7 +14,7 @@ interface ChipProps {
   variant?: 'default' | 'danger' | 'success';
 }
 
-export default function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' }: ChipProps) {
+function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' }: ChipProps) {
   const c = useAppColors();
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -54,3 +55,5 @@ export default function Chip({ label, active, onPress, emoji, icon, count, varia
     </Pressable>
   );
 }
+
+export default memo(Chip);

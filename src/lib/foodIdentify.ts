@@ -8,6 +8,7 @@
 
 import { httpsCallable } from '@react-native-firebase/functions';
 import { functions } from './firebase';
+import { sanitizeAIProduct, sanitizeString } from './sanitize';
 
 export interface IdentifiedFood {
   name: string;
@@ -24,5 +25,9 @@ const _identifyFood = httpsCallable<
 
 export async function identifyFoodFromImage(base64: string, mimeType: string): Promise<IdentifiedFood> {
   const result = await _identifyFood({ base64, mimeType });
-  return result.data;
+  const sanitized = sanitizeAIProduct(result.data);
+  return {
+    ...sanitized,
+    storageLocation: sanitizeString((result.data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
+  };
 }

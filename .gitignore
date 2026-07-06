@@ -42,6 +42,8 @@ yarn-error.*
 
 # local env files
 .env
+.env.development
+.env.production
 
 # Firebase native config (contains project keys — keep out of git)
 google-services.json

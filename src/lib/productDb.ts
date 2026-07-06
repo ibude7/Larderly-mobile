@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { db } from './firebase';
+import { sanitizeString } from './sanitize';
 
 export interface ProductData {
+  source?: 'cache' | 'external';
   name: string;
   brand: string;
   category: string;
@@ -52,6 +56,33 @@ function parseUnit(qty: string): string {
 }
 
 export async function searchProductByBarcode(barcode: string): Promise<ProductData> {
+  try {
+    const productSnap = await getDoc(doc(db, 'products', barcode));
+    if (productSnap.exists()) {
+      const data = productSnap.data() ?? {};
+      const name = sanitizeString(data.name, 200);
+      if (name) {
+        return {
+          source: 'cache',
+          name,
+          brand: sanitizeString(data.brand, 200),
+          category: sanitizeString(data.category, 200) || 'other',
+          imageUrl: sanitizeString(data.image_url ?? data.imageUrl, 500) || null,
+          pricePerUnit: typeof data.pricePerUnit === 'number' ? data.pricePerUnit : null,
+          unit: sanitizeString(data.unit, 24) || 'ea',
+          calories: null,
+          protein: null,
+          fat: null,
+          carbs: null,
+          ingredients: sanitizeString(data.description, 500),
+          barcode,
+        };
+      }
+    }
+  } catch {
+    // Firestore cache errors should not block external lookup.
+  }
+
   const cache = await readCache();
   const hit = cache[barcode];
   if (hit && Date.now() - hit.at < CACHE_TTL) return hit.data;
@@ -72,6 +103,7 @@ export async function searchProductByBarcode(barcode: string): Promise<ProductDa
         const p = json.product;
         const n = p.nutriments ?? {};
         const result: ProductData = {
+          source: 'external',
           name: p.product_name_en || p.product_name || 'Unknown Product',
           brand: p.brands?.split(',')[0]?.trim() ?? '',
           category: p.categories_tags?.[0]?.replace('en:', '').replace(/-/g, ' ') ?? 'other',
@@ -86,6 +118,19 @@ export async function searchProductByBarcode(barcode: string): Promise<ProductDa
           barcode,
         };
         await writeCache(barcode, result);
+        await setDoc(
+          doc(db, 'products', barcode),
+          {
+            barcode,
+            name: result.name,
+            brand: result.brand,
+            category: result.category,
+            image_url: result.imageUrl ?? '',
+            unit: result.unit,
+            description: result.ingredients,
+          },
+          { merge: true },
+        ).catch(() => {});
         return result;
       }
     }
@@ -105,6 +150,7 @@ export async function searchProductByBarcode(barcode: string): Promise<ProductDa
       if (json.code === 'OK' && json.items?.length) {
         const item = json.items[0];
         const result: ProductData = {
+          source: 'external',
           name: item.title || 'Unknown Product',
           brand: item.brand || '',
           category: item.category || 'other',
@@ -119,6 +165,19 @@ export async function searchProductByBarcode(barcode: string): Promise<ProductDa
           barcode,
         };
         await writeCache(barcode, result);
+        await setDoc(
+          doc(db, 'products', barcode),
+          {
+            barcode,
+            name: result.name,
+            brand: result.brand,
+            category: result.category,
+            image_url: result.imageUrl ?? '',
+            unit: result.unit,
+            description: result.ingredients,
+          },
+          { merge: true },
+        ).catch(() => {});
         return result;
       }
     }

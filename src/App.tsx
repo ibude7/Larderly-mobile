@@ -13,7 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ToastProvider } from './contexts/ToastContext';
-import { useNetworkSync } from './hooks/useNetworkSync';
+import { useNetworkStatus } from './hooks/useNetworkStatus';
 import { ConfirmProvider } from './contexts/ConfirmContext';
 import { ReauthProvider } from './components/auth/ReauthDialog';
 import { PreferencesProvider, usePrefs } from './contexts/PreferencesContext';
@@ -48,7 +48,7 @@ function ThemeBridge() {
  * Renders nothing — side-effects only.
  */
 function NetworkSync() {
-  useNetworkSync();
+  useNetworkStatus();
   return null;
 }
 

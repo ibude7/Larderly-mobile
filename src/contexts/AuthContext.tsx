@@ -48,7 +48,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
-import { auth, db } from '../lib/firebase';
+import { analytics, auth, crashlytics, db } from '../lib/firebase';
 import { toISOString } from '../lib/firestore';
 import { Profile } from '../types';
 import { UserProfile } from '../types/household';
@@ -245,10 +245,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(bailout);
       setUser(fbUser);
       if (!fbUser) {
+        await crashlytics().setUserId('');
+        await analytics().setUserId(null);
         setLoading(false);
         return;
       }
       try {
+        await crashlytics().setUserId(fbUser.uid);
+        await analytics().setUserId(fbUser.uid);
         const displayName = fbUser.displayName ?? '';
         await initializeNewUser(fbUser.uid, displayName);
       } catch (err) {

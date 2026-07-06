@@ -1,5 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { doc, getDoc, onSnapshot, updateDoc, setDoc, collection, serverTimestamp, arrayUnion, arrayRemove, deleteField } from '@react-native-firebase/firestore';
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  setDoc,
+  collection,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  writeBatch,
+  increment,
+} from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { Role } from '../types/household';
@@ -18,6 +31,16 @@ interface HouseholdContextType {
 }
 
 const HouseholdContext = createContext<HouseholdContextType | undefined>(undefined);
+
+function inviteRateLimitKey(date = new Date()): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function inviteExpiryDate(date = new Date()): Date {
+  const expires = new Date(date);
+  expires.setDate(expires.getDate() + 30);
+  return expires;
+}
 
 export function HouseholdProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -70,8 +93,10 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     const newHouseholdRef = doc(collection(db, 'households'));
     const newHouseholdId = newHouseholdRef.id;
     const code = generateInviteCode();
+    const rateLimitKey = inviteRateLimitKey();
+    const batch = writeBatch(db);
 
-    await setDoc(newHouseholdRef, {
+    batch.set(newHouseholdRef, {
       name: name.trim(),
       ownerId: user.uid,
       members: [user.uid],
@@ -84,16 +109,31 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       updatedAt: serverTimestamp(),
     });
 
-    await setDoc(doc(db, 'inviteCodes', code), {
+    batch.set(doc(db, 'inviteCodes', code), {
       householdId: newHouseholdId,
       ownerId: user.uid,
+      rateLimitKey,
       createdAt: serverTimestamp(),
+      expiresAt: inviteExpiryDate(),
     });
 
-    await updateDoc(doc(db, 'users', user.uid), {
+    batch.set(
+      doc(db, 'users', user.uid, 'inviteCodeCounters', rateLimitKey),
+      {
+        ownerId: user.uid,
+        count: increment(1),
+        windowStart: new Date(`${rateLimitKey}T00:00:00.000Z`),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    batch.update(doc(db, 'users', user.uid), {
       householdId: newHouseholdId,
       updated_at: serverTimestamp(),
     });
+
+    await batch.commit();
 
     await seedHouseholdStorageLocations(newHouseholdId, user.uid);
 

@@ -36,6 +36,48 @@ service cloud.firestore {
       return isHouseholdMember(householdId) && householdRole(householdId) != 'viewer';
     }
 
+    function validShortString(value, maxLen) {
+      return value is string && value.size() <= maxLen;
+    }
+
+    function validProductCacheWrite() {
+      return request.resource.data.keys().hasAll(['name', 'brand', 'category'])
+        && validShortString(request.resource.data.name, 200)
+        && validShortString(request.resource.data.brand, 200)
+        && validShortString(request.resource.data.category, 200);
+    }
+
+    function validInventoryWrite() {
+      return request.resource.data.keys().hasAll(['name'])
+        && validShortString(request.resource.data.name, 100);
+    }
+
+    function inviteCounterPath(ownerId, rateLimitKey) {
+      return /databases/$(database)/documents/users/$(ownerId)/inviteCodeCounters/$(rateLimitKey);
+    }
+
+    function validInviteCounterAfterWrite(ownerId) {
+      return request.resource.data.rateLimitKey is string
+        && validInviteCounterIncrement(ownerId, request.resource.data.rateLimitKey);
+    }
+
+    function validInviteCounterIncrement(ownerId, rateLimitKey) {
+      let path = inviteCounterPath(ownerId, rateLimitKey);
+      return existsAfter(path)
+        && getAfter(path).data.ownerId == ownerId
+        && getAfter(path).data.count is int
+        && getAfter(path).data.count >= 1
+        && getAfter(path).data.count <= 10
+        && getAfter(path).data.windowStart is timestamp
+        && getAfter(path).data.updatedAt is timestamp
+        && (
+          (!exists(path) && getAfter(path).data.count == 1)
+          || (exists(path)
+            && get(path).data.windowStart == getAfter(path).data.windowStart
+            && getAfter(path).data.count == get(path).data.count + 1)
+        );
+    }
+
     function isJoiningHousehold() {
       return isSignedIn()
         && !(request.auth.uid in resource.data.members)
@@ -80,6 +122,13 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
+      match /inviteCodeCounters/{counterId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && validInviteCounterIncrement(request.auth.uid, counterId);
+        allow delete: if false;
+      }
+
       // Legacy paths — read/write for migration cleanup only
       match /storage_locations/{locationId} {
         allow read, write: if isOwner(userId);
@@ -107,7 +156,8 @@ service cloud.firestore {
 
       match /inventory/{itemId} {
         allow read: if isHouseholdMember(householdId);
-        allow create, update, delete: if canEditHousehold(householdId);
+        allow create, update: if canEditHousehold(householdId) && validInventoryWrite();
+        allow delete: if canEditHousehold(householdId);
       }
 
       match /storageLocations/{locationId} {
@@ -145,9 +195,11 @@ service cloud.firestore {
 
     // ── Invite codes ────────────────────────────────────────────────────────
     match /inviteCodes/{code} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.expiresAt > request.time;
       allow create: if isSignedIn()
-        && request.resource.data.ownerId == request.auth.uid;
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.expiresAt is timestamp
+        && validInviteCounterAfterWrite(request.auth.uid);
       allow update, delete: if isSignedIn()
         && resource.data.ownerId == request.auth.uid;
     }
@@ -155,13 +207,17 @@ service cloud.firestore {
     // ── Shared product barcode cache ────────────────────────────────────────
     match /products/{barcode} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && validProductCacheWrite();
       allow delete: if false;
     }
 
     // ── User-created recipes catalog ────────────────────────────────────────
     match /recipes/{recipeId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.isPublic == true
+        || resource.data.createdBy == request.auth.uid
+        || (resource.data.householdId is string && isHouseholdMember(resource.data.householdId))
+      );
       allow create: if isSignedIn()
         && request.resource.data.createdBy == request.auth.uid;
       allow update, delete: if isSignedIn()

@@ -73,7 +73,7 @@ export default function ToastContainer() {
               >
                 <Icon name={ICON[toast.type]} size={20} color={accent} />
               </View>
-              <Text className="flex-1 pt-1 text-sm font-semibold leading-5 text-ink dark:text-[#F0EEE9]">
+              <Text className="flex-1 pt-1 text-sm font-semibold leading-5 text-ink dark:text-[#F6F1EA]">
                 {toast.message}
               </Text>
               <Pressable onPress={() => removeToast(toast.id)} hitSlop={8} className="p-1">

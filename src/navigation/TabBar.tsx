@@ -68,7 +68,7 @@ function TabButton({ focused, label, icon, isScanner, onPress }: TabButtonProps)
           <Icon name="scanner" size={24} color="#FFFFFF" />
         </Animated.View>
         {focused ? (
-          <Text className="mt-1 text-[11px] font-bold" style={{ color: c.primary }}>
+          <Text className="mt-1 text-xs font-bold" style={{ color: c.primary }}>
             {label}
           </Text>
         ) : null}
@@ -92,7 +92,7 @@ function TabButton({ focused, label, icon, isScanner, onPress }: TabButtonProps)
       <Animated.View style={[animatedStyle, { alignItems: 'center' }]}>
         <Icon name={icon} size={24} color={focused ? c.primary : c.muted} />
         {focused ? (
-          <Text className="mt-1 text-[11px] font-bold" style={{ color: c.primary }}>
+          <Text className="mt-1 text-xs font-bold" style={{ color: c.primary }}>
             {label}
           </Text>
         ) : null}

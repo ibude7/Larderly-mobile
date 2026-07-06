@@ -9,6 +9,7 @@ export interface DashboardStats {
   expiringSoonItems: PantryItem[];
   uncheckedCount: number;
   totalValue: number;
+  loading: boolean;
 }
 
 function stockKey(items: PantryItem[]): string {
@@ -20,8 +21,8 @@ function shoppingCheckKey(list: { id: string; is_checked: boolean }[]): string {
 }
 
 export function useDashboardStats(): DashboardStats {
-  const { items, lowStockItems, expiringSoonItems } = useInventory();
-  const { shoppingList } = useShopping();
+  const { items, lowStockItems, expiringSoonItems, isLoading: inventoryLoading } = useInventory();
+  const { shoppingList, loading: shoppingLoading } = useShopping();
 
   const quantityPriceKey = stockKey(items);
   const checkKey = shoppingCheckKey(shoppingList);
@@ -33,7 +34,8 @@ export function useDashboardStats(): DashboardStats {
   const prevKeysRef = useRef('');
 
   return useMemo(() => {
-    const keys = `${itemCount}|${quantityPriceKey}|${checkKey}|${lowStockKey}|${expiringKey}`;
+    const loading = inventoryLoading || shoppingLoading;
+    const keys = `${itemCount}|${quantityPriceKey}|${checkKey}|${lowStockKey}|${expiringKey}|${loading ? 1 : 0}`;
     if (cacheRef.current && prevKeysRef.current === keys) {
       return cacheRef.current;
     }
@@ -44,6 +46,7 @@ export function useDashboardStats(): DashboardStats {
       expiringSoonItems,
       uncheckedCount: shoppingList.filter((s) => !s.is_checked).length,
       totalValue: items.reduce((sum, i) => sum + (i.purchase_price || 0) * i.quantity, 0),
+      loading,
     };
     prevKeysRef.current = keys;
     cacheRef.current = next;
@@ -54,6 +57,8 @@ export function useDashboardStats(): DashboardStats {
     checkKey,
     lowStockKey,
     expiringKey,
+    inventoryLoading,
+    shoppingLoading,
     items,
     shoppingList,
     lowStockItems,

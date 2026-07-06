@@ -46,17 +46,17 @@ export default function HouseholdSetupScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]">
       <View className="flex-1 justify-center px-6">
-        <View className="rounded-3xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-8">
+        <View className="rounded-3xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-8">
           {mode === 'choice' && (
             <>
               <View className="mb-6 items-center">
                 <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                   <Icon name="dashboard" size={32} color={c.primary} />
                 </View>
-                <Text className="text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Set up your kitchen</Text>
-                <Text className="mt-2 text-center text-sm text-muted dark:text-[#6B6878]">
+                <Text className="text-center text-2xl font-bold text-ink dark:text-[#F6F1EA]">Set up your kitchen</Text>
+                <Text className="mt-2 text-center text-sm text-muted dark:text-[#9A948D]">
                   Create a household or join with an invite code.
                 </Text>
               </View>
@@ -65,26 +65,26 @@ export default function HouseholdSetupScreen() {
                 className="mb-3 flex-row items-center justify-between rounded-2xl border-2 border-primary/30 bg-primary/5 p-5"
               >
                 <View className="flex-row items-center gap-4">
-                  <View className="h-12 w-12 items-center justify-center rounded-xl bg-surface dark:bg-[#1A1A22]">
+                  <View className="h-12 w-12 items-center justify-center rounded-xl bg-surface dark:bg-[#171A21]">
                     <Icon name="plus" size={22} color={c.primary} />
                   </View>
                   <View>
-                    <Text className="font-bold text-ink dark:text-[#F0EEE9]">Create household</Text>
-                    <Text className="text-xs text-muted dark:text-[#6B6878]">Start fresh and invite family</Text>
+                    <Text className="font-bold text-ink dark:text-[#F6F1EA]">Create household</Text>
+                    <Text className="text-xs text-muted dark:text-[#9A948D]">Start fresh and invite family</Text>
                   </View>
                 </View>
               </Pressable>
               <Pressable
                 onPress={() => setMode('join')}
-                className="flex-row items-center justify-between rounded-2xl border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13] p-5"
+                className="flex-row items-center justify-between rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-5"
               >
                 <View className="flex-row items-center gap-4">
                   <View className="h-12 w-12 items-center justify-center rounded-xl bg-line/50">
                     <Icon name="user" size={22} color={c.ink} />
                   </View>
                   <View>
-                    <Text className="font-bold text-ink dark:text-[#F0EEE9]">Join household</Text>
-                    <Text className="text-xs text-muted dark:text-[#6B6878]">8-character invite code</Text>
+                    <Text className="font-bold text-ink dark:text-[#F6F1EA]">Join household</Text>
+                    <Text className="text-xs text-muted dark:text-[#9A948D]">8-character invite code</Text>
                   </View>
                 </View>
               </Pressable>
@@ -93,7 +93,7 @@ export default function HouseholdSetupScreen() {
 
           {mode === 'create' && (
             <>
-              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Name your household</Text>
+              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F6F1EA]">Name your household</Text>
               <TextField
                 label="Household name"
                 value={name}
@@ -109,7 +109,7 @@ export default function HouseholdSetupScreen() {
 
           {mode === 'join' && (
             <>
-              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F0EEE9]">Enter invite code</Text>
+              <Text className="mb-2 text-center text-2xl font-bold text-ink dark:text-[#F6F1EA]">Enter invite code</Text>
               <TextField
                 label="Invite code"
                 value={inviteCode}
