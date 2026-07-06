@@ -63,7 +63,7 @@ module.exports = () => ({
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
-      backgroundColor: '#F4F2EE',
+      backgroundColor: '#F5F4F0',
     },
     googleServicesFile: fs.existsSync(ANDROID_GOOGLE_SERVICES) ? ANDROID_GOOGLE_SERVICES : undefined,
     edgeToEdgeEnabled: true,
@@ -85,7 +85,7 @@ module.exports = () => ({
       {
         image: './assets/splash-icon.png',
         resizeMode: 'contain',
-        backgroundColor: '#F4F2EE',
+        backgroundColor: '#F5F4F0',
       },
     ],
     'expo-font',

@@ -42,12 +42,12 @@ function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' 
         {icon ? <Icon name={icon} size={14} color={active ? '#FFFFFF' : c.ink} /> : null}
         {emoji ? <Text style={{ fontSize: 13 }}>{emoji}</Text> : null}
         <Text style={{
-          fontSize: 12, fontWeight: '700',
+          fontSize: 12, fontFamily: 'Outfit_700Bold',
           color: active ? '#FFFFFF' : c.muted,
           letterSpacing: 0.2,
         }}>{label}</Text>
         {count !== undefined ? (
-          <Text style={{ fontSize: 10, color: active ? 'rgba(255,255,255,0.7)' : c.subtle }}>
+          <Text style={{ fontSize: 10, fontFamily: 'Outfit_600SemiBold', color: active ? 'rgba(255,255,255,0.7)' : c.subtle }}>
             {count}
           </Text>
         ) : null}

@@ -133,33 +133,33 @@ export default function ShoppingModeOverlay({
 
   return (
     <RNModal visible animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]">
-        <View className="flex-row items-center justify-between border-b border-line dark:border-[#303541] px-4 py-3">
+      <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark">
+        <View className="flex-row items-center justify-between border-b border-line dark:border-line-dark px-4 py-3">
           <View>
             <Text className="text-xs font-bold uppercase text-primary">Shopping mode</Text>
-            <Text className="text-xl font-bold text-ink dark:text-[#F6F1EA]">{list.name}</Text>
+            <Text className="font-display text-2xl text-ink dark:text-ink-dark">{list.name}</Text>
           </View>
-          <Pressable onPress={onClose} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
+          <Pressable onPress={onClose} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
             <Icon name="close" size={18} color={c.ink} />
           </Pressable>
         </View>
 
-        <View className="flex-row flex-wrap gap-2 border-b border-line dark:border-[#303541] px-4 py-3">
-          <View className="rounded-xl bg-surface dark:bg-[#171A21] px-3 py-2">
-            <Text className="text-xs text-muted dark:text-[#9A948D]">Spent</Text>
-            <Text className="font-bold text-ink dark:text-[#F6F1EA]">{formatCurrency(spent, prefs.currency)}</Text>
+        <View className="flex-row flex-wrap gap-2 border-b border-line dark:border-line-dark px-4 py-3">
+          <View className="rounded-xl bg-surface dark:bg-surface-dark px-3 py-2">
+            <Text className="text-xs text-muted dark:text-muted-dark">Spent</Text>
+            <Text className="font-bold text-ink dark:text-ink-dark">{formatCurrency(spent, prefs.currency)}</Text>
           </View>
           {remaining !== null && (
-            <View className="rounded-xl bg-surface dark:bg-[#171A21] px-3 py-2">
-              <Text className="text-xs text-muted dark:text-[#9A948D]">Remaining</Text>
-              <Text className={`font-bold ${remaining < 0 ? 'text-danger' : 'text-ink dark:text-[#F6F1EA]'}`}>
+            <View className="rounded-xl bg-surface dark:bg-surface-dark px-3 py-2">
+              <Text className="text-xs text-muted dark:text-muted-dark">Remaining</Text>
+              <Text className={`font-bold ${remaining < 0 ? 'text-danger' : 'text-ink dark:text-ink-dark'}`}>
                 {formatCurrency(remaining, prefs.currency)}
               </Text>
             </View>
           )}
-          <View className="rounded-xl bg-surface dark:bg-[#171A21] px-3 py-2">
-            <Text className="text-xs text-muted dark:text-[#9A948D]">Left to buy</Text>
-            <Text className="font-bold text-ink dark:text-[#F6F1EA]">{uncheckedCount}</Text>
+          <View className="rounded-xl bg-surface dark:bg-surface-dark px-3 py-2">
+            <Text className="text-xs text-muted dark:text-muted-dark">Left to buy</Text>
+            <Text className="font-bold text-ink dark:text-ink-dark">{uncheckedCount}</Text>
           </View>
         </View>
 
@@ -178,7 +178,7 @@ export default function ShoppingModeOverlay({
         </View>
 
         {isScanning && (
-          <View className="mx-4 mb-3 h-48 overflow-hidden rounded-2xl border border-line dark:border-[#303541]">
+          <View className="mx-4 mb-3 h-48 overflow-hidden rounded-2xl border border-line dark:border-line-dark">
             <CameraView
               style={{ flex: 1 }}
               facing="back"
@@ -194,7 +194,7 @@ export default function ShoppingModeOverlay({
               key={item.id}
               onPress={() => onTogglePurchased(item.id)}
               className={`mb-2 flex-row items-center gap-3 rounded-2xl border px-4 py-4 ${
-                item.is_checked ? 'border-success/30 bg-success/5' : 'border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'
+                item.is_checked ? 'border-success/30 bg-success/5' : 'border-line dark:border-line-dark bg-surface dark:bg-surface-dark'
               }`}
             >
               <Icon
@@ -203,10 +203,10 @@ export default function ShoppingModeOverlay({
                 color={item.is_checked ? c.success : c.primary}
               />
               <View className="flex-1">
-                <Text className={`text-base font-semibold ${item.is_checked ? 'text-muted dark:text-[#9A948D] line-through' : 'text-ink dark:text-[#F6F1EA]'}`}>
+                <Text className={`text-base font-semibold ${item.is_checked ? 'text-muted dark:text-muted-dark line-through' : 'text-ink dark:text-ink-dark'}`}>
                   {item.name}
                 </Text>
-                <Text className="text-sm text-muted dark:text-[#9A948D]">
+                <Text className="text-sm text-muted dark:text-muted-dark">
                   {item.quantity} {item.unit}
                   {item.estimatedPrice ? ` · ${formatCurrency(item.estimatedPrice * item.quantity, prefs.currency)}` : ''}
                 </Text>
@@ -215,7 +215,7 @@ export default function ShoppingModeOverlay({
           ))}
         </ScrollView>
 
-        <View className="border-t border-line dark:border-[#303541] px-4 py-3">
+        <View className="border-t border-line dark:border-line-dark px-4 py-3">
           <Button label="Checkout to pantry" icon="pantry" onPress={onCheckout} />
         </View>
       </SafeAreaView>

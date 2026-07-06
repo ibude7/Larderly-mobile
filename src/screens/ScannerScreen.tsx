@@ -414,8 +414,8 @@ export default function ScannerScreen() {
           >
             <View className="items-center">
               <Icon name="camera" size={40} color={c.muted} />
-              <Text className="mt-4 text-center text-lg font-bold text-ink dark:text-[#F6F1EA]">Camera access needed</Text>
-              <Text className="mt-2 text-center text-sm text-muted dark:text-[#9A948D]">
+              <Text className="mt-4 text-center font-display text-xl text-ink dark:text-ink-dark">Camera access needed</Text>
+              <Text className="mt-2 text-center text-sm text-muted dark:text-muted-dark">
                 Larderly needs your camera to scan barcodes. Enable it in Settings to continue.
               </Text>
               <Button
@@ -444,13 +444,13 @@ export default function ScannerScreen() {
         }}
       >
         <View className="flex-row items-center justify-between">
-          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]/60 p-1">
+          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark/60 p-1">
             {(['add', 'consume'] as const).map((m) => (
               <Pressable
                 key={m}
                 onPress={() => setScanMode(m)}
                 className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${
-                  scanMode === m ? 'bg-surface dark:bg-[#171A21]' : ''
+                  scanMode === m ? 'bg-surface dark:bg-surface-dark' : ''
                 }`}
               >
                 <Icon
@@ -459,7 +459,7 @@ export default function ScannerScreen() {
                   color={scanMode === m ? c.primary : c.muted}
                 />
                 <Text
-                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-[#9A948D]'}`}
+                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-muted-dark'}`}
                 >
                   {m === 'add' ? 'Add' : 'Consume'}
                 </Text>
@@ -469,7 +469,7 @@ export default function ScannerScreen() {
           <Pressable
             onPress={() => navigation.navigate('Dashboard')}
             hitSlop={8}
-            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]/80"
+            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark/80"
           >
             <Icon name="close" size={18} color={c.ink} />
           </Pressable>
@@ -584,10 +584,10 @@ export default function ScannerScreen() {
           }}
         >
           <View className="flex-row items-center justify-between">
-            <Text className="text-[12px] font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+            <Text className="text-[12px] font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
               Recent scans
             </Text>
-            <Text className="text-xs text-muted dark:text-[#9A948D]">Session only</Text>
+            <Text className="text-xs text-muted dark:text-muted-dark">Session only</Text>
           </View>
 
           {recentScans.length > 0 ? (

@@ -17,10 +17,10 @@ function alpha(hex: string, value: string) {
 export default function Badge({ label, variant, size = 'sm', dot = false }: BadgeProps) {
   const c = useAppColors();
   const colors: Record<BadgeVariant, { background: string; foreground: string }> = {
-    success: { background: alpha(c.primary, '1A'), foreground: c.primary },
-    warning: { background: 'rgba(245, 158, 11, 0.1)', foreground: '#D97706' },
-    danger: { background: alpha(c.danger, '1A'), foreground: c.danger },
-    neutral: { background: alpha(c.muted, '1A'), foreground: c.muted },
+    success: { background: c.teal, foreground: '#04231A' },
+    warning: { background: c.amber, foreground: '#231A00' },
+    danger: { background: c.danger, foreground: '#FFFFFF' },
+    neutral: { background: alpha(c.muted, '1F'), foreground: c.muted },
     primary: { background: c.primary, foreground: '#FFFFFF' },
   };
   const tone = colors[variant];
@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontWeight: '800',
-    letterSpacing: 0,
+    fontFamily: 'Outfit_700Bold',
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   dot: {

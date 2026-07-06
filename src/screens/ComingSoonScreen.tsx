@@ -30,7 +30,7 @@ export default function ComingSoonScreen() {
 
   return (
     <View
-      className="flex-1 items-center justify-center bg-canvas px-8 dark:bg-[#0F0F13]"
+      className="flex-1 items-center justify-center bg-canvas px-8 dark:bg-canvas-dark"
       style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 96 }}
     >
       <Text className="text-6xl">🍳</Text>
@@ -44,10 +44,10 @@ export default function ComingSoonScreen() {
         />
       </View>
 
-      <Text className="mt-4 text-center text-3xl font-black text-ink dark:text-[#F0EEE9]">
+      <Text className="mt-4 text-center text-3xl font-black text-ink dark:text-ink-dark">
         Meal Planner
       </Text>
-      <Text className="mt-3 max-w-[320px] text-center text-base font-medium leading-6 text-muted dark:text-[#6B6878]">
+      <Text className="mt-3 max-w-[320px] text-center text-base font-medium leading-6 text-muted dark:text-muted-dark">
         AI-powered meal planning from your pantry. Coming soon.
       </Text>
 

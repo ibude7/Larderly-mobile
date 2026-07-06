@@ -107,14 +107,14 @@ export default function Modal({
                   marginBottom: 8,
                 }}
               />
-              <View className="flex-row items-center justify-between border-b border-line dark:border-[#2A2A35] px-5 pb-4">
-                <Text numberOfLines={1} className="flex-1 pr-4 text-lg font-bold text-ink dark:text-[#F0EEE9]">
+              <View className="flex-row items-center justify-between border-b border-line dark:border-line-dark px-5 pb-4">
+                <Text numberOfLines={1} className="flex-1 pr-4 font-display text-xl text-ink dark:text-ink-dark">
                   {title}
                 </Text>
                 <Pressable
                   onPress={onClose}
                   hitSlop={8}
-                  className="h-10 w-10 items-center justify-center rounded-2xl border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+                  className="h-10 w-10 items-center justify-center rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
                 >
                   <Icon name="close" size={18} color={c.muted} />
                 </Pressable>

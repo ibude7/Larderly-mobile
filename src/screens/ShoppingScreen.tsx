@@ -16,6 +16,7 @@ import SmartSuggestionsCard from '../components/dashboard/SmartSuggestionsCard';
 import ShoppingModeOverlay from '../components/shopping/ShoppingModeOverlay';
 import ShoppingCategoryGroup from '../components/shopping/ShoppingCategoryGroup';
 import AddItemSheet from '../components/shopping/AddItemSheet';
+import SmartRestockCard from '../components/shopping/SmartRestockCard';
 import ListPickerSheet from '../components/shopping/ListPickerSheet';
 import ListSettingsSheet from '../components/shopping/ListSettingsSheet';
 import { Icon } from '../components/ui/Icon';
@@ -307,7 +308,7 @@ export default function ShoppingScreen() {
         <View className="mb-4 flex-row items-center justify-between">
           <View className="flex-1">
             <Pressable onPress={() => setShowListPicker(true)} className="flex-row items-center gap-2">
-              <Text className="text-3xl font-bold text-ink">{activeList?.name ?? 'Shopping'}</Text>
+              <Text className="font-display text-4xl text-ink">{activeList?.name ?? 'Shopping'}</Text>
               <Icon name="chevron-down" size={18} color={colors.muted} />
             </Pressable>
             {budget > 0 ? (
@@ -377,6 +378,25 @@ export default function ShoppingScreen() {
             </View>
           </View>
         )}
+
+        {canEdit && activeListId ? (
+          <SmartRestockCard
+            pantryItems={pantryItems}
+            existingNames={shoppingList.map((s) => s.name)}
+            onRestock={async (items) => {
+              await bulkAddItems(
+                items.map((i) => ({
+                  name: i.name,
+                  quantity: Math.max(1, i.low_stock_threshold - i.quantity + 1),
+                  price: i.purchase_price ?? 0,
+                  category: i.category || categoryFromName(i.name).id,
+                })),
+              );
+              trackEvent('smart_restock_used', { item_count: items.length }).catch(() => {});
+              showToast(`Added ${items.length} low-stock items`, 'success');
+            }}
+          />
+        ) : null}
 
         <SmartSuggestionsCard inventory={inventory} activity={activity} shoppingItems={shoppingNames} />
 

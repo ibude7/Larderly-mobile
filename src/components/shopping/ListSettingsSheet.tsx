@@ -62,7 +62,7 @@ export default function ListSettingsSheet({
         placeholder="Costco"
       />
       {isRecurring ? (
-        <Text className="mt-2 text-xs font-semibold text-muted dark:text-[#9A948D]">
+        <Text className="mt-2 text-xs font-semibold text-muted dark:text-muted-dark">
           {nextRefreshLabel(recurringFrequency, archivedAt, lastGeneratedAt)}
         </Text>
       ) : null}

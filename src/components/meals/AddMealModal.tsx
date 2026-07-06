@@ -150,17 +150,17 @@ export default function AddMealModal({
   return (
     <Modal isOpen onClose={onClose} title={`Add ${MEAL_TYPE_LABELS[slot.mealType]}`}>
       <View className="gap-5">
-        <View className="rounded-3xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-4">
+        <View className="rounded-3xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-4">
           <View className="flex-row items-center gap-3">
             <View className="h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
               <Icon name={getMealTypeIcon(slot.mealType)} size={22} color={c.primary} />
             </View>
             <View>
-              <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+              <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                 Meal slot
               </Text>
-              <Text className="text-base font-bold text-ink dark:text-[#F6F1EA]">{MEAL_TYPE_LABELS[slot.mealType]}</Text>
-              <Text className="text-[13px] font-medium text-muted dark:text-[#9A948D]">{label}</Text>
+              <Text className="text-base font-bold text-ink dark:text-ink-dark">{MEAL_TYPE_LABELS[slot.mealType]}</Text>
+              <Text className="text-[13px] font-medium text-muted dark:text-muted-dark">{label}</Text>
             </View>
           </View>
         </View>
@@ -171,10 +171,10 @@ export default function AddMealModal({
               <Icon name="sparkles" size={18} color="#FFFFFF" />
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+              <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                 AI assist
               </Text>
-              <Text className="text-[13px] font-semibold text-ink dark:text-[#F6F1EA]">
+              <Text className="text-[13px] font-semibold text-ink dark:text-ink-dark">
                 Let Larderly pick a {slot.mealType} from your pantry.
               </Text>
               {aiSuggestion ? (
@@ -209,7 +209,7 @@ export default function AddMealModal({
         />
 
         <View>
-          <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+          <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
             Ingredients
           </Text>
           <View className="mb-3 gap-2">
@@ -227,8 +227,8 @@ export default function AddMealModal({
                     size={18}
                     color={inPantry ? c.success : c.primary}
                   />
-                  <Text className="flex-1 text-sm font-medium text-ink dark:text-[#F6F1EA]">{ing.name}</Text>
-                  <Text className="text-xs text-muted dark:text-[#9A948D]">
+                  <Text className="flex-1 text-sm font-medium text-ink dark:text-ink-dark">{ing.name}</Text>
+                  <Text className="text-xs text-muted dark:text-muted-dark">
                     {ing.quantity} {ing.unit}
                   </Text>
                   <Pressable onPress={() => removeIngredient(i)} hitSlop={8}>

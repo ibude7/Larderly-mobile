@@ -42,7 +42,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   return (
     <View className={containerClassName}>
       {label ? (
-        <Text className="mb-2 text-xs font-bold uppercase text-muted dark:text-[#9A948D]">
+        <Text className="mb-2 text-xs font-bold uppercase text-muted dark:text-muted-dark">
           {label}
         </Text>
       ) : null}
@@ -66,7 +66,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
         <TextInput
           ref={ref}
           placeholderTextColor={c.muted}
-          className="flex-1 py-3.5 text-sm text-ink dark:text-[#F6F1EA]"
+          className="flex-1 py-3.5 text-sm text-ink dark:text-ink-dark"
           onFocus={(e) => {
             setFocused(true);
             inputProps.onFocus?.(e);
@@ -90,7 +90,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
       {error ? (
         <Text style={{ color: c.danger, fontSize: 12, marginTop: 6 }}>{error}</Text>
       ) : null}
-      {hint ? <Text className="mt-1.5 text-xs text-muted dark:text-[#9A948D]">{hint}</Text> : null}
+      {hint ? <Text className="mt-1.5 text-xs text-muted dark:text-muted-dark">{hint}</Text> : null}
     </View>
   );
 });

@@ -40,8 +40,8 @@ export default function HouseholdBanner({
     <View>
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="text-3xl font-bold text-ink dark:text-[#F6F1EA]">{name}</Text>
-          <Text className="mt-1 font-medium text-muted dark:text-[#9A948D]">
+          <Text className="font-display text-4xl text-ink dark:text-ink-dark">{name}</Text>
+          <Text className="mt-1 font-medium text-muted dark:text-muted-dark">
             {itemCount} items tracked
           </Text>
         </View>
@@ -92,7 +92,7 @@ export default function HouseholdBanner({
                   zIndex: shown.length - i,
                 }}
               >
-                <Text className="text-xs font-bold text-ink dark:text-[#F6F1EA]">
+                <Text className="text-xs font-bold text-ink dark:text-ink-dark">
                   {initials(memberNames[uid] ?? 'M')}
                 </Text>
               </View>
@@ -112,15 +112,15 @@ export default function HouseholdBanner({
                 justifyContent: 'center',
               }}
             >
-              <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">
+              <Text className="text-xs font-bold text-muted dark:text-muted-dark">
                 +{overflow}
               </Text>
             </View>
           ) : null}
         </View>
 
-        <View className="rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3 py-1">
-          <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">
+        <View className="rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-3 py-1">
+          <Text className="text-xs font-bold text-muted dark:text-muted-dark">
             {memberCount} member{memberCount === 1 ? '' : 's'}
           </Text>
         </View>

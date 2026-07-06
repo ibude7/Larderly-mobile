@@ -33,9 +33,9 @@ function Chip({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-full px-3 py-2 ${active ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]'}`}
+      className={`rounded-full px-3 py-2 ${active ? 'bg-primary' : 'border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark'}`}
     >
-      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{label}</Text>
+      <Text className={`text-xs font-bold ${active ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>{label}</Text>
     </Pressable>
   );
 }
@@ -55,7 +55,7 @@ export default function PreferencesSection() {
   return (
     <View className="gap-5">
       <View>
-        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Appearance</Text>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">Appearance</Text>
         <View className="gap-2">
           {THEME_OPTIONS.map((opt) => {
             const active = prefs.theme === opt.value;
@@ -64,7 +64,7 @@ export default function PreferencesSection() {
                 key={opt.value}
                 onPress={() => setPrefs({ theme: opt.value })}
                 className={`flex-row items-center gap-3 rounded-xl border px-3 py-2.5 ${
-                  active ? 'border-primary bg-primary/10' : 'border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]'
+                  active ? 'border-primary bg-primary/10' : 'border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark'
                 }`}
               >
                 <Icon name={opt.icon} size={18} color={active ? c.primary : c.muted} />
@@ -99,7 +99,7 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Region</Text>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">Region</Text>
         <View className="flex-row flex-wrap gap-2">
           {CURRENCIES.map((currency) => (
             <Chip key={currency} label={currency} active={prefs.currency === currency} onPress={() => setPrefs({ currency: currency })} />
@@ -125,7 +125,7 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Notifications</Text>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">Notifications</Text>
         <Button label="Enable push notifications" variant="secondary" size="sm" onPress={enablePush} />
         <View className="mt-3 gap-2">
           {(
@@ -141,9 +141,9 @@ export default function PreferencesSection() {
             <Pressable
               key={key}
               onPress={() => setNotificationPref(key, !prefs.notifications[key])}
-              className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-3 py-2.5"
+              className="flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-3 py-2.5"
             >
-              <Text className="text-sm text-ink dark:text-[#F6F1EA]">{label}</Text>
+              <Text className="text-sm text-ink dark:text-ink-dark">{label}</Text>
               <Text className="text-xs font-bold text-primary">{prefs.notifications[key] ? 'On' : 'Off'}</Text>
             </Pressable>
           ))}
@@ -151,12 +151,12 @@ export default function PreferencesSection() {
       </View>
 
       <View>
-        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Privacy</Text>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">Privacy</Text>
         <Pressable
           onPress={() => setPrefs({ privacy: { ...prefs.privacy, analytics: !prefs.privacy.analytics } })}
-          className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-3 py-2.5"
+          className="flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-3 py-2.5"
         >
-          <Text className="text-sm text-ink dark:text-[#F6F1EA]">Usage analytics</Text>
+          <Text className="text-sm text-ink dark:text-ink-dark">Usage analytics</Text>
           <Text className="text-xs font-bold text-primary">{prefs.privacy.analytics ? 'On' : 'Off'}</Text>
         </Pressable>
       </View>

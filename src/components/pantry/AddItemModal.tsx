@@ -84,7 +84,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Item to Pantry">
       {/* Preview */}
-      <View className="mb-5 flex-row items-center gap-4 rounded-3xl border border-line dark:border-[#303541] bg-surface-muted dark:bg-[#101217] p-4">
+      <View className="mb-5 flex-row items-center gap-4 rounded-3xl border border-line dark:border-line-dark bg-surface-muted dark:bg-canvas-raised-dark p-4">
         {form.image_url && !imgError ? (
           <Image
             source={{ uri: form.image_url }}
@@ -93,25 +93,25 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
             resizeMode="contain"
           />
         ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-[#303541] bg-white">
+          <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-line-dark bg-white">
             <Icon name={getCategoryIcon(form.category)} size={32} color={c.ink} />
           </View>
         )}
         <View className="flex-1">
-          <Text className="mb-1 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+          <Text className="mb-1 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
             Product preview
           </Text>
-          <Text numberOfLines={1} className="text-lg font-semibold text-ink dark:text-[#F6F1EA]">
+          <Text numberOfLines={1} className="text-lg font-semibold text-ink dark:text-ink-dark">
             {form.name || 'New pantry item'}
           </Text>
-          {form.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-[#9A948D]">{form.brand}</Text> : null}
+          {form.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-muted-dark">{form.brand}</Text> : null}
           <View className="mt-2 flex-row flex-wrap gap-2">
-            <View className="rounded-full border border-line dark:border-[#303541] bg-white px-3 py-1">
-              <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">{form.category}</Text>
+            <View className="rounded-full border border-line dark:border-line-dark bg-white px-3 py-1">
+              <Text className="text-xs font-bold text-muted dark:text-muted-dark">{form.category}</Text>
             </View>
             {form.barcode ? (
-              <View className="rounded-full border border-line dark:border-[#303541] bg-white px-3 py-1">
-                <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">{form.barcode}</Text>
+              <View className="rounded-full border border-line dark:border-line-dark bg-white px-3 py-1">
+                <Text className="text-xs font-bold text-muted dark:text-muted-dark">{form.barcode}</Text>
               </View>
             ) : null}
           </View>
@@ -166,7 +166,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, locations, prefil
           placeholder="None"
         />
         <View>
-          <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+          <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
             Expiry Date
           </Text>
           <DateInput value={form.expiry_date ?? null} onChange={(v) => set('expiry_date', v)} />

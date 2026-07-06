@@ -91,7 +91,7 @@ export default function ScannedProductModal({
       <Modal isOpen onClose={onClose} title="Looking up product" scroll={false}>
         <View className="items-center py-8">
           <LoadingSpinner />
-          <Text className="mt-3 text-sm text-muted dark:text-[#9A948D]">Searching databases…</Text>
+          <Text className="mt-3 text-sm text-muted dark:text-muted-dark">Searching databases…</Text>
         </View>
       </Modal>
     );
@@ -140,19 +140,19 @@ export default function ScannedProductModal({
                 <Badge label="Product recognized" variant="success" />
               </View>
             ) : null}
-            <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">{product.name}</Text>
-            {product.brand ? <Text className="text-sm text-muted dark:text-[#9A948D]">{product.brand}</Text> : null}
-            {product.barcode ? <Text className="font-mono text-xs text-muted dark:text-[#9A948D]">{product.barcode}</Text> : null}
+            <Text className="font-display text-xl text-ink dark:text-ink-dark">{product.name}</Text>
+            {product.brand ? <Text className="text-sm text-muted dark:text-muted-dark">{product.brand}</Text> : null}
+            {product.barcode ? <Text className="font-mono text-xs text-muted dark:text-muted-dark">{product.barcode}</Text> : null}
           </View>
         </View>
 
         {hasNutrition && (
           <Pressable onPress={() => setShowNutrition((s) => !s)} className="mb-3">
-            <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">Nutrition per 100g {showNutrition ? '▲' : '▼'}</Text>
+            <Text className="text-xs font-bold uppercase text-muted dark:text-muted-dark">Nutrition per 100g {showNutrition ? '▲' : '▼'}</Text>
           </Pressable>
         )}
         {showNutrition && hasNutrition && (
-          <View className="mb-4 flex-row justify-between rounded-2xl bg-canvas dark:bg-[#090A0D] p-3">
+          <View className="mb-4 flex-row justify-between rounded-2xl bg-canvas dark:bg-canvas-dark p-3">
             <Text className="text-xs">Cal {product.calories ?? '—'}</Text>
             <Text className="text-xs">P {product.protein ?? '—'}g</Text>
             <Text className="text-xs">F {product.fat ?? '—'}g</Text>
@@ -173,7 +173,7 @@ export default function ScannedProductModal({
             />
           </View>
         </View>
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">Expiry</Text>
+        <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">Expiry</Text>
         <DateInput value={expiry} onChange={setExpiry} placeholder="Select expiry date" />
         <TextField
           label={`Price (${prefs.currency})`}
@@ -186,7 +186,7 @@ export default function ScannedProductModal({
         {noteLoading ? (
           <View className="mt-1 flex-row items-center gap-2">
             <ActivityIndicator size="small" color={c.primary} />
-            <Text className="text-xs text-muted dark:text-[#9A948D]">Generating note with AI…</Text>
+            <Text className="text-xs text-muted dark:text-muted-dark">Generating note with AI…</Text>
           </View>
         ) : null}
 

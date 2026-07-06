@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontSize: 36,
-    fontWeight: '900',
+    fontFamily: 'Outfit_800ExtraBold',
     letterSpacing: -1,
     marginTop: 16,
   },

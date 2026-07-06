@@ -227,7 +227,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark">
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
         <View className="mb-6 flex-row justify-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -245,17 +245,17 @@ export default function OnboardingScreen() {
         </View>
 
         <Text className="text-sm font-semibold text-primary">Step {step + 1} of {TOTAL_STEPS}</Text>
-        <Text className="mb-1 mt-2 text-2xl font-bold text-ink dark:text-[#F6F1EA]">{STEP_TITLES[step]}</Text>
+        <Text className="mb-1 mt-2 font-display text-3xl text-ink dark:text-ink-dark">{STEP_TITLES[step]}</Text>
 
         <Animated.View style={stepStyle}>
         {step === 0 && (
           <View className="mt-4 gap-3">
             <View className="items-center gap-3">
               {photoUrl ? (
-                <Image source={{ uri: photoUrl }} className="h-24 w-24 rounded-full border border-line dark:border-[#303541]" />
+                <Image source={{ uri: photoUrl }} className="h-24 w-24 rounded-full border border-line dark:border-line-dark" />
               ) : (
-                <View className="h-24 w-24 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
-                  <Text className="text-3xl text-muted dark:text-[#9A948D]">?</Text>
+                <View className="h-24 w-24 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
+                  <Text className="text-3xl text-muted dark:text-muted-dark">?</Text>
                 </View>
               )}
               <Button
@@ -288,8 +288,8 @@ export default function OnboardingScreen() {
         {step === 1 && (
           <View className="mt-4 gap-4">
             <View className="items-center rounded-2xl border border-primary/20 bg-primary/5 p-6">
-              <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">Your invite code</Text>
-              <Text className="mt-2 font-mono text-3xl font-black tracking-widest text-ink dark:text-[#F6F1EA]">
+              <Text className="text-xs font-bold uppercase text-muted dark:text-muted-dark">Your invite code</Text>
+              <Text className="mt-2 font-mono text-3xl font-black tracking-widest text-ink dark:text-ink-dark">
                 {inviteCode || '——'}
               </Text>
               <Button
@@ -300,7 +300,7 @@ export default function OnboardingScreen() {
                 onPress={() => inviteCode && Share.share({ message: `Join my Larderly household: ${inviteCode}` })}
               />
             </View>
-            <Text className="text-center text-sm text-muted dark:text-[#9A948D]">
+            <Text className="text-center text-sm text-muted dark:text-muted-dark">
               Family can join via Settings → Join household. You can invite people later too.
             </Text>
           </View>
@@ -313,9 +313,9 @@ export default function OnboardingScreen() {
                 <Pressable
                   key={d}
                   onPress={() => toggleDiet(d)}
-                  className={`rounded-full px-4 py-2 ${dietaryPrefs.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+                  className={`rounded-full px-4 py-2 ${dietaryPrefs.includes(d) ? 'bg-primary' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
                 >
-                  <Text className={dietaryPrefs.includes(d) ? 'font-semibold text-white' : 'text-ink dark:text-[#F6F1EA]'}>{d}</Text>
+                  <Text className={dietaryPrefs.includes(d) ? 'font-semibold text-white' : 'text-ink dark:text-ink-dark'}>{d}</Text>
                 </Pressable>
               ))}
             </View>
@@ -330,9 +330,9 @@ export default function OnboardingScreen() {
                 <Pressable
                   key={s}
                   onPress={() => toggleStore(s)}
-                  className={`rounded-full px-4 py-2 ${stores.includes(s) ? 'bg-ink' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+                  className={`rounded-full px-4 py-2 ${stores.includes(s) ? 'bg-ink' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
                 >
-                  <Text className={stores.includes(s) ? 'font-semibold text-white' : 'text-ink dark:text-[#F6F1EA]'}>{s}</Text>
+                  <Text className={stores.includes(s) ? 'font-semibold text-white' : 'text-ink dark:text-ink-dark'}>{s}</Text>
                 </Pressable>
               ))}
             </View>
@@ -358,7 +358,7 @@ export default function OnboardingScreen() {
 
         {step === 4 && (
           <View className="mt-4 gap-3">
-            <Text className="text-sm text-muted dark:text-[#9A948D]">
+            <Text className="text-sm text-muted dark:text-muted-dark">
               Get alerts about expiring items, low stock, and household activity.
             </Text>
             <Button
@@ -377,7 +377,7 @@ export default function OnboardingScreen() {
           <View className="mt-4 gap-3">
             <View className="items-center rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6">
               <Text className="text-4xl">📷</Text>
-              <Text className="mt-3 text-center text-sm text-muted dark:text-[#9A948D]">
+              <Text className="mt-3 text-center text-sm text-muted dark:text-muted-dark">
                 Scan any food barcode or try a demo product below.
               </Text>
             </View>
@@ -401,8 +401,8 @@ export default function OnboardingScreen() {
         {step === 6 && scannedItem && (
           <View className="mt-4 gap-3">
             <View className="rounded-2xl border border-success/30 bg-success/10 p-4">
-              <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">{scannedItem.name}</Text>
-              <Text className="font-mono text-xs text-muted dark:text-[#9A948D]">{scannedItem.barcode}</Text>
+              <Text className="font-display text-xl text-ink dark:text-ink-dark">{scannedItem.name}</Text>
+              <Text className="font-mono text-xs text-muted dark:text-muted-dark">{scannedItem.barcode}</Text>
             </View>
             <TextField label="Quantity" value={editQty} onChangeText={setEditQty} keyboardType="numeric" />
             <SelectField
@@ -424,7 +424,7 @@ export default function OnboardingScreen() {
                 {scannedItem.name} has been added to your pantry and synced.
               </Text>
             )}
-            <Text className="text-center text-sm text-muted dark:text-[#9A948D]">
+            <Text className="text-center text-sm text-muted dark:text-muted-dark">
               {scanSkipped
                 ? "You're all set! Add items anytime from Pantry or Scanner."
                 : 'Your data is safely stored. Head to your dashboard to manage inventory.'}

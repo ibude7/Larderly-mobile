@@ -7,6 +7,7 @@ export type AppEvent =
   | 'voice_command_used'
   | 'list_created'
   | 'checkout_completed'
+  | 'smart_restock_used'
   | 'recipe_generated'
   | 'achievement_unlocked';
 

@@ -353,30 +353,30 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]" edges={['top']}>
-      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#303541] px-4 pb-3">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark" edges={['top']}>
+      <View className="flex-row items-center gap-3 border-b border-line dark:border-line-dark px-4 pb-3">
         <Pressable
           onPress={() => navigation.goBack()}
           hitSlop={8}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
+          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
         >
           <Icon name="chevron-left" size={20} color={c.ink} />
         </Pressable>
-        <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Settings</Text>
+        <Text className="font-display text-xl text-ink dark:text-ink-dark">Settings</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+        <View className="rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
           <View className="mb-1 flex-row items-center gap-1.5">
             <Icon name="sparkles" size={14} color={c.primary} />
-            <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+            <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
               Workspace settings
             </Text>
           </View>
-          <Text className="text-2xl font-bold text-ink dark:text-[#F6F1EA]">Tune your pantry</Text>
+          <Text className="font-display text-3xl text-ink dark:text-ink-dark">Tune your pantry</Text>
           <View className="mt-3 flex-row flex-wrap gap-2">
             <Chip label={`${locations.length} locations`} />
             <Chip label={providerLabel} highlight />
@@ -392,7 +392,7 @@ export default function SettingsScreen() {
 
         {isAnonymous ? (
           <Section title="Upgrade guest session" icon="sparkles" iconBg="bg-primary">
-            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
+            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
               Create an account to keep your items, meals, and shopping list backed up.
             </Text>
             {googleAvailable ? (
@@ -459,8 +459,8 @@ export default function SettingsScreen() {
 
         {needsVerification ? (
           <Section title="Verify your email" icon="mail" iconBg="bg-warning/10">
-            <Text className="mb-3 text-sm text-muted dark:text-[#9A948D]">
-              We sent a link to <Text className="font-bold text-ink dark:text-[#F6F1EA]">{user?.email}</Text>. Tap the
+            <Text className="mb-3 text-sm text-muted dark:text-muted-dark">
+              We sent a link to <Text className="font-bold text-ink dark:text-ink-dark">{user?.email}</Text>. Tap the
               link to confirm your address.
             </Text>
             <Button
@@ -475,9 +475,9 @@ export default function SettingsScreen() {
         <Section title="Profile" icon="user" iconBg="bg-primary/10">
           <View className="mb-4 items-center gap-3">
             {photoUrl ? (
-              <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-[#303541]" />
+              <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-line-dark" />
             ) : (
-              <View className="h-20 w-20 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]">
+              <View className="h-20 w-20 items-center justify-center rounded-full border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark">
                 <Icon name="user" size={28} color={c.muted} />
               </View>
             )}
@@ -507,7 +507,7 @@ export default function SettingsScreen() {
               }}
             />
           </View>
-          <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">
+          <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
             {isAnonymous ? 'Guest session — no email on file' : user?.email || 'Signed in'}
           </Text>
           <TextField
@@ -539,20 +539,20 @@ export default function SettingsScreen() {
 
         <Section title="Security & sync" icon="lock" iconBg="bg-warning/10">
           <SecuritySection />
-          <View className="mt-4 rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
-            <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Sync status</Text>
-            <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">
+          <View className="mt-4 rounded-xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
+            <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Sync status</Text>
+            <Text className="mt-1 text-xs text-muted dark:text-muted-dark">
               {online ? (syncing ? 'Syncing…' : 'Online') : 'Offline'}
               {lastSyncedAt ? ` · Last sync ${new Date(lastSyncedAt).toLocaleString()}` : ''}
             </Text>
           </View>
           {loginEvents.length > 0 && (
             <View className="mt-4">
-              <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F6F1EA]">Recent sign-ins</Text>
+              <Text className="mb-2 text-sm font-semibold text-ink dark:text-ink-dark">Recent sign-ins</Text>
               {loginEvents.map((ev) => (
-                <View key={ev.id} className="mb-1 rounded-lg bg-canvas dark:bg-[#090A0D] px-3 py-2">
-                  <Text className="text-xs text-ink dark:text-[#F6F1EA]">{ev.device} · {ev.platform}</Text>
-                  {ev.at ? <Text className="text-xs text-muted dark:text-[#9A948D]">{new Date(ev.at).toLocaleString()}</Text> : null}
+                <View key={ev.id} className="mb-1 rounded-lg bg-canvas dark:bg-canvas-dark px-3 py-2">
+                  <Text className="text-xs text-ink dark:text-ink-dark">{ev.device} · {ev.platform}</Text>
+                  {ev.at ? <Text className="text-xs text-muted dark:text-muted-dark">{new Date(ev.at).toLocaleString()}</Text> : null}
                 </View>
               ))}
             </View>
@@ -566,7 +566,7 @@ export default function SettingsScreen() {
 
         <Section title="Storage locations" icon="shelf" iconBg="bg-info/10">
           <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-sm text-muted dark:text-[#9A948D]">Pantry, Fridge, Freezer, etc.</Text>
+            <Text className="text-sm text-muted dark:text-muted-dark">Pantry, Fridge, Freezer, etc.</Text>
             <Button
               label={addingLoc ? 'Cancel' : 'Add'}
               icon={addingLoc ? 'close' : 'plus'}
@@ -576,7 +576,7 @@ export default function SettingsScreen() {
             />
           </View>
           {addingLoc ? (
-            <View className="mb-4 gap-3 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
+            <View className="mb-4 gap-3 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
               <TextField
                 value={newLocName}
                 onChangeText={setNewLocName}
@@ -584,7 +584,7 @@ export default function SettingsScreen() {
                 autoFocus
               />
               <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
                   Color
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
@@ -609,7 +609,7 @@ export default function SettingsScreen() {
             </View>
           ) : null}
           {locations.length === 0 ? (
-            <Text className="rounded-2xl border border-dashed border-line dark:border-[#303541] p-4 text-center text-xs text-muted dark:text-[#9A948D]">
+            <Text className="rounded-2xl border border-dashed border-line dark:border-line-dark p-4 text-center text-xs text-muted dark:text-muted-dark">
               No storage locations yet. Tap Add to create one.
             </Text>
           ) : (
@@ -636,7 +636,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Progress" icon="star" iconBg="bg-primary/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
+          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
             Track streaks, badges, and milestones as you use Larderly.
           </Text>
           <Button
@@ -648,7 +648,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Your data" icon="download" iconBg="bg-success/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-[#9A948D]">
+          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
             Download a copy of your pantry, shopping history, meal plans, and storage locations.
           </Text>
           <View className="gap-2">
@@ -675,7 +675,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Account" icon="logout" iconBg="bg-danger/10">
-          <Text className="mb-4 text-sm text-muted dark:text-[#9A948D]">
+          <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
             {isAnonymous
               ? 'Signing out clears this guest session.'
               : 'Securely end your session on this device.'}
@@ -689,7 +689,7 @@ export default function SettingsScreen() {
         </Section>
 
         <View className="items-center pt-2">
-          <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+          <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
             Larderly · v1.0
           </Text>
         </View>
@@ -722,12 +722,12 @@ function Section({
 }) {
   const c = useAppColors();
   return (
-    <View className="rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+    <View className="rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
       <View className="mb-4 flex-row items-center gap-3">
         <View className={`h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>
           <Icon name={icon} size={22} color={c.ink} />
         </View>
-        <Text className="text-base font-bold text-ink dark:text-[#F6F1EA]">{title}</Text>
+        <Text className="text-base font-bold text-ink dark:text-ink-dark">{title}</Text>
       </View>
       {children}
     </View>
@@ -753,7 +753,7 @@ function Chip({
           ? 'border-ink bg-ink'
           : warn
             ? 'border-warning/40 bg-warning/10'
-            : 'border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D]'
+            : 'border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark'
       }`}
     >
       {icon ? (
@@ -762,7 +762,7 @@ function Chip({
       <Text
         numberOfLines={1}
         className={`max-w-[180px] text-xs font-bold ${
-          highlight ? 'text-white' : warn ? 'text-warning' : 'text-muted dark:text-[#9A948D]'
+          highlight ? 'text-white' : warn ? 'text-warning' : 'text-muted dark:text-muted-dark'
         }`}
       >
         {label}
@@ -780,7 +780,7 @@ function LocationRow({
 }) {
   const c = useAppColors();
   return (
-    <View className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
+    <View className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
       <View
         className="h-11 w-11 items-center justify-center rounded-2xl border"
         style={{
@@ -790,7 +790,7 @@ function LocationRow({
       >
         <Icon name={getLocationIcon(location.name)} size={18} color={location.color} />
       </View>
-      <Text className="flex-1 text-sm font-bold text-ink dark:text-[#F6F1EA]">{location.name}</Text>
+      <Text className="flex-1 text-sm font-bold text-ink dark:text-ink-dark">{location.name}</Text>
       <View
         className="h-3.5 w-3.5 rounded-full"
         style={{ backgroundColor: location.color }}

@@ -44,21 +44,21 @@ export default function JoinScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-canvas dark:bg-[#090A0D]">
-        <Text className="text-muted dark:text-[#9A948D]">Sign in to join a household.</Text>
+      <SafeAreaView className="flex-1 items-center justify-center bg-canvas dark:bg-canvas-dark">
+        <Text className="text-muted dark:text-muted-dark">Sign in to join a household.</Text>
         <Button label="Sign in" className="mt-4" onPress={() => navigation.navigate('Auth')} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark">
       <ScrollView contentContainerStyle={{ padding: 24, flexGrow: 1, justifyContent: 'center' }}>
-        <Text className="text-center text-2xl font-bold text-ink dark:text-[#F6F1EA]">Join household</Text>
-        <Text className="mt-2 text-center text-muted dark:text-[#9A948D]">
-          Invite code <Text className="font-mono font-bold text-ink dark:text-[#F6F1EA]">{code || '—'}</Text>
+        <Text className="text-center font-display text-3xl text-ink dark:text-ink-dark">Join household</Text>
+        <Text className="mt-2 text-center text-muted dark:text-muted-dark">
+          Invite code <Text className="font-mono font-bold text-ink dark:text-ink-dark">{code || '—'}</Text>
         </Text>
-        {householdName && <Text className="mt-1 text-center text-sm text-muted dark:text-[#9A948D]">You're joining {householdName}</Text>}
+        {householdName && <Text className="mt-1 text-center text-sm text-muted dark:text-muted-dark">You're joining {householdName}</Text>}
         <View className="mt-8">
           <Button label="Join now" onPress={join} loading={loading} disabled={code.length !== 8} />
         </View>

@@ -123,31 +123,31 @@ export default function HouseholdSettingsSection() {
 
   return (
     <View className="gap-4">
-      <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Household</Text>
+      <Text className="font-display text-xl text-ink dark:text-ink-dark">Household</Text>
       <TextField label="Household name" value={household.name} onChangeText={() => {}} editable={false} />
       {household.inviteCode ? (
         <View className="flex-row gap-2">
-          <View className="flex-1 rounded-xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-4 py-3">
-            <Text className="text-xs text-muted dark:text-[#9A948D]">Invite code</Text>
-            <Text className="font-mono text-lg font-bold tracking-widest text-ink dark:text-[#F6F1EA]">{household.inviteCode}</Text>
+          <View className="flex-1 rounded-xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-4 py-3">
+            <Text className="text-xs text-muted dark:text-muted-dark">Invite code</Text>
+            <Text className="font-mono font-display text-xl tracking-widest text-ink dark:text-ink-dark">{household.inviteCode}</Text>
           </View>
           <Button label="Copy" size="sm" variant="secondary" onPress={copyInvite} />
           <Button label="Share" size="sm" variant="secondary" onPress={shareInvite} />
         </View>
       ) : null}
 
-      <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Members</Text>
+      <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Members</Text>
       {members.map((m) => (
-        <View key={m.uid} className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#303541] px-3 py-2">
+        <View key={m.uid} className="flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark px-3 py-2">
           <View>
-            <Text className="font-medium text-ink dark:text-[#F6F1EA]">{m.name}</Text>
-            <Text className="text-xs capitalize text-muted dark:text-[#9A948D]">{m.role}</Text>
+            <Text className="font-medium text-ink dark:text-ink-dark">{m.name}</Text>
+            <Text className="text-xs capitalize text-muted dark:text-muted-dark">{m.role}</Text>
           </View>
           {role === 'admin' && m.uid !== user?.uid && (
             <View className="flex-row gap-1">
               {(['editor', 'viewer'] as Role[]).map((r) => (
-                <Pressable key={r} onPress={() => changeRole(m.uid, r)} className="rounded-full border border-line dark:border-[#303541] px-2 py-1">
-                  <Text className="text-xs capitalize text-ink dark:text-[#F6F1EA]">{r}</Text>
+                <Pressable key={r} onPress={() => changeRole(m.uid, r)} className="rounded-full border border-line dark:border-line-dark px-2 py-1">
+                  <Text className="text-xs capitalize text-ink dark:text-ink-dark">{r}</Text>
                 </Pressable>
               ))}
               <Button label="Remove" size="sm" variant="danger" onPress={() => removeMember(m.uid, m.name)} />
@@ -156,15 +156,15 @@ export default function HouseholdSettingsSection() {
         </View>
       ))}
 
-      <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Household dietary prefs</Text>
+      <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Household dietary prefs</Text>
       <View className="flex-row flex-wrap gap-2">
         {DIET_OPTIONS.map((d) => (
           <Pressable
             key={d}
             onPress={() => setDraftDiet((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))}
-            className={`rounded-full px-3 py-1.5 ${draftDiet.includes(d) ? 'bg-primary' : 'border border-line dark:border-[#303541]'}`}
+            className={`rounded-full px-3 py-1.5 ${draftDiet.includes(d) ? 'bg-primary' : 'border border-line dark:border-line-dark'}`}
           >
-            <Text className={`text-xs font-semibold ${draftDiet.includes(d) ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{d}</Text>
+            <Text className={`text-xs font-semibold ${draftDiet.includes(d) ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>{d}</Text>
           </Pressable>
         ))}
       </View>

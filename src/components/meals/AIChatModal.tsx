@@ -120,22 +120,22 @@ export default function AIChatModal({ pantryItems, onClose }: AIChatModalProps) 
             <View className="flex-1">
               <View className="flex-row items-center gap-1.5">
                 <Icon name="sparkles" size={13} color={c.primary} />
-                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                   AI chef
                 </Text>
               </View>
-              <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Ask about cooking or your pantry</Text>
-              <Text className="text-xs text-muted dark:text-[#9A948D]">
+              <Text className="text-sm font-bold text-ink dark:text-ink-dark">Ask about cooking or your pantry</Text>
+              <Text className="text-xs text-muted dark:text-muted-dark">
                 {pantryItems.length} pantry items in context
               </Text>
             </View>
             {hasMessages ? (
               <Pressable
                 onPress={handleReset}
-                className="flex-row items-center gap-1.5 rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3 py-2"
+                className="flex-row items-center gap-1.5 rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-3 py-2"
               >
                 <Icon name="refresh" size={14} color={c.muted} />
-                <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">New</Text>
+                <Text className="text-xs font-bold text-muted dark:text-muted-dark">New</Text>
               </Pressable>
             ) : null}
           </View>
@@ -171,14 +171,14 @@ export default function AIChatModal({ pantryItems, onClose }: AIChatModalProps) 
             <View className="mt-4 flex-row items-start gap-2 rounded-2xl border border-danger/30 bg-danger/10 p-3">
               <Icon name="warning" size={16} color={c.danger} />
               <View className="flex-1">
-                <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">Couldn't reach the chef.</Text>
-                <Text className="mt-0.5 text-sm text-ink/70 dark:text-[#F6F1EA]">{error}</Text>
+                <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Couldn't reach the chef.</Text>
+                <Text className="mt-0.5 text-sm text-ink/70 dark:text-ink-dark">{error}</Text>
               </View>
             </View>
           ) : null}
         </ScrollView>
 
-        <View className="border-t border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
+        <View className="border-t border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
           <View className="flex-row items-end gap-2">
             <TextInput
               value={input}
@@ -191,7 +191,7 @@ export default function AIChatModal({ pantryItems, onClose }: AIChatModalProps) 
               placeholderTextColor={c.muted}
               multiline
               editable={!isStreaming}
-              className="max-h-32 flex-1 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-4 py-3 text-sm text-ink dark:text-[#F6F1EA]"
+              className="max-h-32 flex-1 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-4 py-3 text-sm text-ink dark:text-ink-dark"
               style={{ maxHeight: 128 }}
               onSubmitEditing={() => void handleSend()}
               blurOnSubmit={false}
@@ -199,7 +199,7 @@ export default function AIChatModal({ pantryItems, onClose }: AIChatModalProps) 
             {isStreaming ? (
               <Pressable
                 onPress={handleStop}
-                className="h-11 w-11 items-center justify-center rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
+                className="h-11 w-11 items-center justify-center rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
               >
                 <Icon name="close" size={18} color={c.ink} />
               </Pressable>
@@ -215,7 +215,7 @@ export default function AIChatModal({ pantryItems, onClose }: AIChatModalProps) 
               </Pressable>
             )}
           </View>
-          <Text className="mt-2 text-center text-xs font-semibold text-muted dark:text-[#9A948D]">
+          <Text className="mt-2 text-center text-xs font-semibold text-muted dark:text-muted-dark">
             Larderly AI can make mistakes. Double-check ingredients and allergens.
           </Text>
         </View>
@@ -239,8 +239,8 @@ function EmptyChat({
       <View className="mb-4 h-14 w-14 items-center justify-center rounded-3xl bg-primary">
         <Icon name="sparkles" size={28} color="#FFFFFF" />
       </View>
-      <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Let's cook something good.</Text>
-      <Text className="mt-2 max-w-sm text-center text-[13px] leading-relaxed text-muted dark:text-[#9A948D]">
+      <Text className="font-display text-xl text-ink dark:text-ink-dark">Let's cook something good.</Text>
+      <Text className="mt-2 max-w-sm text-center text-[13px] leading-relaxed text-muted dark:text-muted-dark">
         {pantryCount === 0
           ? 'Your pantry is empty, but the chef can still help you plan what to buy and what to make this week.'
           : `The chef can see all ${pantryCount} items in your pantry. Ask for ideas, recipes, substitutions, or a plan.`}
@@ -250,10 +250,10 @@ function EmptyChat({
           <Pressable
             key={s}
             onPress={() => onPick(s)}
-            className="flex-row items-center gap-2 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3.5 py-3"
+            className="flex-row items-center gap-2 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-3.5 py-3"
           >
             <Icon name="sparkles" size={14} color={c.primary} />
-            <Text className="flex-1 text-[13px] font-semibold text-ink dark:text-[#F6F1EA]">{s}</Text>
+            <Text className="flex-1 text-[13px] font-semibold text-ink dark:text-ink-dark">{s}</Text>
           </Pressable>
         ))}
       </View>
@@ -286,8 +286,8 @@ function MessageBubble({
       <View className="mt-0.5 h-8 w-8 items-center justify-center rounded-2xl bg-primary/10">
         <Icon name="chef" size={16} color={c.primary} />
       </View>
-      <View className="max-w-[85%] rounded-3xl rounded-tl-md border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] px-4 py-2.5">
-        <Text className="text-sm leading-relaxed text-ink dark:text-[#F6F1EA]">{message.text || '…'}</Text>
+      <View className="max-w-[85%] rounded-3xl rounded-tl-md border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-4 py-2.5">
+        <Text className="text-sm leading-relaxed text-ink dark:text-ink-dark">{message.text || '…'}</Text>
         {streaming ? (
           <View className="mt-1 h-3.5 w-0.5 animate-pulse bg-primary" />
         ) : null}

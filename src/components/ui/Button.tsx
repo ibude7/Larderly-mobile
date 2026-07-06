@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Pressable, Text, View, ActivityIndicator, PressableProps, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
@@ -24,11 +25,13 @@ interface ButtonProps {
 
 const LABEL: Record<Variant, string> = {
   primary: 'text-white',
-  secondary: 'text-ink dark:text-[#F6F1EA]',
-  ghost: 'text-muted dark:text-[#9A948D]',
+  secondary: 'text-ink dark:text-ink-dark',
+  ghost: 'text-muted dark:text-muted-dark',
   danger: 'text-white',
-  outline: 'text-ink dark:text-[#F6F1EA]',
+  outline: 'text-ink dark:text-ink-dark',
 };
+
+const SPRING = { damping: 14, stiffness: 160 };
 
 function getIconColor(variant: Variant, c: AppColors): string {
   switch (variant) {
@@ -58,10 +61,11 @@ function Button({
   const c = useAppColors();
   const haptics = useHaptics();
   const scale = useSharedValue(1);
-  const pad = size === 'sm' ? 'px-4 py-2' : 'px-5 py-3';
+  const pad = size === 'sm' ? 'px-4 py-2' : 'px-6 py-3.5';
   const isDisabled = disabled || loading;
   const labelSize = size === 'sm' ? 13 : 15;
   const iconColor = getIconColor(variant, c);
+  const isGradient = variant === 'primary';
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -71,28 +75,41 @@ function Button({
     variant === 'primary' && !isDisabled
       ? {
           shadowColor: c.primary,
-          shadowOpacity: 0.36,
-          shadowRadius: 22,
-          shadowOffset: { width: 0, height: 10 as const },
+          shadowOpacity: 0.4,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 8 as const },
           elevation: 9,
         }
       : undefined;
 
   const backgroundColor =
-    variant === 'primary'
-      ? c.primary
-      : variant === 'danger'
-        ? c.danger
-        : variant === 'secondary'
-          ? c.surfaceGlass
-          : 'transparent';
+    variant === 'danger'
+      ? c.danger
+      : variant === 'secondary'
+        ? c.surfaceMuted
+        : 'transparent';
 
   const borderColor =
-    variant === 'outline' || variant === 'secondary'
-      ? variant === 'secondary'
-        ? c.glassLine
-        : c.line
-      : 'transparent';
+    variant === 'outline'
+      ? c.lineStrong
+      : variant === 'secondary'
+        ? c.line
+        : 'transparent';
+
+  const content = loading ? (
+    <ActivityIndicator size={18} color={iconColor} />
+  ) : (
+    <>
+      {icon && (
+        <View>
+          <Icon name={icon} size={18} color={iconColor} />
+        </View>
+      )}
+      <Text style={{ fontSize: labelSize }} className={`font-bold ${LABEL[variant]}`}>
+        {label}
+      </Text>
+    </>
+  );
 
   return (
     <Animated.View
@@ -105,10 +122,10 @@ function Button({
           onPress();
         }}
         onPressIn={() => {
-          if (!isDisabled) scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+          if (!isDisabled) scale.value = withSpring(0.94, SPRING);
         }}
         onPressOut={() => {
-          scale.value = withSpring(1, { damping: 12, stiffness: 180 });
+          scale.value = withSpring(1, SPRING);
         }}
         disabled={isDisabled}
         hitSlop={hitSlop}
@@ -118,27 +135,22 @@ function Button({
             opacity: isDisabled ? 0.55 : 1,
             backgroundColor,
             borderColor,
-            shadowColor: variant === 'secondary' ? c.shadow : 'transparent',
+            overflow: 'hidden',
           },
         ]}
         className={`flex-row items-center justify-center gap-2 rounded-full ${pad} ${
           full ? 'w-full' : ''
         } ${className}`}
       >
-        {loading ? (
-          <ActivityIndicator size={18} color={iconColor} />
-        ) : (
-          <>
-            {icon && (
-              <View>
-                <Icon name={icon} size={18} color={iconColor} />
-              </View>
-            )}
-            <Text style={{ fontSize: labelSize }} className={`font-semibold ${LABEL[variant]}`}>
-              {label}
-            </Text>
-          </>
-        )}
+        {isGradient ? (
+          <LinearGradient
+            colors={[c.primary, c.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        {content}
       </Pressable>
     </Animated.View>
   );
@@ -149,8 +161,5 @@ export default memo(Button);
 const styles = StyleSheet.create({
   button: {
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 18,
   },
 });

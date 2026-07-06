@@ -76,16 +76,16 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader title="Notifications" onBack={() => navigation.goBack()} />
       <View className="flex-row gap-2 px-5 py-3">
         {(['all', 'unread'] as const).map((f) => (
           <Pressable
             key={f}
             onPress={() => setFilter(f)}
-            className={`rounded-full px-4 py-2 ${filter === f ? 'bg-ink' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+            className={`rounded-full px-4 py-2 ${filter === f ? 'bg-ink' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
           >
-            <Text className={`text-sm font-semibold capitalize ${filter === f ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{f}</Text>
+            <Text className={`text-sm font-semibold capitalize ${filter === f ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>{f}</Text>
           </Pressable>
         ))}
       </View>
@@ -101,14 +101,14 @@ export default function NotificationsScreen() {
             <Pressable
               key={n.id}
               onPress={() => markRead(n.id)}
-              className={`mb-2 rounded-2xl border p-4 ${n.read ? 'border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]' : 'border-primary/30 bg-primary/5'}`}
+              className={`mb-2 rounded-2xl border p-4 ${n.read ? 'border-line dark:border-line-dark bg-surface dark:bg-surface-dark' : 'border-primary/30 bg-primary/5'}`}
             >
               <View className="flex-row items-start gap-3">
                 <Icon name="bell" size={18} color={c.primary} />
                 <View className="flex-1">
-                  <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{n.title}</Text>
-                  <Text className="mt-1 text-sm text-muted dark:text-[#9A948D]">{n.body}</Text>
-                  <Text className="mt-2 text-xs text-muted dark:text-[#9A948D]">{relativeTime(n.createdAt)}</Text>
+                  <Text className="font-semibold text-ink dark:text-ink-dark">{n.title}</Text>
+                  <Text className="mt-1 text-sm text-muted dark:text-muted-dark">{n.body}</Text>
+                  <Text className="mt-2 text-xs text-muted dark:text-muted-dark">{relativeTime(n.createdAt)}</Text>
                 </View>
               </View>
             </Pressable>

@@ -304,16 +304,16 @@ export default function AuthScreen() {
             <AppLogo size="lg" showWordmark={false} animated />
             <Text
               style={{
-                fontSize: 40,
-                fontWeight: '900',
-                letterSpacing: -1.5,
+                fontSize: 42,
+                fontFamily: 'Fraunces_700Bold',
+                letterSpacing: -1,
                 color: c.ink,
                 marginTop: 16,
               }}
             >
               Larderly
             </Text>
-            <Text style={{ fontSize: 15, color: c.muted, marginTop: 4, fontWeight: '500' }}>
+            <Text style={{ fontSize: 15, color: c.muted, marginTop: 4, fontFamily: 'Outfit_500Medium' }}>
               Your pantry, organized
             </Text>
           </Animated.View>
@@ -331,7 +331,7 @@ export default function AuthScreen() {
             }}
           >
             {mode !== 'reset' ? (
-              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line dark:border-[#303541] bg-line/60 p-1.5">
+              <View className="mb-6 flex-row gap-1.5 rounded-2xl border border-line dark:border-line-dark bg-line/60 p-1.5">
                 {(['signin', 'signup'] as const).map((m) => {
                   const isActive = mode === m;
                   return (
@@ -357,21 +357,21 @@ export default function AuthScreen() {
                 className="mb-4 flex-row items-center gap-1.5"
               >
                 <Icon name="chevron-left" size={16} color={c.muted} />
-                <Text className="text-xs font-semibold text-muted dark:text-[#9A948D]">Back to sign in</Text>
+                <Text className="text-xs font-semibold text-muted dark:text-muted-dark">Back to sign in</Text>
               </Pressable>
             )}
 
             <View className="mb-6">
-              <Text className="text-2xl font-bold text-ink dark:text-[#F6F1EA]">{heading}</Text>
-              <Text className="mt-1 text-sm leading-relaxed text-muted dark:text-[#9A948D]">{subheading}</Text>
+              <Text className="font-display text-3xl text-ink dark:text-ink-dark">{heading}</Text>
+              <Text className="mt-1 text-sm leading-relaxed text-muted dark:text-muted-dark">{subheading}</Text>
             </View>
 
             {verificationSent && mode === 'signup' ? (
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
                 <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Check your email</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F6F1EA]">
+                  <Text className="text-sm font-bold text-ink dark:text-ink-dark">Check your email</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-ink-dark">
                     We sent a verification link to {verificationSent}. Tap it to activate your
                     account.
                   </Text>
@@ -383,8 +383,8 @@ export default function AuthScreen() {
               <View className="mb-5 flex-row gap-3 rounded-2xl border border-success/30 bg-success/10 p-4">
                 <Icon name="success" size={22} color={c.success} />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Reset link sent</Text>
-                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-[#F6F1EA]">
+                  <Text className="text-sm font-bold text-ink dark:text-ink-dark">Reset link sent</Text>
+                  <Text className="mt-1 text-xs leading-relaxed text-ink/70 dark:text-ink-dark">
                     If an account exists for {resetSent}, you’ll receive an email with instructions
                     shortly.
                   </Text>
@@ -501,7 +501,7 @@ export default function AuthScreen() {
                       {mode !== 'reset' ? (
                         <View>
                           <View className="flex-row items-center justify-between">
-                            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+                            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
                               Password
                             </Text>
                             {mode === 'signin' ? (
@@ -546,7 +546,7 @@ export default function AuthScreen() {
                           marginTop: 8,
                         }}
                       >
-                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>
+                        <Text style={{ fontSize: 16, fontFamily: 'Outfit_700Bold', color: '#FFFFFF' }}>
                           {loading
                             ? 'Please wait...'
                             : mode === 'signin'
@@ -578,7 +578,7 @@ export default function AuthScreen() {
                         marginTop: 8,
                       }}
                     >
-                      <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>
+                      <Text style={{ fontSize: 16, fontFamily: 'Outfit_700Bold', color: '#FFFFFF' }}>
                         {loading ? 'Please wait...' : phoneCodeSent ? 'Verify code' : 'Send code'}
                       </Text>
                     </Pressable>
@@ -591,14 +591,14 @@ export default function AuthScreen() {
                   </Pressable>
                 ) : mode === 'phone' ? (
                   <Pressable onPress={() => setMode('signin')} className="mt-4">
-                    <Text className="text-center text-sm font-semibold text-muted dark:text-[#9A948D]">Back to email sign in</Text>
+                    <Text className="text-center text-sm font-semibold text-muted dark:text-muted-dark">Back to email sign in</Text>
                   </Pressable>
                 ) : null}
 
                 {/* GUEST BUTTON */}
                 {mode !== 'reset' && mode !== 'phone' ? (
                   <Pressable onPress={onGuest} style={{ marginTop: 24, alignItems: 'center' }} disabled={loading}>
-                    <Text style={{ color: c.muted, fontSize: 13, fontWeight: '500' }}>
+                    <Text style={{ color: c.muted, fontSize: 13, fontFamily: 'Outfit_500Medium' }}>
                       Explore without account →
                     </Text>
                   </Pressable>

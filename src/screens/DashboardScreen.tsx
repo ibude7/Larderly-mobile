@@ -12,6 +12,7 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  FadeInUp,
 } from 'react-native-reanimated';
 import AppHeader from '../components/layout/AppHeader';
 import AnimatedNumber from '../components/ui/AnimatedNumber';
@@ -120,20 +121,20 @@ export default function DashboardScreen() {
         }`;
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#0F0F13]">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader
         onOpenSettings={() => navigation.navigate('Settings')}
         right={
           <View className="flex-row gap-2">
             <Pressable
               onPress={() => navigation.navigate('Search')}
-              className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+              className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
             >
               <Icon name="search" size={18} color={c.ink} />
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Settings')}
-              className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22]"
+              className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
             >
               <Icon name="settings" size={18} color={c.ink} />
             </Pressable>
@@ -144,14 +145,16 @@ export default function DashboardScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 90 }}
         showsVerticalScrollIndicator={false}
       >
-        <HouseholdBanner
-          name={householdName}
-          memberNames={householdMemberNames}
-          members={householdMembers}
-          inviteCode={inviteCode}
-          itemCount={itemCount}
-        />
-        <Text className="mt-1 font-medium text-muted dark:text-[#6B6878]">{subtitle}</Text>
+        <Animated.View entering={FadeInUp.duration(450)}>
+          <HouseholdBanner
+            name={householdName}
+            memberNames={householdMemberNames}
+            members={householdMembers}
+            inviteCode={inviteCode}
+            itemCount={itemCount}
+          />
+          <Text className="mt-1 font-medium text-muted dark:text-muted-dark">{subtitle}</Text>
+        </Animated.View>
 
         <View className="mt-5 flex-row gap-3">
           <Button
@@ -177,48 +180,50 @@ export default function DashboardScreen() {
             <DashboardStatSkeleton />
           </View>
         ) : (
-          <View className="mt-6">
+          <Animated.View entering={FadeInUp.duration(450).delay(80)} className="mt-6">
             <StatTileRow stats={stats} itemsTrend={itemsTrend} shoppingTrend={shoppingTrend} />
-          </View>
+          </Animated.View>
         )}
 
         {totalValue > 0 ? (
           <LinearGradient
-            colors={[c.primary, c.info]}
+            colors={[c.teal, c.success]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ borderRadius: 24, padding: 24, marginTop: 24 }}
+            style={{ borderRadius: 28, borderBottomLeftRadius: 10, padding: 24, marginTop: 24 }}
           >
-            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/80">
+            <Text className="mb-1 text-[11px] font-bold uppercase tracking-widest text-[#04231A]/70">
               Pantry Value
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-              <Text style={{ color: 'rgba(255,255,255,0.65)', fontWeight: '900', fontSize: 28 }}>
+              <Text style={{ color: 'rgba(4,35,26,0.6)', fontFamily: 'Outfit_800ExtraBold', fontSize: 28 }}>
                 $
               </Text>
               <AnimatedNumber
                 value={totalValue}
                 formatFn={(n) => n.toFixed(2)}
-                style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 42 }}
+                style={{ color: '#04231A', fontFamily: 'Outfit_800ExtraBold', fontSize: 42 }}
               />
             </View>
-            <Text className="mt-3 text-xs text-white/90">
+            <Text className="mt-3 text-xs font-medium text-[#04231A]/80">
               Based on purchase prices of {itemCount} items
             </Text>
           </LinearGradient>
         ) : null}
 
-        <ExpiryAlertBanner
-          items={expiringSoonItems}
-          onPress={() => navigation.navigate('Pantry', { filterExpiration: 'Expiring Soon' })}
-        />
+        <Animated.View entering={FadeInUp.duration(450).delay(160)}>
+          <ExpiryAlertBanner
+            items={expiringSoonItems}
+            onPress={() => navigation.navigate('Pantry', { filterExpiration: 'Expiring Soon' })}
+          />
+        </Animated.View>
 
         <SmartSuggestionsCard inventory={inventory} activity={activity} shoppingItems={shoppingNames} />
 
         {(aiTip || aiTipLoading) && (
           <Card className="mt-6">
             <CardHeader icon="sparkles" iconColor={c.primary} title="AI insight" />
-            {aiTipLoading ? <AiTipSkeleton /> : <Text className="text-sm text-muted dark:text-[#9A948D]">{aiTip}</Text>}
+            {aiTipLoading ? <AiTipSkeleton /> : <Text className="text-sm text-muted dark:text-muted-dark">{aiTip}</Text>}
           </Card>
         )}
 
@@ -334,7 +339,7 @@ function AiTipSkeleton() {
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <View
-      className={`rounded-card border border-line dark:border-[#2A2A35] bg-surface dark:bg-[#1A1A22] p-5 ${className}`}
+      className={`rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5 ${className}`}
     >
       {children}
     </View>
@@ -356,11 +361,11 @@ function CardHeader({
     <View className="mb-4 flex-row items-center justify-between">
       <View className="flex-row items-center gap-2">
         <Icon name={icon} size={20} color={iconColor} />
-        <Text className="text-lg font-bold text-ink dark:text-[#F0EEE9]">{title}</Text>
+        <Text className="font-display text-xl text-ink dark:text-ink-dark">{title}</Text>
       </View>
       {onViewAll ? (
         <Pressable onPress={onViewAll}>
-          <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">View All</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">View All</Text>
         </Pressable>
       ) : null}
     </View>
@@ -372,7 +377,7 @@ function ItemRow({ item }: { item: PantryItem }) {
 
   return (
     <View className="flex-row items-center gap-4 rounded-xl border border-transparent p-1">
-      <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line dark:border-[#2A2A35] bg-canvas dark:bg-[#0F0F13]">
+      <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark">
         {item.image_url ? (
           <Image source={{ uri: item.image_url }} className="h-full w-full" contentFit="contain" />
         ) : (
@@ -380,16 +385,16 @@ function ItemRow({ item }: { item: PantryItem }) {
         )}
       </View>
       <View className="flex-1">
-        <Text numberOfLines={1} className="text-sm font-bold text-ink dark:text-[#F0EEE9]">
+        <Text numberOfLines={1} className="text-sm font-bold text-ink dark:text-ink-dark">
           {item.name}
         </Text>
-        <Text numberOfLines={1} className="text-xs font-medium text-muted dark:text-[#6B6878]">
+        <Text numberOfLines={1} className="text-xs font-medium text-muted dark:text-muted-dark">
           {item.brand || item.category}
         </Text>
       </View>
-      <Text className="text-sm font-black text-ink dark:text-[#F0EEE9]">
+      <Text className="text-sm font-black text-ink dark:text-ink-dark">
         {item.quantity}
-        <Text className="text-[11px] font-bold uppercase text-muted dark:text-[#6B6878]"> {item.unit}</Text>
+        <Text className="text-[11px] font-bold uppercase text-muted dark:text-muted-dark"> {item.unit}</Text>
       </Text>
     </View>
   );
@@ -399,14 +404,14 @@ function LocationRow({ location, count }: { location: StorageLocation; count: nu
   const c = useAppColors();
 
   return (
-    <View className="flex-row items-center justify-between rounded-xl border border-line dark:border-[#2A2A35] p-3">
+    <View className="flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark p-3">
       <View className="flex-row items-center gap-3">
-        <View className="h-8 w-8 items-center justify-center rounded-lg bg-canvas dark:bg-[#0F0F13]">
+        <View className="h-8 w-8 items-center justify-center rounded-lg bg-canvas dark:bg-canvas-dark">
           <Icon name={getLocationIcon(location.name)} size={16} color={c.ink} />
         </View>
-        <Text className="text-sm font-bold text-ink dark:text-[#F0EEE9]">{location.name}</Text>
+        <Text className="text-sm font-bold text-ink dark:text-ink-dark">{location.name}</Text>
       </View>
-      <Text className="text-xs font-semibold text-muted dark:text-[#6B6878]">{count} items</Text>
+      <Text className="text-xs font-semibold text-muted dark:text-muted-dark">{count} items</Text>
     </View>
   );
 }

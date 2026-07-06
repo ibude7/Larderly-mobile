@@ -1,25 +1,18 @@
 import { View, Text, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import AnimatedNumber from '../ui/AnimatedNumber';
 import { Icon, IconName } from '../ui/Icon';
 import type { TabScreenNavigationProp } from '../../navigation/types';
 import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
 import type { DashboardStats } from '../../hooks/useDashboardStats';
-
-const STAT_ICONS: Record<string, IconName> = {
-  'Total Items': 'pantry',
-  'Shopping List': 'cart',
-  'Low Stock': 'warning',
-  'Expiring Soon': 'calendar',
-};
 
 interface StatTileRowProps {
   stats: DashboardStats;
   itemsTrend?: string;
   shoppingTrend?: string;
 }
+
+type Tone = 'surface' | 'green' | 'yellow' | 'pink';
 
 export default function StatTileRow({ stats, itemsTrend, shoppingTrend }: StatTileRowProps) {
   const navigation = useNavigation<TabScreenNavigationProp>();
@@ -32,137 +25,146 @@ export default function StatTileRow({ stats, itemsTrend, shoppingTrend }: StatTi
     <View className="flex-row flex-wrap gap-3">
       <StatCard
         label="Total Items"
+        icon="pantry"
         value={itemCount}
+        tone="surface"
+        corner="tl"
         trendText={itemsTrend}
         onPress={() => navigation.navigate('Pantry')}
+        testID="stat-total-items"
       />
       <StatCard
         label="Shopping List"
+        icon="cart"
         value={uncheckedCount}
+        tone="green"
+        corner="tr"
         trendText={shoppingTrend}
         onPress={() => navigation.navigate('Shopping')}
+        testID="stat-shopping-list"
       />
       <StatCard
         label="Low Stock"
+        icon="warning"
         value={lowStockItems.length}
-        alert={lowStockItems.length > 0}
+        tone={lowStockItems.length > 0 ? 'yellow' : 'surface'}
+        corner="bl"
         trendText={lowStockTrend}
         onPress={() => navigation.navigate('Pantry')}
+        testID="stat-low-stock"
       />
       <StatCard
         label="Expiring Soon"
+        icon="calendar"
         value={expiringSoonItems.length}
-        alert={expiringSoonItems.length > 0}
+        tone={expiringSoonItems.length > 0 ? 'pink' : 'surface'}
+        corner="br"
         trendText={expiringTrend}
-        onPress={() => navigation.navigate('Pantry')}
+        onPress={() => navigation.navigate('Pantry', { filterExpiration: 'Expiring Soon' })}
+        testID="stat-expiring-soon"
       />
     </View>
   );
 }
 
+const R = 28;
+const r = 10;
+const CORNERS: Record<string, object> = {
+  tl: { borderTopLeftRadius: R, borderTopRightRadius: r, borderBottomLeftRadius: r, borderBottomRightRadius: R },
+  tr: { borderTopLeftRadius: r, borderTopRightRadius: R, borderBottomLeftRadius: R, borderBottomRightRadius: r },
+  bl: { borderTopLeftRadius: r, borderTopRightRadius: R, borderBottomLeftRadius: R, borderBottomRightRadius: r },
+  br: { borderTopLeftRadius: R, borderTopRightRadius: r, borderBottomLeftRadius: r, borderBottomRightRadius: R },
+};
+
 function StatCard({
   label,
+  icon,
   value,
-  alert,
+  tone,
+  corner,
   trendText,
   onPress,
+  testID,
 }: {
   label: string;
+  icon: IconName;
   value: number;
-  alert?: boolean;
+  tone: Tone;
+  corner: keyof typeof CORNERS;
   trendText?: string;
   onPress: () => void;
+  testID: string;
 }) {
   const c = useAppColors();
-  const theme = useTheme();
-  const highlight = alert && value > 0;
 
-  const iconName = STAT_ICONS[label];
-
-  const glassBg = theme === 'dark' ? 'rgba(26, 26, 34, 0.5)' : 'rgba(255, 255, 255, 0.4)';
-  const accentColor = highlight ? c.danger : c.primary;
+  const palette = {
+    surface: { bg: c.surface, ink: c.ink, sub: c.muted, chip: `${c.primary}18`, chipInk: c.primary, border: c.line },
+    green: { bg: c.teal, ink: '#04231A', sub: 'rgba(4,35,26,0.65)', chip: 'rgba(4,35,26,0.12)', chipInk: '#04231A', border: 'transparent' },
+    yellow: { bg: c.amber, ink: '#231A00', sub: 'rgba(35,26,0,0.65)', chip: 'rgba(35,26,0,0.12)', chipInk: '#231A00', border: 'transparent' },
+    pink: { bg: c.primary, ink: '#FFFFFF', sub: 'rgba(255,255,255,0.78)', chip: 'rgba(255,255,255,0.2)', chipInk: '#FFFFFF', border: 'transparent' },
+  }[tone];
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1, width: '47.5%' }]}
+      testID={testID}
+      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1, width: '47.5%', transform: [{ scale: pressed ? 0.98 : 1 }] }]}
     >
       <View
-        style={{
-          borderRadius: 20,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-          shadowColor: theme === 'dark' ? '#000' : '#A09C96',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: theme === 'dark' ? 0.4 : 0.12,
-          shadowRadius: 8,
-          elevation: 4,
-        }}
+        style={[
+          CORNERS[corner],
+          {
+            backgroundColor: palette.bg,
+            borderWidth: 1,
+            borderColor: palette.border,
+            padding: 18,
+            shadowColor: tone === 'surface' ? c.shadow : palette.bg,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: tone === 'surface' ? 0.1 : 0.32,
+            shadowRadius: 16,
+            elevation: 5,
+          },
+        ]}
       >
-        <BlurView
-          intensity={theme === 'dark' ? 65 : 70}
-          tint={theme}
-          style={{
-            width: '100%',
-            padding: 20,
-            backgroundColor: glassBg,
-            flexDirection: 'row',
-          }}
-        >
-          {/* Left accent bar */}
-          <View
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 4,
-              backgroundColor: accentColor,
-            }}
-          />
-
-          <View className="flex-1 min-h-[85px] justify-between pl-2">
-            <View className="mt-1">
-              <AnimatedNumber
-                value={value}
-                duration={800}
-                style={{
-                  fontSize: 30,
-                  fontWeight: '900',
-                  color: theme === 'dark' ? '#F0EEE9' : c.ink,
-                }}
-              />
-              <Text className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted dark:text-[#6B6878]">
-                {label}
-              </Text>
-            </View>
-
-            {trendText ? (
-              <Text className="text-[11px] font-semibold text-muted dark:text-[#6B6878] mt-3">
-                {trendText}
-              </Text>
-            ) : null}
-          </View>
-
-          {iconName ? (
+        <View className="min-h-[92px] justify-between">
+          <View className="flex-row items-start justify-between">
+            <AnimatedNumber
+              value={value}
+              duration={800}
+              style={{ fontSize: 34, fontFamily: 'Outfit_800ExtraBold', color: palette.ink }}
+            />
             <View
               style={{
                 width: 32,
                 height: 32,
                 borderRadius: 16,
-                backgroundColor: highlight ? `${c.danger}15` : `${c.primary}15`,
+                backgroundColor: palette.chip,
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'absolute',
-                top: 16,
-                right: 16,
               }}
             >
-              <Icon name={iconName} size={16} color={accentColor} />
+              <Icon name={icon} size={16} color={palette.chipInk} />
             </View>
-          ) : null}
-        </BlurView>
+          </View>
+          <View>
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: 'Outfit_700Bold',
+                textTransform: 'uppercase',
+                letterSpacing: 1.2,
+                color: palette.ink,
+              }}
+            >
+              {label}
+            </Text>
+            {trendText ? (
+              <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', marginTop: 3, color: palette.sub }}>
+                {trendText}
+              </Text>
+            ) : null}
+          </View>
+        </View>
       </View>
     </Pressable>
   );

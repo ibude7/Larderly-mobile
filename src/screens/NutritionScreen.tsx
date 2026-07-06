@@ -41,8 +41,8 @@ function MacroBar({ label, current, goal, color }: { label: string; current: num
   return (
     <View className="mb-3">
       <View className="mb-1 flex-row justify-between">
-        <Text className="text-sm font-semibold text-ink dark:text-[#F6F1EA]">{label}</Text>
-        <Text className="text-xs text-muted dark:text-[#9A948D]">{Math.round(current)} / {goal}</Text>
+        <Text className="text-sm font-semibold text-ink dark:text-ink-dark">{label}</Text>
+        <Text className="text-xs text-muted dark:text-muted-dark">{Math.round(current)} / {goal}</Text>
       </View>
       <ProgressBar value={goal > 0 ? current / goal : 0} color={color} height={7} />
     </View>
@@ -113,7 +113,7 @@ function MacroDonut({ intake, goals }: { intake: DailyIntake; goals: NutritionGo
   let rotation = 0;
 
   return (
-    <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+    <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
       <View className="items-center">
         <View className="h-[180px] w-[180px] items-center justify-center">
           <Svg width={180} height={180}>
@@ -135,10 +135,10 @@ function MacroDonut({ intake, goals }: { intake: DailyIntake; goals: NutritionGo
             })}
           </Svg>
           <View className="absolute items-center">
-            <Text className="text-3xl font-black text-ink dark:text-[#F6F1EA]">
+            <Text className="text-3xl font-black text-ink dark:text-ink-dark">
               {Math.round(intake.calories)}
             </Text>
-            <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">kcal today</Text>
+            <Text className="text-xs font-bold uppercase text-muted dark:text-muted-dark">kcal today</Text>
           </View>
         </View>
       </View>
@@ -149,9 +149,9 @@ function MacroDonut({ intake, goals }: { intake: DailyIntake; goals: NutritionGo
           ['Fat', c.warning],
           ['Fiber', c.success],
         ].map(([label, color]) => (
-          <View key={label} className="flex-row items-center gap-2 rounded-full border border-line dark:border-[#303541] px-3 py-1.5">
+          <View key={label} className="flex-row items-center gap-2 rounded-full border border-line dark:border-line-dark px-3 py-1.5">
             <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-            <Text className="text-xs font-bold text-muted dark:text-[#9A948D]">{label}</Text>
+            <Text className="text-xs font-bold text-muted dark:text-muted-dark">{label}</Text>
           </View>
         ))}
       </View>
@@ -277,7 +277,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader title="Nutrition" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <View className="mb-4 flex-row gap-2">
@@ -287,9 +287,9 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
         <MacroDonut intake={intake} goals={goals} />
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
-          <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Today</Text>
-          <Text className="mt-2 text-3xl font-bold text-primary">
+        <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
+          <Text className="font-display text-xl text-ink dark:text-ink-dark">Today</Text>
+          <Text className="mt-2 font-display text-4xl text-primary">
             {Math.round(intake.calories)} / {goals.dailyCalories} kcal
           </Text>
           <View className="mt-4 h-2 overflow-hidden rounded-full bg-line">
@@ -298,16 +298,16 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
           <MacroBar label="Protein (g)" current={intake.proteinG} goal={goals.proteinG} color={c.info} />
           <MacroBar label="Carbs (g)" current={intake.carbsG} goal={goals.carbsG} color={c.warning} />
           <MacroBar label="Fat (g)" current={intake.fatG} goal={goals.fatG} color={c.danger} />
-          <Text className="text-sm text-muted dark:text-[#9A948D]">
+          <Text className="text-sm text-muted dark:text-muted-dark">
             Fiber {intake.fiberG}g / {goals.fiberG}g · Sodium {intake.sodiumMg}mg / {goals.sodiumMg}mg
           </Text>
-          <Text className="mt-1 text-sm text-muted dark:text-[#9A948D]">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
+          <Text className="mt-1 text-sm text-muted dark:text-muted-dark">Hydration {intake.hydrationMl} / {goals.hydrationMl} ml</Text>
         </View>
 
         {(aiLoading || aiTip) && (
           <View className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <Text className="text-xs font-bold uppercase text-primary">AI coach</Text>
-            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-[#F6F1EA]">{aiTip}</Text>}
+            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-ink-dark">{aiTip}</Text>}
           </View>
         )}
 
@@ -317,8 +317,8 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
         </View>
 
         {trend.length > 0 && (
-          <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-            <Text className="mb-3 font-semibold text-ink dark:text-[#F6F1EA]">7-day calories</Text>
+          <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+            <Text className="mb-3 font-semibold text-ink dark:text-ink-dark">7-day calories</Text>
             <View className="h-28 flex-row items-end gap-1">
               {trend.map((day) => {
                 const h = Math.max(4, (day.calories / trendMaxCal) * 100);
@@ -326,7 +326,7 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
                 return (
                   <View key={day.date} className="flex-1 items-center">
                     <View className={`w-full rounded-t-md ${isToday ? 'bg-primary' : 'bg-primary/40'}`} style={{ height: h }} />
-                    <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">
+                    <Text className="mt-1 text-xs text-muted dark:text-muted-dark">
                       {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                     </Text>
                   </View>
@@ -338,11 +338,11 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
         {intake.meals.length > 0 && (
           <View className="mt-2">
-            <Text className="mb-2 font-semibold text-ink dark:text-[#F6F1EA]">Meals today</Text>
+            <Text className="mb-2 font-semibold text-ink dark:text-ink-dark">Meals today</Text>
             {[...intake.meals].reverse().map((m, i) => (
-              <View key={i} className="mb-2 rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
-                <Text className="font-medium text-ink dark:text-[#F6F1EA]">{m.label}</Text>
-                <Text className="text-sm text-muted dark:text-[#9A948D]">
+              <View key={i} className="mb-2 rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
+                <Text className="font-medium text-ink dark:text-ink-dark">{m.label}</Text>
+                <Text className="text-sm text-muted dark:text-muted-dark">
                   {m.calories} kcal · P {m.proteinG}g · C {m.carbsG}g · F {m.fatG}g
                 </Text>
               </View>
@@ -350,8 +350,8 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
           </View>
         )}
 
-        <View className="mt-2 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
-          <Text className="mb-3 text-lg font-bold text-ink dark:text-[#F6F1EA]">Daily Goal</Text>
+        <View className="mt-2 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
+          <Text className="mb-3 font-display text-xl text-ink dark:text-ink-dark">Daily Goal</Text>
           <View className="flex-row gap-3">
             <View className="flex-1">
               <TextField label="Calories" value={String(draftGoals.dailyCalories)} onChangeText={(v) => setDraftGoals({ ...draftGoals, dailyCalories: Number(v) || 0 })} keyboardType="numeric" />
@@ -392,15 +392,15 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
       <Modal isOpen={showGoals} onClose={() => setShowGoals(false)} title="Nutritional goals">
         <ScrollView style={{ maxHeight: 420 }}>
-          <Text className="mb-2 text-sm font-semibold text-ink dark:text-[#F6F1EA]">Macro preset</Text>
+          <Text className="mb-2 text-sm font-semibold text-ink dark:text-ink-dark">Macro preset</Text>
           <View className="mb-4 flex-row flex-wrap gap-2">
             {(Object.keys(RATIO_PRESETS) as NutritionGoals['ratioPreset'][]).map((p) => (
               <Pressable
                 key={p}
                 onPress={() => applyPreset(p)}
-                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+                className={`rounded-full px-3 py-2 ${draftGoals.ratioPreset === p ? 'bg-primary' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
               >
-                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-[#F6F1EA]'}>{p}</Text>
+                <Text className={draftGoals.ratioPreset === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-ink-dark'}>{p}</Text>
               </Pressable>
             ))}
           </View>

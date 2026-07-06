@@ -54,12 +54,12 @@ export default function AchievementsScreen() {
   const unlockedCount = counters.unlocked.length;
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-[#090A0D]" edges={['top']}>
-      <View className="flex-row items-center gap-3 border-b border-line dark:border-[#303541] px-5 py-4">
-        <Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]">
+    <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark" edges={['top']}>
+      <View className="flex-row items-center gap-3 border-b border-line dark:border-line-dark px-5 py-4">
+        <Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
           <Icon name="chevron-left" size={20} color={c.ink} />
         </Pressable>
-        <Text className="flex-1 text-2xl font-bold text-ink dark:text-[#F6F1EA]">Achievements</Text>
+        <Text className="flex-1 font-display text-3xl text-ink dark:text-ink-dark">Achievements</Text>
         <Icon name="star" size={22} color={c.primary} />
       </View>
 
@@ -74,7 +74,7 @@ export default function AchievementsScreen() {
           />
         </View>
 
-        <Text className="mb-4 text-lg font-bold text-ink dark:text-[#F6F1EA]">Your Badges</Text>
+        <Text className="mb-4 font-display text-xl text-ink dark:text-ink-dark">Your Badges</Text>
         <View className="gap-3">
           {ACHIEVEMENTS.map((a) => {
             const unlocked = counters.unlocked.includes(a.id);
@@ -96,16 +96,16 @@ export default function AchievementsScreen() {
             return (
               <View
                 key={a.id}
-                className={`rounded-2xl border bg-surface dark:bg-[#171A21] p-4 ${TIER_BORDER[a.tier]} ${unlocked ? '' : 'opacity-85'}`}
+                className={`rounded-2xl border bg-surface dark:bg-surface-dark p-4 ${TIER_BORDER[a.tier]} ${unlocked ? '' : 'opacity-85'}`}
               >
                 <View className="flex-row items-center gap-3">
-                  <View className={`h-12 w-12 items-center justify-center rounded-2xl bg-canvas dark:bg-[#090A0D] ${unlocked ? '' : 'opacity-60'}`}>
+                  <View className={`h-12 w-12 items-center justify-center rounded-2xl bg-canvas dark:bg-canvas-dark ${unlocked ? '' : 'opacity-60'}`}>
                     <Text className="text-2xl">{a.icon}</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="font-bold text-ink dark:text-[#F6F1EA]">{a.title}</Text>
-                    <Text className="text-xs font-bold uppercase tracking-wide text-muted dark:text-[#9A948D]">{a.tier}</Text>
-                    <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">{a.description}</Text>
+                    <Text className="font-bold text-ink dark:text-ink-dark">{a.title}</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wide text-muted dark:text-muted-dark">{a.tier}</Text>
+                    <Text className="mt-1 text-xs text-muted dark:text-muted-dark">{a.description}</Text>
                   </View>
                   <Icon name={unlocked ? 'check' : 'lock'} size={18} color={unlocked ? '#10b981' : c.muted} />
                 </View>
@@ -114,7 +114,7 @@ export default function AchievementsScreen() {
                     <View className="h-1.5 overflow-hidden rounded-full bg-line">
                       <View className="h-full rounded-full bg-primary" style={{ width: `${progress * 100}%` }} />
                     </View>
-                    <Text className="mt-1 text-xs font-semibold text-muted dark:text-[#9A948D]">{progressLabel}</Text>
+                    <Text className="mt-1 text-xs font-semibold text-muted dark:text-muted-dark">{progressLabel}</Text>
                   </View>
                 ) : null}
               </View>
@@ -140,12 +140,12 @@ function StatBox({
   return (
     <View
       className={`min-w-[45%] flex-1 rounded-2xl border p-4 ${
-        highlight ? 'border-primary/30 bg-primary/5' : 'border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'
+        highlight ? 'border-primary/30 bg-primary/5' : 'border-line dark:border-line-dark bg-surface dark:bg-surface-dark'
       }`}
     >
-      <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">{label}</Text>
-      <Text className="mt-1 text-2xl font-black text-ink dark:text-[#F6F1EA]">{value}</Text>
-      {sub ? <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">{sub}</Text> : null}
+      <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">{label}</Text>
+      <Text className="mt-1 text-2xl font-black text-ink dark:text-ink-dark">{value}</Text>
+      {sub ? <Text className="mt-1 text-xs text-muted dark:text-muted-dark">{sub}</Text> : null}
     </View>
   );
 }

@@ -57,7 +57,7 @@ export default function ConfirmDialog({
           </View>
           <View className="flex-1">
             {typeof description === 'string' ? (
-              <Text className="text-sm leading-relaxed text-ink/70 dark:text-[#F6F1EA]">{description}</Text>
+              <Text className="text-sm leading-relaxed text-ink/70 dark:text-ink-dark">{description}</Text>
             ) : (
               description
             )}

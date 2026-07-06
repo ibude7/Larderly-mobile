@@ -17,23 +17,23 @@ function ErrorFallback({ error, onReset }: { error: Error; onReset: () => void }
   const c = useAppColors();
 
   return (
-    <View className="flex-1 items-center justify-center bg-canvas dark:bg-[#090A0D] px-6 py-10">
-      <View className="w-full max-w-md rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-8">
+    <View className="flex-1 items-center justify-center bg-canvas dark:bg-canvas-dark px-6 py-10">
+      <View className="w-full max-w-md rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-8">
         <View className="mb-5 h-16 w-16 items-center justify-center self-center rounded-3xl bg-danger/10">
           <Icon name="warning" size={32} color={c.danger} />
         </View>
         <Text className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-danger">
           Something went wrong
         </Text>
-        <Text className="text-center text-xl font-bold text-ink dark:text-[#F6F1EA]">
+        <Text className="text-center font-display text-2xl text-ink dark:text-ink-dark">
           Larderly hit an unexpected error
         </Text>
-        <Text className="mt-2 text-center text-sm text-muted dark:text-[#9A948D]">
+        <Text className="mt-2 text-center text-sm text-muted dark:text-muted-dark">
           The issue has been logged. Try again to continue.
         </Text>
         {error.message ? (
-          <ScrollView className="mt-5 max-h-40 rounded-2xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-3">
-            <Text className="font-mono text-xs text-ink/70 dark:text-[#F6F1EA]">{error.message}</Text>
+          <ScrollView className="mt-5 max-h-40 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
+            <Text className="font-mono text-xs text-ink/70 dark:text-ink-dark">{error.message}</Text>
           </ScrollView>
         ) : null}
         <View className="mt-6">

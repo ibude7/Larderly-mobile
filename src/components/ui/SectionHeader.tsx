@@ -33,11 +33,11 @@ export default function SectionHeader({
         ) : null}
         <View className="min-w-0 flex-1">
           {eyebrow ? (
-            <Text className="text-xs font-bold uppercase text-muted dark:text-[#9A948D]">
+            <Text className="text-xs font-bold uppercase text-muted dark:text-muted-dark">
               {eyebrow}
             </Text>
           ) : null}
-          <Text numberOfLines={1} className="text-xl font-bold text-ink dark:text-[#F6F1EA]">
+          <Text numberOfLines={1} className="font-display text-2xl text-ink dark:text-ink-dark">
             {title}
           </Text>
         </View>

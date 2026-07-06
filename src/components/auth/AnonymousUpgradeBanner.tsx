@@ -21,8 +21,8 @@ export default function AnonymousUpgradeBanner() {
     >
       <View className="flex-row items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3">
       <View className="flex-1 pr-3">
-        <Text className="font-semibold text-ink dark:text-[#F6F1EA]">Guest mode</Text>
-        <Text className="text-xs text-muted dark:text-[#9A948D]">Create an account to keep your data across devices.</Text>
+        <Text className="font-semibold text-ink dark:text-ink-dark">Guest mode</Text>
+        <Text className="text-xs text-muted dark:text-muted-dark">Create an account to keep your data across devices.</Text>
       </View>
       <Button size="sm" label="Upgrade" onPress={() => navigation.navigate('Settings')} />
       </View>

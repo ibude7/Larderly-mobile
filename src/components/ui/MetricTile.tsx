@@ -39,9 +39,9 @@ export default function MetricTile({
             <AnimatedNumber
               value={value}
               duration={800}
-              style={{ color: c.ink, fontSize: 34, fontWeight: '900' }}
+              style={{ color: c.ink, fontSize: 34, fontFamily: 'Outfit_800ExtraBold' }}
             />
-            <Text className="mt-1 text-xs font-bold uppercase text-muted dark:text-[#9A948D]">
+            <Text className="mt-1 text-xs font-bold uppercase text-muted dark:text-muted-dark">
               {label}
             </Text>
           </View>
@@ -53,7 +53,7 @@ export default function MetricTile({
           </View>
         </View>
         {trend ? (
-          <Text numberOfLines={1} className="mt-4 text-xs font-semibold text-muted dark:text-[#9A948D]">
+          <Text numberOfLines={1} className="mt-4 text-xs font-semibold text-muted dark:text-muted-dark">
             {trend}
           </Text>
         ) : null}

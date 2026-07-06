@@ -45,10 +45,10 @@ function SmartSuggestionsCard({
   if (visible.length === 0) return null;
 
   return (
-    <View className="mt-6 rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-5">
+    <View className="mt-6 rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
       <View className="mb-4 flex-row items-center gap-2">
         <Icon name="sparkles" size={20} color={c.primary} />
-        <Text className="text-lg font-bold text-ink dark:text-[#F6F1EA]">Smart Suggestions</Text>
+        <Text className="font-display text-xl text-ink dark:text-ink-dark">Smart Suggestions</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
         <View className="flex-row gap-3 px-1">
@@ -73,7 +73,7 @@ function SmartSuggestionsCard({
                     </Text>
                   </Pressable>
                 </View>
-                <Text className="text-xs leading-5 text-ink/80 dark:text-[#F6F1EA]">{s.body}</Text>
+                <Text className="text-xs leading-5 text-ink/80 dark:text-ink-dark">{s.body}</Text>
                 {s.kind === 'predictive' || s.kind === 'bundle' ? (
                   <Pressable
                     onPress={() => navigation.navigate('Shopping')}

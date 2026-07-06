@@ -176,7 +176,7 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader title="Analytics" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <View className="mb-4 flex-row gap-2">
@@ -184,9 +184,9 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
             <Pressable
               key={p}
               onPress={() => setPeriod(p)}
-              className={`rounded-full px-4 py-2 ${period === p ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+              className={`rounded-full px-4 py-2 ${period === p ? 'bg-primary' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
             >
-              <Text className={period === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-[#F6F1EA]'}>{p}d</Text>
+              <Text className={period === p ? 'text-xs font-bold text-white' : 'text-xs text-ink dark:text-ink-dark'}>{p}d</Text>
             </Pressable>
           ))}
           <Button label="Share" variant="ghost" size="sm" onPress={exportReport} />
@@ -199,9 +199,9 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
             { label: 'Items tracked', value: String(inventory.length) },
             { label: 'Waste ratio', value: `${Math.round(wasteRatio * 100)}%` },
           ].map((s) => (
-            <View key={s.label} className="min-w-[45%] flex-1 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-              <Text className="text-xs text-muted dark:text-[#9A948D]">{s.label}</Text>
-              <Text className="mt-1 text-xl font-bold text-ink dark:text-[#F6F1EA]">{s.value}</Text>
+            <View key={s.label} className="min-w-[45%] flex-1 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+              <Text className="text-xs text-muted dark:text-muted-dark">{s.label}</Text>
+              <Text className="mt-1 font-display text-2xl text-ink dark:text-ink-dark">{s.value}</Text>
             </View>
           ))}
         </View>
@@ -209,42 +209,42 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
         {(aiLoading || aiInsight) && (
           <View className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <Text className="text-xs font-bold uppercase text-primary">AI insight</Text>
-            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-[#F6F1EA]">{aiInsight}</Text>}
+            {aiLoading ? <LoadingSpinner className="mt-2" /> : <Text className="mt-2 text-sm text-ink dark:text-ink-dark">{aiInsight}</Text>}
           </View>
         )}
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-          <Text className="font-semibold text-ink dark:text-[#F6F1EA]">Spending trend</Text>
+        <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+          <Text className="font-semibold text-ink dark:text-ink-dark">Spending trend</Text>
           <View className="mt-3 h-24 flex-row items-end gap-1">
             {trend.map((d) => (
               <View key={d.label} className="flex-1 items-center">
                 <View className="w-full rounded-t-md bg-primary/70" style={{ height: Math.max(4, (d.spent / trendMax) * 80) }} />
-                <Text className="mt-1 text-xs text-muted dark:text-[#9A948D]">{d.label}</Text>
+                <Text className="mt-1 text-xs text-muted dark:text-muted-dark">{d.label}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-          <Text className="font-semibold text-ink dark:text-[#F6F1EA]">Activity</Text>
-          <Text className="mt-2 text-sm text-muted dark:text-[#9A948D]">
+        <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+          <Text className="font-semibold text-ink dark:text-ink-dark">Activity</Text>
+          <Text className="mt-2 text-sm text-muted dark:text-muted-dark">
             {activityCount.added} added · {activityCount.consumed} consumed · {activityCount.checkouts} checkouts · {activityCount.recipes} recipes cooked
           </Text>
         </View>
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-          <Text className="mb-2 font-semibold text-ink dark:text-[#F6F1EA]">Sustainability</Text>
-          <Text className="text-sm text-muted dark:text-[#9A948D]">Est. savings {formatCurrency(sustainability.estimatedSavings, prefs.currency)}</Text>
-          <Text className="text-sm text-muted dark:text-[#9A948D]">CO₂ saved ~{sustainability.co2SavedKg}kg · Organic {sustainability.organicPercent}%</Text>
+        <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+          <Text className="mb-2 font-semibold text-ink dark:text-ink-dark">Sustainability</Text>
+          <Text className="text-sm text-muted dark:text-muted-dark">Est. savings {formatCurrency(sustainability.estimatedSavings, prefs.currency)}</Text>
+          <Text className="text-sm text-muted dark:text-muted-dark">CO₂ saved ~{sustainability.co2SavedKg}kg · Organic {sustainability.organicPercent}%</Text>
         </View>
 
         {byPerson.length > 0 && (
           <>
-            <Text className="mb-2 font-semibold text-ink dark:text-[#F6F1EA]">Spending by person</Text>
+            <Text className="mb-2 font-semibold text-ink dark:text-ink-dark">Spending by person</Text>
             {byPerson.map((p, i) => (
-              <View key={i} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
-                <Text className="text-ink dark:text-[#F6F1EA]">{p.name}</Text>
-                <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{formatCurrency(p.spent, prefs.currency)}</Text>
+              <View key={i} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
+                <Text className="text-ink dark:text-ink-dark">{p.name}</Text>
+                <Text className="font-semibold text-ink dark:text-ink-dark">{formatCurrency(p.spent, prefs.currency)}</Text>
               </View>
             ))}
           </>
@@ -252,11 +252,11 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
 
         {topPurchased.length > 0 && (
           <>
-            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-[#F6F1EA]">Most purchased</Text>
+            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">Most purchased</Text>
             {topPurchased.map((item) => (
-              <View key={item.name} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
-                <Text className="text-ink dark:text-[#F6F1EA]">{item.name}</Text>
-                <Text className="text-muted dark:text-[#9A948D]">{item.count}×</Text>
+              <View key={item.name} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
+                <Text className="text-ink dark:text-ink-dark">{item.name}</Text>
+                <Text className="text-muted dark:text-muted-dark">{item.count}×</Text>
               </View>
             ))}
           </>
@@ -264,11 +264,11 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
 
         {mostExpensive.length > 0 && (
           <>
-            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-[#F6F1EA]">Most expensive items</Text>
+            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">Most expensive items</Text>
             {mostExpensive.map((item) => (
-              <View key={item.id} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
-                <Text className="text-ink dark:text-[#F6F1EA]">{item.name}</Text>
-                <Text className="font-semibold text-ink dark:text-[#F6F1EA]">
+              <View key={item.id} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
+                <Text className="text-ink dark:text-ink-dark">{item.name}</Text>
+                <Text className="font-semibold text-ink dark:text-ink-dark">
                   {formatCurrency(item.latestPrice, prefs.currency)}
                 </Text>
               </View>
@@ -276,11 +276,11 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
           </>
         )}
 
-        <Text className="mb-2 mt-2 font-semibold text-ink dark:text-[#F6F1EA]">By category</Text>
+        <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">By category</Text>
         {byCategory.map((c) => (
-          <View key={c.id} className="mb-2 flex-row items-center justify-between rounded-xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-4 py-3">
+          <View key={c.id} className="mb-2 flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
             <Text>{c.emoji} {c.name}</Text>
-            <Text className="font-semibold text-ink dark:text-[#F6F1EA]">{formatCurrency(c.value, prefs.currency)}</Text>
+            <Text className="font-semibold text-ink dark:text-ink-dark">{formatCurrency(c.value, prefs.currency)}</Text>
           </View>
         ))}
       </ScrollView>

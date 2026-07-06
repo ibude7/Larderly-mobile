@@ -45,7 +45,7 @@ function RecipeCard({
   return (
     <Pressable
       onPress={onPress}
-      className="mb-4 overflow-hidden rounded-card border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]"
+      className="mb-4 overflow-hidden rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
     >
       <LinearGradient
         colors={[c.primary, c.teal]}
@@ -94,15 +94,15 @@ function RecipeCard({
           <View className="flex-row items-center gap-4">
             <View className="flex-row items-center gap-1.5">
               <Icon name="clock" size={16} color={c.muted} />
-              <Text className="text-sm font-semibold text-muted dark:text-[#9A948D]">{totalTime} min</Text>
+              <Text className="text-sm font-semibold text-muted dark:text-muted-dark">{totalTime} min</Text>
             </View>
             <View className="flex-row items-center gap-1.5">
               <Icon name="user" size={16} color={c.muted} />
-              <Text className="text-sm font-semibold text-muted dark:text-[#9A948D]">{recipe.servings}</Text>
+              <Text className="text-sm font-semibold text-muted dark:text-muted-dark">{recipe.servings}</Text>
             </View>
-            <Text className="text-sm font-semibold text-muted dark:text-[#9A948D]">★ {rating.toFixed(1)}</Text>
+            <Text className="text-sm font-semibold text-muted dark:text-muted-dark">★ {rating.toFixed(1)}</Text>
           </View>
-          {views > 0 ? <Text className="text-xs text-muted dark:text-[#9A948D]">{views} views</Text> : null}
+          {views > 0 ? <Text className="text-xs text-muted dark:text-muted-dark">{views} views</Text> : null}
         </View>
         <Button label="Cook this" icon="chef" onPress={onCook} />
       </View>

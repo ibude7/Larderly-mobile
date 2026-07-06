@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon } from '../ui/Icon';
 import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
 import type { PantryItem } from '../../types';
 
 interface ExpiryAlertBannerProps {
@@ -13,7 +13,6 @@ const MAX_PREVIEW = 3;
 
 export default function ExpiryAlertBanner({ items, onPress }: ExpiryAlertBannerProps) {
   const c = useAppColors();
-  const theme = useTheme();
   const count = items.length;
 
   if (count === 0) return null;
@@ -25,38 +24,75 @@ export default function ExpiryAlertBanner({ items, onPress }: ExpiryAlertBannerP
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-      className="mt-6 flex-row items-center gap-3 rounded-card border p-5"
+      testID="expiry-alert-banner"
+      style={({ pressed }) => [
+        {
+          opacity: pressed ? 0.94 : 1,
+          transform: [{ scale: pressed ? 0.985 : 1 }],
+          marginTop: 24,
+          borderRadius: 28,
+          shadowColor: c.primary,
+          shadowOpacity: 0.35,
+          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 8,
+        },
+      ]}
     >
-      <View
+      <LinearGradient
+        colors={[c.primary, '#FF7A3D']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          backgroundColor: `${c.danger}18`,
-          width: 44,
-          height: 44,
-          borderRadius: 22,
+          borderRadius: 28,
+          borderTopRightRadius: 10,
+          padding: 20,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 14,
         }}
       >
-        <Icon name="calendar" size={20} color={c.danger} />
-      </View>
+        <View
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.22)',
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="calendar" size={22} color="#FFFFFF" />
+        </View>
 
-      <View className="flex-1">
-        <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">{headline}</Text>
-        {preview ? (
-          <Text numberOfLines={1} className="mt-0.5 text-xs font-medium text-muted dark:text-[#9A948D]">
-            {preview}
-            {extra}
+        <View className="flex-1">
+          <Text style={{ fontFamily: 'Fraunces_600SemiBold', fontSize: 17, color: '#FFFFFF' }}>
+            {headline}
           </Text>
-        ) : null}
-      </View>
+          {preview ? (
+            <Text
+              numberOfLines={1}
+              style={{ marginTop: 2, fontSize: 12, fontFamily: 'Outfit_500Medium', color: 'rgba(255,255,255,0.85)' }}
+            >
+              {preview}
+              {extra}
+            </Text>
+          ) : null}
+        </View>
 
-      <View className="flex-row items-center gap-1">
-        <Text className="text-xs font-bold uppercase tracking-wider" style={{ color: c.danger }}>
-          View in pantry
-        </Text>
-        <Icon name="chevron-right" size={14} color={c.danger} />
-      </View>
+        <View
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.22)',
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="chevron-right" size={16} color="#FFFFFF" />
+        </View>
+      </LinearGradient>
     </Pressable>
   );
 }

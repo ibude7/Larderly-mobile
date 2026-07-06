@@ -294,21 +294,30 @@ export default function RecipesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-canvas dark:bg-[#090A0D]">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader
         onOpenSettings={() => navigation.navigate('Settings')}
         right={
-          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] px-3 py-1.5">
-            <Text className="text-xs font-semibold text-ink dark:text-[#F6F1EA]">Planner</Text>
+          <Pressable onPress={() => navigation.navigate('MealPlanner')} className="rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-3 py-1.5">
+            <Text className="text-xs font-semibold text-ink dark:text-ink-dark">Planner</Text>
           </Pressable>
         }
       />
 
+      <View className="flex-row items-end justify-between px-5 pt-4">
+        <View>
+          <Text className="font-display text-4xl text-ink dark:text-ink-dark">Kitchen</Text>
+          <Text className="mt-0.5 text-sm font-medium text-muted dark:text-muted-dark">
+            Recipes crafted from your pantry
+          </Text>
+        </View>
+      </View>
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 py-3">
         <View className="flex-row gap-2">
           {(['browse', 'expiring', 'favorites', 'mine', 'trending'] as Tab[]).map((t) => (
-            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}>
-              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{t}</Text>
+            <Pressable key={t} onPress={() => setTab(t)} className={`rounded-full px-4 py-2 capitalize ${tab === t ? 'bg-ink' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}>
+              <Text className={`text-sm font-semibold ${tab === t ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>{t}</Text>
             </Pressable>
           ))}
         </View>
@@ -331,9 +340,9 @@ export default function RecipesScreen() {
             <Pressable
               key={value}
               onPress={() => setQuickFilter(value as QuickFilter)}
-              className={`rounded-full px-4 py-2 ${quickFilter === value ? 'bg-primary' : 'border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21]'}`}
+              className={`rounded-full px-4 py-2 ${quickFilter === value ? 'bg-primary' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
             >
-              <Text className={`text-xs font-bold ${quickFilter === value ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>
+              <Text className={`text-xs font-bold ${quickFilter === value ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>
                 {label}
               </Text>
             </Pressable>
@@ -360,8 +369,8 @@ export default function RecipesScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 pb-2">
           <View className="flex-row gap-2">
             {collections.map((c) => (
-              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line dark:border-[#303541]'}`}>
-                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink dark:text-[#F6F1EA]'}`}>{c}</Text>
+              <Pressable key={c} onPress={() => setActiveCollection(c)} className={`rounded-full px-3 py-1.5 ${activeCollection === c ? 'bg-primary' : 'border border-line dark:border-line-dark'}`}>
+                <Text className={`text-xs font-bold ${activeCollection === c ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>{c}</Text>
               </Pressable>
             ))}
           </View>
@@ -402,7 +411,7 @@ export default function RecipesScreen() {
         accessibilityLabel="Generate recipes with AI"
         className="absolute right-5 h-16 w-16 items-center justify-center rounded-full bg-primary"
         style={{
-          bottom: insets.bottom + 22,
+          bottom: insets.bottom + 96,
           shadowColor: c.primary,
           shadowOffset: { width: 0, height: 12 },
           shadowOpacity: 0.35,
@@ -416,14 +425,14 @@ export default function RecipesScreen() {
       <Modal isOpen={!!activeRecipe} onClose={() => setActiveRecipe(null)} title={activeRecipe?.title ?? 'Recipe'}>
         {activeRecipe && (
           <ScrollView style={{ maxHeight: 420 }}>
-            <Text className="mb-3 text-sm text-muted dark:text-[#9A948D]">{activeRecipe.description}</Text>
-            <Text className="mb-1 font-semibold text-ink dark:text-[#F6F1EA]">Ingredients</Text>
+            <Text className="mb-3 text-sm text-muted dark:text-muted-dark">{activeRecipe.description}</Text>
+            <Text className="mb-1 font-semibold text-ink dark:text-ink-dark">Ingredients</Text>
             {activeRecipe.ingredients.map((ing, i) => (
-              <Text key={i} className="text-sm text-ink dark:text-[#F6F1EA]">• {ing}</Text>
+              <Text key={i} className="text-sm text-ink dark:text-ink-dark">• {ing}</Text>
             ))}
-            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-[#F6F1EA]">Steps</Text>
+            <Text className="mb-1 mt-4 font-semibold text-ink dark:text-ink-dark">Steps</Text>
             {activeRecipe.instructions.map((step, i) => (
-              <Text key={i} className="mb-1 text-sm text-ink dark:text-[#F6F1EA]">{i + 1}. {step}</Text>
+              <Text key={i} className="mb-1 text-sm text-ink dark:text-ink-dark">{i + 1}. {step}</Text>
             ))}
             <View className="mt-4 gap-2">
               <TextField label="Your rating (1-5)" value={String(userRating)} onChangeText={(v) => setUserRating(Number(v) || 5)} keyboardType="numeric" />

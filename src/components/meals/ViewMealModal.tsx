@@ -88,7 +88,7 @@ export default function ViewMealModal({
     <>
       <Modal isOpen onClose={onClose} title={meal.name}>
         <View className="gap-5">
-          <View className="rounded-3xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-4">
+          <View className="rounded-3xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-4">
             <View className="flex-row items-center gap-3">
               <View className="h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                 <Icon
@@ -98,13 +98,13 @@ export default function ViewMealModal({
                 />
               </View>
               <View>
-                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                   Scheduled meal
                 </Text>
-                <Text className="text-base font-bold text-ink dark:text-[#F6F1EA]">
+                <Text className="text-base font-bold text-ink dark:text-ink-dark">
                   {MEAL_TYPE_LABELS[meal.meal_type]}
                 </Text>
-                <Text className="text-[13px] font-medium text-muted dark:text-[#9A948D]">{label}</Text>
+                <Text className="text-[13px] font-medium text-muted dark:text-muted-dark">{label}</Text>
               </View>
             </View>
           </View>
@@ -119,19 +119,19 @@ export default function ViewMealModal({
             <View className="flex-1">
               <View className="flex-row items-center gap-1.5">
                 <Icon name="sparkles" size={13} color={c.primary} />
-                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+                <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                   AI recipe
                 </Text>
               </View>
-              <Text className="text-sm font-bold text-ink dark:text-[#F6F1EA]">Generate a full recipe</Text>
-              <Text className="text-xs text-muted dark:text-[#9A948D]">Steps, timing, and tips</Text>
+              <Text className="text-sm font-bold text-ink dark:text-ink-dark">Generate a full recipe</Text>
+              <Text className="text-xs text-muted dark:text-muted-dark">Steps, timing, and tips</Text>
             </View>
             <Icon name="chevron-right" size={18} color={c.muted} />
           </Pressable>
 
           {meal.ingredients && meal.ingredients.length > 0 ? (
-            <View className="rounded-3xl border border-line dark:border-[#303541] bg-canvas dark:bg-[#090A0D] p-4">
-              <Text className="mb-3 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+            <View className="rounded-3xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-4">
+              <Text className="mb-3 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                 Ingredients
               </Text>
               <View className="gap-2">
@@ -151,8 +151,8 @@ export default function ViewMealModal({
                         size={16}
                         color={inPantry ? c.success : c.primary}
                       />
-                      <Text className="flex-1 text-sm text-ink dark:text-[#F6F1EA]">{ing.name}</Text>
-                      <Text className="text-xs text-muted dark:text-[#9A948D]">
+                      <Text className="flex-1 text-sm text-ink dark:text-ink-dark">{ing.name}</Text>
+                      <Text className="text-xs text-muted dark:text-muted-dark">
                         {ing.quantity} {ing.unit}
                       </Text>
                     </View>
@@ -174,11 +174,11 @@ export default function ViewMealModal({
           ) : null}
 
           {meal.notes ? (
-            <View className="rounded-3xl border border-line dark:border-[#303541] bg-surface dark:bg-[#171A21] p-4">
-              <Text className="mb-2 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+            <View className="rounded-3xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
+              <Text className="mb-2 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                 Notes
               </Text>
-              <Text className="text-sm leading-relaxed text-ink/80 dark:text-[#F6F1EA]">{meal.notes}</Text>
+              <Text className="text-sm leading-relaxed text-ink/80 dark:text-ink-dark">{meal.notes}</Text>
             </View>
           ) : null}
 

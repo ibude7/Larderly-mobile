@@ -44,9 +44,9 @@ function EmptyState({
       <View className="mb-4">
         <EmptyIllustration variant={artVariant} size={variant === 'inline' ? 112 : 144} />
       </View>
-      <Text className="text-center text-xl font-bold text-ink dark:text-[#F6F1EA]">{title}</Text>
+      <Text className="text-center font-display text-2xl text-ink dark:text-ink-dark">{title}</Text>
       {description ? (
-        <Text className="mt-2 max-w-xs text-center text-sm leading-relaxed text-muted dark:text-[#9A948D]">
+        <Text className="mt-2 max-w-xs text-center text-sm leading-relaxed text-muted dark:text-muted-dark">
           {description}
         </Text>
       ) : null}

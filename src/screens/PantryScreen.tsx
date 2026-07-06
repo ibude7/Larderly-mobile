@@ -314,7 +314,7 @@ export default function PantryScreen() {
         ListHeaderComponent={
           <View className="px-5 pb-4 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-3xl font-bold text-ink">Pantry</Text>
+              <Text className="font-display text-4xl text-ink">Pantry</Text>
               <View className="flex-row gap-2">
                 <Pressable onPress={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))} className="h-9 w-9 items-center justify-center rounded-full border border-line bg-surface">
                   <Icon name={viewMode === 'grid' ? 'grid' : 'shelf'} size={16} color={c.ink} />

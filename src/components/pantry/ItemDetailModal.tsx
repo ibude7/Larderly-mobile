@@ -35,7 +35,7 @@ const CHIP_TONE: Record<ChipTone, { bg: string; text: string }> = {
   orange: { bg: 'bg-primary/10', text: 'text-primary' },
   yellow: { bg: 'bg-warning/10', text: 'text-warning' },
   green: { bg: 'bg-success/10', text: 'text-success' },
-  stone: { bg: 'bg-canvas dark:bg-[#090A0D]', text: 'text-muted dark:text-[#9A948D]' },
+  stone: { bg: 'bg-canvas dark:bg-canvas-dark', text: 'text-muted dark:text-muted-dark' },
 };
 
 export default function ItemDetailModal({
@@ -153,7 +153,7 @@ export default function ItemDetailModal({
         {!editing ? (
           <View className="gap-5">
             {/* Preview */}
-            <View className="flex-row items-start gap-4 rounded-3xl border border-line dark:border-[#303541] bg-surface-muted dark:bg-[#101217] p-4">
+            <View className="flex-row items-start gap-4 rounded-3xl border border-line dark:border-line-dark bg-surface-muted dark:bg-canvas-raised-dark p-4">
               {showImage ? (
                 <Image
                   source={{ uri: item.image_url }}
@@ -162,16 +162,16 @@ export default function ItemDetailModal({
                   resizeMode="contain"
                 />
               ) : (
-                <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-[#303541] bg-white">
+                <View className="h-20 w-20 items-center justify-center rounded-3xl border border-line dark:border-line-dark bg-white">
                   <Icon name={getCategoryIcon(item.category)} size={32} color={c.ink} />
                 </View>
               )}
               <View className="flex-1">
-                <Text className="mb-1 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+                <Text className="mb-1 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                   Pantry item
                 </Text>
-                <Text className="text-xl font-bold text-ink dark:text-[#F6F1EA]">{item.name}</Text>
-                {item.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-[#9A948D]">{item.brand}</Text> : null}
+                <Text className="font-display text-2xl text-ink dark:text-ink-dark">{item.name}</Text>
+                {item.brand ? <Text className="mt-0.5 text-sm text-muted dark:text-muted-dark">{item.brand}</Text> : null}
                 <View className="mt-2 flex-row flex-wrap gap-2">
                   <Chip label={item.category} />
                   {location ? <Chip label={location.name} icon="location" /> : null}
@@ -181,14 +181,14 @@ export default function ItemDetailModal({
             </View>
 
             {/* Quantity */}
-            <View className="rounded-3xl border border-line dark:border-[#303541] bg-surface-muted dark:bg-[#101217] p-4">
+            <View className="rounded-3xl border border-line dark:border-line-dark bg-surface-muted dark:bg-canvas-raised-dark p-4">
               <View className="mb-3 flex-row items-center justify-between">
-                <Text className="text-sm font-semibold text-muted dark:text-[#9A948D]">Quantity</Text>
+                <Text className="text-sm font-semibold text-muted dark:text-muted-dark">Quantity</Text>
                 <Text
-                  className={`text-3xl font-bold ${isLowStock ? 'text-warning' : 'text-ink dark:text-[#F6F1EA]'}`}
+                  className={`font-display text-4xl ${isLowStock ? 'text-warning' : 'text-ink dark:text-ink-dark'}`}
                 >
                   {item.quantity}
-                  <Text className="text-sm font-normal text-muted dark:text-[#9A948D]"> {item.unit}</Text>
+                  <Text className="text-sm font-normal text-muted dark:text-muted-dark"> {item.unit}</Text>
                 </Text>
               </View>
               <View className="flex-row gap-2">
@@ -241,11 +241,11 @@ export default function ItemDetailModal({
             </View>
 
             {item.notes ? (
-              <View className="rounded-3xl border border-line dark:border-[#303541] bg-surface-muted dark:bg-[#101217] p-4">
-                <Text className="mb-2 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+              <View className="rounded-3xl border border-line dark:border-line-dark bg-surface-muted dark:bg-canvas-raised-dark p-4">
+                <Text className="mb-2 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
                   Notes
                 </Text>
-                <Text className="text-sm leading-6 text-ink/80 dark:text-[#F6F1EA]">{item.notes}</Text>
+                <Text className="text-sm leading-6 text-ink/80 dark:text-ink-dark">{item.notes}</Text>
               </View>
             ) : null}
 
@@ -315,7 +315,7 @@ export default function ItemDetailModal({
               placeholder="None"
             />
             <View>
-              <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+              <Text className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
                 Expiry Date
               </Text>
               <DateInput value={editForm.expiry_date ?? null} onChange={(v) => set('expiry_date', v)} />
@@ -340,7 +340,7 @@ export default function ItemDetailModal({
             </View>
             <View>
               <View className="mb-1.5 flex-row items-center justify-between">
-                <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-[#9A948D]">
+                <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
                   Notes
                 </Text>
                 <Button
@@ -409,19 +409,19 @@ function PriceHistoryChart({ history }: { history?: PantryItem['priceHistory'] }
   const max = Math.max(1, ...entries.map((entry) => entry.price));
 
   return (
-    <View className="rounded-3xl border border-line dark:border-[#303541] bg-surface-muted dark:bg-[#101217] p-4">
-      <Text className="mb-3 text-xs font-bold uppercase tracking-widest text-muted dark:text-[#9A948D]">
+    <View className="rounded-3xl border border-line dark:border-line-dark bg-surface-muted dark:bg-canvas-raised-dark p-4">
+      <Text className="mb-3 text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
         Price History
       </Text>
       {entries.length === 0 ? (
-        <Text className="text-sm text-muted dark:text-[#9A948D]">No price history yet</Text>
+        <Text className="text-sm text-muted dark:text-muted-dark">No price history yet</Text>
       ) : (
         <View className="h-28 flex-row items-end gap-2">
           {entries.map((entry, index) => {
             const height = Math.max(8, (entry.price / max) * 72);
             return (
               <View key={`${entry.recordedAt}-${index}`} className="flex-1 items-center justify-end">
-                <Text className="mb-1 text-xs font-bold text-muted dark:text-[#9A948D]">
+                <Text className="mb-1 text-xs font-bold text-muted dark:text-muted-dark">
                   ${entry.price.toFixed(0)}
                 </Text>
                 <View
@@ -439,8 +439,8 @@ function PriceHistoryChart({ history }: { history?: PantryItem['priceHistory'] }
 
 function Chip({ label, icon, tone }: { label: string; icon?: IconName; tone?: 'warning' }) {
   const c = useAppColors();
-  const bg = tone === 'warning' ? 'bg-warning/10' : 'bg-white border border-line dark:border-[#303541]';
-  const text = tone === 'warning' ? 'text-warning' : 'text-muted dark:text-[#9A948D]';
+  const bg = tone === 'warning' ? 'bg-warning/10' : 'bg-white border border-line dark:border-line-dark';
+  const text = tone === 'warning' ? 'text-warning' : 'text-muted dark:text-muted-dark';
   return (
     <View className={`flex-row items-center gap-1 rounded-full px-3 py-1 ${bg}`}>
       {icon ? <Icon name={icon} size={12} color={c.muted} /> : null}
@@ -468,7 +468,7 @@ function DetailChip({
     <View className={`min-w-[45%] grow rounded-2xl p-3.5 ${t.bg}`}>
       <View className="mb-1 flex-row items-center gap-1">
         <Icon name={icon} size={14} color={c.muted} />
-        <Text className="text-xs font-semibold uppercase tracking-wide text-muted dark:text-[#9A948D]">{label}</Text>
+        <Text className="text-xs font-semibold uppercase tracking-wide text-muted dark:text-muted-dark">{label}</Text>
       </View>
       {badgeVariant ? (
         <Badge label={value} variant={badgeVariant} />
