@@ -48,3 +48,7 @@ yarn-error.*
 # Firebase native config (contains project keys — keep out of git)
 google-services.json
 GoogleService-Info.plist
+.env.*
+*.env
+credentials.json
+.credentials
