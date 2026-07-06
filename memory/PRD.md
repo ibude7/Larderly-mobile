@@ -32,12 +32,21 @@
 6. **New feature — Smart Restock**: `src/components/shopping/SmartRestockCard.tsx` on Shopping screen; one-tap bulk-add of low/out-of-stock pantry items not already on the list (uses bulkAddItems); analytics event `smart_restock_used` added.
 7. **Tests**: added `src/components/ui/__tests__/redesign.test.tsx` (RNTL 14 — note: `render` is async, must await); jest.config testMatch extended; installed @react-native/jest-preset, react-test-renderer, test-renderer dev deps.
 
+### Phase 2 (2026-06) — deep screen redesigns
+8. **RecipeCard**: full magazine rewrite — 200px photo hero (recipe.imageUrl or curated cuisine-keyed Unsplash fallbacks in CUISINE_IMAGES), cinematic scrim, Fraunces title overlay, availability/AI/allergen chips, glass save button, meta row + Cook CTA.
+9. **Onboarding**: Lottie block replaced with cinematic image hero (230px, asymmetric corners, scrim, STEP pill + Fraunces title overlay); STEP_IMAGES cycles 3 curated design-system photos.
+10. **Pantry toolbar cleanup**: title+subtitle row, search, single compact action row (Voice / Photo AI / select icon-toggle), contextual bulk actions only when items selected; dark-mode classes added to screen root.
+11. **Analytics**: vivid bento stat tiles (pink/surface/teal/yellow, asymmetric corners, Fraunces numbers), Fraunces section titles.
+12. **Achievements**: vivid gamified StatBoxes (pink/yellow/teal tones).
+13. **Nutrition**: Today card hero — giant Fraunces teal calorie number, thicker teal progress bar, asymmetric corner.
+14. **Search**: ink-pill segmented tabs, cleaner header (no heavy border band).
+15. Fixed pre-existing eslint error (ComingSoonScreen require) with disable comment.
+Verified: tsc clean, eslint clean, jest 34/34, full Metro iOS bundle (`npx expo export --platform ios --no-bytecode`) = 3861 modules OK.
+
 Pre-existing features confirmed present (not rebuilt): expiry tracking + notifications, dashboard stats (useDashboardStats), barcode scanner w/ animated scan line, AI recipes (recipeGen via Firebase AI), voice add, receipt scan, shopping templates/budget, households, achievements, analytics.
 
 ## Backlog / Next Tasks
-- P1: Deeper layout redesign of Settings, Analytics, Achievements, Nutrition, Search screens (currently re-skinned via tokens only).
-- P1: Pantry screen toolbar cleanup (3 rows of buttons → tidy toolbar), staggered list entrances.
-- P2: Onboarding cinematic imagery (design_guidelines media_urls), magazine-style recipe cards with images.
-- P2: Scanner glass overlay refinement per guidelines.
-- P2: Fix pre-existing eslint error in ComingSoonScreen (require statement).
+- P2: Scanner glass overlay refinement per guidelines; staggered pantry list entrances.
+- P2: Recipe detail modal → full editorial bottom sheet with hero image.
+- P2: Unused lottie assets (household/pantry/shopping/scan.json) still shipped — only meal-planner one used now.
 - Note: user must build via `npm run ios/android` on their machine to see results; Firebase native config files are gitignored.

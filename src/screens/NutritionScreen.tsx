@@ -287,13 +287,14 @@ Hydration: ${intake.hydrationMl}ml/${goals.hydrationMl}ml`;
 
         <MacroDonut intake={intake} goals={goals} />
 
-        <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
-          <Text className="font-display text-xl text-ink dark:text-ink-dark">Today</Text>
-          <Text className="mt-2 font-display text-4xl text-primary">
-            {Math.round(intake.calories)} / {goals.dailyCalories} kcal
-          </Text>
-          <View className="mt-4 h-2 overflow-hidden rounded-full bg-line">
-            <View className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, progress.cal * 100)}%` }} />
+        <View className="mb-4 rounded-3xl rounded-tr-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
+          <Text className="text-[11px] font-bold uppercase tracking-widest text-muted dark:text-muted-dark">Today</Text>
+          <View className="mt-1 flex-row items-baseline gap-2">
+            <Text className="font-display text-5xl text-teal">{Math.round(intake.calories)}</Text>
+            <Text className="font-display text-xl text-muted dark:text-muted-dark">/ {goals.dailyCalories} kcal</Text>
+          </View>
+          <View className="mt-4 h-3 overflow-hidden rounded-full bg-line dark:bg-line-dark">
+            <View className="h-full rounded-full bg-teal" style={{ width: `${Math.min(100, progress.cal * 100)}%` }} />
           </View>
           <MacroBar label="Protein (g)" current={intake.proteinG} goal={goals.proteinG} color={c.info} />
           <MacroBar label="Carbs (g)" current={intake.carbsG} goal={goals.carbsG} color={c.warning} />

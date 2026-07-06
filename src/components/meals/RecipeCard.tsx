@@ -1,10 +1,11 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Button from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { useAppColors } from '../../hooks/useAppColors';
-import type { Recipe } from '../../lib/recipes';
+import type { Recipe, Cuisine } from '../../lib/recipes';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -19,10 +20,21 @@ interface RecipeCardProps {
   onCook: () => void;
 }
 
+/** Curated fallback photography keyed by cuisine (AI/user recipes without images). */
+const CUISINE_IMAGES: Record<Cuisine, string> = {
+  italian: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80',
+  american: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+  mexican: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80',
+  asian: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80',
+  indian: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80',
+  mediterranean: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=800&q=80',
+  other: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHx2aWJyYW50JTIwZnJlc2glMjB2ZWdldGFibGVzJTIwaW5ncmVkaWVudHMlMjBjaW5lbWF0aWN8ZW58MHx8fHwxNzgzMzIzNzM2fDA&ixlib=rb-4.1.0&q=85',
+};
+
 function availabilityTone(ratio: number) {
-  if (ratio >= 0.8) return { bg: 'rgba(85, 194, 138, 0.18)', text: '#55C28A' };
-  if (ratio >= 0.5) return { bg: 'rgba(245, 158, 11, 0.18)', text: '#F59E0B' };
-  return { bg: 'rgba(255, 106, 97, 0.18)', text: '#FF6A61' };
+  if (ratio >= 0.8) return { bg: 'rgba(26, 224, 173, 0.92)', text: '#04231A' };
+  if (ratio >= 0.5) return { bg: 'rgba(255, 214, 0, 0.92)', text: '#231A00' };
+  return { bg: 'rgba(255, 77, 121, 0.92)', text: '#FFFFFF' };
 }
 
 function RecipeCard({
@@ -41,68 +53,106 @@ function RecipeCard({
   const ratio = totalIngredients > 0 ? availableCount / totalIngredients : 0;
   const tone = availabilityTone(ratio);
   const totalTime = recipe.prepTime + recipe.cookTime;
+  const imageUri = recipe.imageUrl || CUISINE_IMAGES[recipe.cuisine] || CUISINE_IMAGES.other;
 
   return (
     <Pressable
       onPress={onPress}
-      className="mb-4 overflow-hidden rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+      testID={`recipe-card-${recipe.id}`}
+      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.985 : 1 }] }]}
+      className="mb-5 overflow-hidden rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
     >
-      <LinearGradient
-        colors={[c.primary, c.teal]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ padding: 18, minHeight: 132, justifyContent: 'space-between' }}
-      >
-        <View className="flex-row items-start justify-between gap-3">
-          <View className="flex-1">
-            <Text className="text-2xl font-black text-white">{recipe.title}</Text>
-            <Text className="mt-2 text-sm font-semibold text-white/80" numberOfLines={2}>
-              {recipe.description || `${recipe.cuisine} ${recipe.mealType}`}
-            </Text>
+      {/* Magazine image hero */}
+      <View style={{ height: 200 }}>
+        <Image
+          source={{ uri: imageUri }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={350}
+          recyclingKey={recipe.id}
+        />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.25)', 'transparent', 'rgba(0,0,0,0.78)']}
+          locations={[0, 0.4, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Top chips + save */}
+        <View className="flex-row items-start justify-between p-3">
+          <View className="flex-1 flex-row flex-wrap gap-1.5">
+            <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: tone.bg }}>
+              <Text style={{ fontSize: 11, fontFamily: 'Outfit_700Bold', color: tone.text }}>
+                {availableCount}/{totalIngredients} in pantry
+              </Text>
+            </View>
+            {recipe.source === 'ai' ? (
+              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-2.5 py-1.5">
+                <Icon name="sparkles" size={11} color="#FFE033" />
+                <Text style={{ fontSize: 10, fontFamily: 'Outfit_700Bold', color: '#FFFFFF' }}>AI</Text>
+              </View>
+            ) : null}
+            {risky ? (
+              <View className="rounded-full bg-black/40 px-2.5 py-1.5">
+                <Text style={{ fontSize: 10, fontFamily: 'Outfit_700Bold', color: '#FFB4C6' }}>
+                  Allergen check
+                </Text>
+              </View>
+            ) : null}
           </View>
           <Pressable
             onPress={onFavorite}
             hitSlop={8}
-            className="h-10 w-10 items-center justify-center rounded-full bg-black/15"
+            testID={`recipe-favorite-${recipe.id}`}
+            className="h-10 w-10 items-center justify-center rounded-full"
+            style={{ backgroundColor: favorite ? c.primary : 'rgba(0,0,0,0.35)' }}
             accessibilityRole="button"
             accessibilityLabel={favorite ? 'Remove favorite' : 'Save favorite'}
           >
-            <Icon name="star" size={20} color={favorite ? '#FFFFFF' : 'rgba(255,255,255,0.72)'} />
+            <Icon name="star" size={18} color="#FFFFFF" />
           </Pressable>
         </View>
-        <View className="mt-4 flex-row flex-wrap items-center gap-2">
-          <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: tone.bg }}>
-            <Text className="text-xs font-bold" style={{ color: tone.text }}>
-              {availableCount} of {totalIngredients} ingredients available
-            </Text>
-          </View>
-          {recipe.source === 'ai' ? (
-            <View className="rounded-full bg-white/15 px-3 py-1.5">
-              <Text className="text-xs font-bold text-white">AI</Text>
-            </View>
-          ) : null}
-          {risky ? (
-            <View className="rounded-full bg-black/20 px-3 py-1.5">
-              <Text className="text-xs font-bold text-white">Allergen check</Text>
-            </View>
-          ) : null}
-        </View>
-      </LinearGradient>
 
+        {/* Editorial title overlay */}
+        <View style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
+          <Text
+            style={{ fontSize: 10, fontFamily: 'Outfit_700Bold', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}
+          >
+            {recipe.cuisine} · {recipe.mealType}
+          </Text>
+          <Text
+            numberOfLines={2}
+            style={{ marginTop: 3, fontSize: 26, lineHeight: 30, fontFamily: 'Fraunces_700Bold', color: '#FFFFFF' }}
+          >
+            {recipe.title}
+          </Text>
+        </View>
+      </View>
+
+      {/* Meta + CTA */}
       <View className="gap-4 p-4">
+        {recipe.description ? (
+          <Text numberOfLines={2} className="text-sm font-medium leading-5 text-muted dark:text-muted-dark">
+            {recipe.description}
+          </Text>
+        ) : null}
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-4">
             <View className="flex-row items-center gap-1.5">
-              <Icon name="clock" size={16} color={c.muted} />
+              <Icon name="clock" size={15} color={c.muted} />
               <Text className="text-sm font-semibold text-muted dark:text-muted-dark">{totalTime} min</Text>
             </View>
             <View className="flex-row items-center gap-1.5">
-              <Icon name="user" size={16} color={c.muted} />
+              <Icon name="user" size={15} color={c.muted} />
               <Text className="text-sm font-semibold text-muted dark:text-muted-dark">{recipe.servings}</Text>
             </View>
-            <Text className="text-sm font-semibold text-muted dark:text-muted-dark">★ {rating.toFixed(1)}</Text>
+            <View className="flex-row items-center gap-1">
+              <Icon name="star" size={14} color={c.amber} />
+              <Text className="text-sm font-semibold text-muted dark:text-muted-dark">{rating.toFixed(1)}</Text>
+            </View>
           </View>
-          {views > 0 ? <Text className="text-xs text-muted dark:text-muted-dark">{views} views</Text> : null}
+          {views > 0 ? (
+            <Text className="text-xs font-medium text-muted dark:text-muted-dark">{views} views</Text>
+          ) : null}
         </View>
         <Button label="Cook this" icon="chef" onPress={onCook} />
       </View>

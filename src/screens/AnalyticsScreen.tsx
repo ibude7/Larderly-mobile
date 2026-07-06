@@ -194,14 +194,14 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
 
         <View className="mb-4 flex-row flex-wrap gap-3">
           {[
-            { label: 'Pantry value', value: formatCurrency(totalValue, prefs.currency) },
-            { label: `${period}d spend`, value: formatCurrency(periodSpend, prefs.currency) },
-            { label: 'Items tracked', value: String(inventory.length) },
-            { label: 'Waste ratio', value: `${Math.round(wasteRatio * 100)}%` },
+            { label: 'Pantry value', value: formatCurrency(totalValue, prefs.currency), box: 'bg-primary rounded-3xl rounded-tr-xl', ink: 'text-white', sub: 'text-white/70' },
+            { label: `${period}d spend`, value: formatCurrency(periodSpend, prefs.currency), box: 'bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-3xl rounded-tl-xl', ink: 'text-ink dark:text-ink-dark', sub: 'text-muted dark:text-muted-dark' },
+            { label: 'Items tracked', value: String(inventory.length), box: 'bg-teal rounded-3xl rounded-br-xl', ink: 'text-[#04231A]', sub: 'text-[#04231A]/70' },
+            { label: 'Waste ratio', value: `${Math.round(wasteRatio * 100)}%`, box: 'bg-amber rounded-3xl rounded-bl-xl', ink: 'text-[#231A00]', sub: 'text-[#231A00]/70' },
           ].map((s) => (
-            <View key={s.label} className="min-w-[45%] flex-1 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
-              <Text className="text-xs text-muted dark:text-muted-dark">{s.label}</Text>
-              <Text className="mt-1 font-display text-2xl text-ink dark:text-ink-dark">{s.value}</Text>
+            <View key={s.label} className={`min-w-[45%] flex-1 p-4 ${s.box}`}>
+              <Text className={`text-[11px] font-bold uppercase tracking-wider ${s.sub}`}>{s.label}</Text>
+              <Text className={`mt-1 font-display text-3xl ${s.ink}`}>{s.value}</Text>
             </View>
           ))}
         </View>
@@ -214,7 +214,7 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
         )}
 
         <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
-          <Text className="font-semibold text-ink dark:text-ink-dark">Spending trend</Text>
+          <Text className="font-display text-lg text-ink dark:text-ink-dark">Spending trend</Text>
           <View className="mt-3 h-24 flex-row items-end gap-1">
             {trend.map((d) => (
               <View key={d.label} className="flex-1 items-center">
@@ -226,21 +226,21 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
         </View>
 
         <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
-          <Text className="font-semibold text-ink dark:text-ink-dark">Activity</Text>
+          <Text className="font-display text-lg text-ink dark:text-ink-dark">Activity</Text>
           <Text className="mt-2 text-sm text-muted dark:text-muted-dark">
             {activityCount.added} added · {activityCount.consumed} consumed · {activityCount.checkouts} checkouts · {activityCount.recipes} recipes cooked
           </Text>
         </View>
 
         <View className="mb-4 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
-          <Text className="mb-2 font-semibold text-ink dark:text-ink-dark">Sustainability</Text>
+          <Text className="mb-2 font-display text-lg text-ink dark:text-ink-dark">Sustainability</Text>
           <Text className="text-sm text-muted dark:text-muted-dark">Est. savings {formatCurrency(sustainability.estimatedSavings, prefs.currency)}</Text>
           <Text className="text-sm text-muted dark:text-muted-dark">CO₂ saved ~{sustainability.co2SavedKg}kg · Organic {sustainability.organicPercent}%</Text>
         </View>
 
         {byPerson.length > 0 && (
           <>
-            <Text className="mb-2 font-semibold text-ink dark:text-ink-dark">Spending by person</Text>
+            <Text className="mb-2 font-display text-lg text-ink dark:text-ink-dark">Spending by person</Text>
             {byPerson.map((p, i) => (
               <View key={i} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
                 <Text className="text-ink dark:text-ink-dark">{p.name}</Text>
@@ -252,7 +252,7 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
 
         {topPurchased.length > 0 && (
           <>
-            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">Most purchased</Text>
+            <Text className="mb-2 mt-4 font-display text-lg text-ink dark:text-ink-dark">Most purchased</Text>
             {topPurchased.map((item) => (
               <View key={item.name} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
                 <Text className="text-ink dark:text-ink-dark">{item.name}</Text>
@@ -264,7 +264,7 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
 
         {mostExpensive.length > 0 && (
           <>
-            <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">Most expensive items</Text>
+            <Text className="mb-2 mt-4 font-display text-lg text-ink dark:text-ink-dark">Most expensive items</Text>
             {mostExpensive.map((item) => (
               <View key={item.id} className="mb-2 flex-row justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
                 <Text className="text-ink dark:text-ink-dark">{item.name}</Text>
@@ -276,7 +276,7 @@ Top category: ${byCategory[0]?.name ?? 'n/a'}`;
           </>
         )}
 
-        <Text className="mb-2 mt-2 font-semibold text-ink dark:text-ink-dark">By category</Text>
+        <Text className="mb-2 mt-4 font-display text-lg text-ink dark:text-ink-dark">By category</Text>
         {byCategory.map((c) => (
           <View key={c.id} className="mb-2 flex-row items-center justify-between rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark px-4 py-3">
             <Text>{c.emoji} {c.name}</Text>

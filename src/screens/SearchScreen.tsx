@@ -237,14 +237,15 @@ export default function SearchScreen() {
       </View>
 
       {/* Segmented Control Tabs */}
-      <View className="flex-row gap-2 px-5 py-3 border-b border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
+      <View className="flex-row gap-2 px-5 py-3">
         {(['All', 'Pantry', 'Recipes', 'Shopping'] as Tab[]).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
-            className={`rounded-full px-4 py-1.5 ${activeTab === tab ? 'bg-primary' : 'border border-line dark:border-line-dark'}`}
+            testID={`search-tab-${tab.toLowerCase()}`}
+            className={`rounded-full px-4 py-2 ${activeTab === tab ? 'bg-ink dark:bg-ink-dark' : 'border border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
           >
-            <Text className={activeTab === tab ? 'text-xs font-bold text-white' : 'text-xs font-semibold text-muted dark:text-muted-dark'}>
+            <Text className={activeTab === tab ? 'text-xs font-bold text-canvas dark:text-canvas-dark' : 'text-xs font-semibold text-muted dark:text-muted-dark'}>
               {tab}
             </Text>
           </Pressable>

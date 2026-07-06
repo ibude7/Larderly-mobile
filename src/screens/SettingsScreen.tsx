@@ -727,7 +727,7 @@ function Section({
         <View className={`h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>
           <Icon name={icon} size={22} color={c.ink} />
         </View>
-        <Text className="text-base font-bold text-ink dark:text-ink-dark">{title}</Text>
+        <Text className="font-display text-lg text-ink dark:text-ink-dark">{title}</Text>
       </View>
       {children}
     </View>

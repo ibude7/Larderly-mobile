@@ -65,12 +65,13 @@ export default function AchievementsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View className="mb-6 flex-row flex-wrap gap-3">
-          <StatBox label="Unlocked" value={`${unlockedCount}/${ACHIEVEMENTS.length}`} highlight />
-          <StatBox label="Streak" value={`${counters.currentStreak} days`} sub={`Best: ${counters.longestStreak}`} />
+          <StatBox label="Unlocked" value={`${unlockedCount}/${ACHIEVEMENTS.length}`} tone="pink" />
+          <StatBox label="Streak" value={`${counters.currentStreak} days`} sub={`Best: ${counters.longestStreak}`} tone="yellow" />
           <StatBox
             label="Impact"
             value={`$${counters.dollarsSaved}`}
             sub={`${counters.itemsConsumedBeforeExpiry} saved from expiry`}
+            tone="teal"
           />
         </View>
 
@@ -107,7 +108,7 @@ export default function AchievementsScreen() {
                     <Text className="text-xs font-bold uppercase tracking-wide text-muted dark:text-muted-dark">{a.tier}</Text>
                     <Text className="mt-1 text-xs text-muted dark:text-muted-dark">{a.description}</Text>
                   </View>
-                  <Icon name={unlocked ? 'check' : 'lock'} size={18} color={unlocked ? '#10b981' : c.muted} />
+                  <Icon name={unlocked ? 'check' : 'lock'} size={18} color={unlocked ? c.teal : c.muted} />
                 </View>
                 {!unlocked ? (
                   <View className="mt-3">
@@ -126,26 +127,29 @@ export default function AchievementsScreen() {
   );
 }
 
+const STAT_TONES = {
+  pink: { box: 'bg-primary rounded-3xl rounded-tr-xl', ink: 'text-white', sub: 'text-white/70' },
+  yellow: { box: 'bg-amber rounded-3xl rounded-tl-xl', ink: 'text-[#231A00]', sub: 'text-[#231A00]/70' },
+  teal: { box: 'bg-teal rounded-3xl rounded-br-xl', ink: 'text-[#04231A]', sub: 'text-[#04231A]/70' },
+} as const;
+
 function StatBox({
   label,
   value,
   sub,
-  highlight,
+  tone,
 }: {
   label: string;
   value: string;
   sub?: string;
-  highlight?: boolean;
+  tone: keyof typeof STAT_TONES;
 }) {
+  const t = STAT_TONES[tone];
   return (
-    <View
-      className={`min-w-[45%] flex-1 rounded-2xl border p-4 ${
-        highlight ? 'border-primary/30 bg-primary/5' : 'border-line dark:border-line-dark bg-surface dark:bg-surface-dark'
-      }`}
-    >
-      <Text className="text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">{label}</Text>
-      <Text className="mt-1 text-2xl font-black text-ink dark:text-ink-dark">{value}</Text>
-      {sub ? <Text className="mt-1 text-xs text-muted dark:text-muted-dark">{sub}</Text> : null}
+    <View className={`min-w-[45%] flex-1 p-4 ${t.box}`}>
+      <Text className={`text-[11px] font-bold uppercase tracking-wider ${t.sub}`}>{label}</Text>
+      <Text className={`mt-1 font-display text-3xl ${t.ink}`}>{value}</Text>
+      {sub ? <Text className={`mt-1 text-xs font-medium ${t.sub}`}>{sub}</Text> : null}
     </View>
   );
 }

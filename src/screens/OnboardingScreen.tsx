@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Share } from 'react-native';
+import { View, Text, ScrollView, Pressable, Share, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import LottieView from 'lottie-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -27,15 +27,18 @@ import { requestNotificationPermission } from '../lib/push';
 import { pickProfilePhoto, uploadUserAvatar } from '../lib/avatar';
 
 const TOTAL_STEPS = 8;
-const STEP_ANIMATIONS = [
-  require('../../assets/lottie/household.json'),
-  require('../../assets/lottie/household.json'),
-  require('../../assets/lottie/pantry.json'),
-  require('../../assets/lottie/shopping.json'),
-  require('../../assets/lottie/pantry.json'),
-  require('../../assets/lottie/scan.json'),
-  require('../../assets/lottie/pantry.json'),
-  require('../../assets/lottie/household.json'),
+const IMG_KITCHEN = 'https://images.pexels.com/photos/10568352/pexels-photo-10568352.jpeg?auto=compress&cs=tinysrgb&w=900';
+const IMG_VEGGIES = 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHx2aWJyYW50JTIwZnJlc2glMjB2ZWdldGFibGVzJTIwaW5ncmVkaWVudHMlMjBjaW5lbWF0aWN8ZW58MHx8fHwxNzgzMzIzNzM2fDA&ixlib=rb-4.1.0&q=85';
+const IMG_MARKET = 'https://images.unsplash.com/photo-1518843875459-f738682238a6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwzfHx2aWJyYW50JTIwZnJlc2glMjB2ZWdldGFibGVzJTIwaW5ncmVkaWVudHMlMjBjaW5lbWF0aWN8ZW58MHx8fHwxNzgzMzIzNzM2fDA&ixlib=rb-4.1.0&q=85';
+const STEP_IMAGES = [
+  IMG_KITCHEN,
+  IMG_KITCHEN,
+  IMG_VEGGIES,
+  IMG_MARKET,
+  IMG_VEGGIES,
+  IMG_MARKET,
+  IMG_VEGGIES,
+  IMG_KITCHEN,
 ] as const;
 const DIET_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Pescatarian', 'Halal', 'Kosher'];
 const STORES = ["Whole Foods", "Trader Joe's", 'Costco', 'Target', 'Walmart', 'Kroger', 'Safeway', 'Publix', 'Aldi'];
@@ -235,17 +238,46 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        <View className="h-56 items-center justify-center">
-          <LottieView
-            source={STEP_ANIMATIONS[step]}
-            autoPlay
-            loop
-            style={{ width: 220, height: 220 }}
+        {/* Cinematic step hero */}
+        <View
+          style={{
+            height: 230,
+            borderRadius: 32,
+            borderBottomRightRadius: 12,
+            overflow: 'hidden',
+            marginBottom: 24,
+          }}
+        >
+          <Image
+            source={{ uri: STEP_IMAGES[step] }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={450}
           />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.15)', 'transparent', 'rgba(0,0,0,0.78)']}
+            locations={[0, 0.35, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={{ position: 'absolute', left: 18, right: 18, bottom: 16 }}>
+            <View
+              style={{
+                alignSelf: 'flex-start',
+                backgroundColor: 'rgba(255,255,255,0.22)',
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontFamily: 'Outfit_700Bold', letterSpacing: 1, color: '#FFFFFF' }}>
+                STEP {step + 1} OF {TOTAL_STEPS}
+              </Text>
+            </View>
+            <Text style={{ marginTop: 8, fontSize: 30, lineHeight: 34, fontFamily: 'Fraunces_700Bold', color: '#FFFFFF' }}>
+              {STEP_TITLES[step]}
+            </Text>
+          </View>
         </View>
-
-        <Text className="text-sm font-semibold text-primary">Step {step + 1} of {TOTAL_STEPS}</Text>
-        <Text className="mb-1 mt-2 font-display text-3xl text-ink dark:text-ink-dark">{STEP_TITLES[step]}</Text>
 
         <Animated.View style={stepStyle}>
         {step === 0 && (

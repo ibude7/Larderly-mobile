@@ -8,6 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useAppColors } from '../hooks/useAppColors';
 
 const NOTIFY_KEY = 'larderly:mealPlannerNotify';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const mealPlannerAnimation = require('../../assets/lottie/meal-planner-coming-soon.json');
 
 export default function ComingSoonScreen() {

@@ -285,7 +285,7 @@ export default function PantryScreen() {
   );
 
   return (
-    <View className="flex-1 bg-canvas">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
 
       {isLoading ? (
@@ -313,27 +313,23 @@ export default function PantryScreen() {
         removeClippedSubviews={Platform.OS === 'android'}
         ListHeaderComponent={
           <View className="px-5 pb-4 pt-5">
-            <View className="mb-4 flex-row items-center justify-between">
-              <Text className="font-display text-4xl text-ink">Pantry</Text>
-              <View className="flex-row gap-2">
-                <Pressable onPress={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))} className="h-9 w-9 items-center justify-center rounded-full border border-line bg-surface">
+            <View className="mb-3 flex-row items-center justify-between">
+              <View>
+                <Text className="font-display text-4xl text-ink dark:text-ink-dark">Pantry</Text>
+                <Text className="mt-0.5 text-sm font-medium text-muted dark:text-muted-dark">
+                  {items.length} item{items.length === 1 ? '' : 's'} on your shelves
+                </Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <Pressable
+                  onPress={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))}
+                  testID="pantry-view-toggle"
+                  className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+                >
                   <Icon name={viewMode === 'grid' ? 'grid' : 'shelf'} size={16} color={c.ink} />
                 </Pressable>
                 <Button label="Add" icon="plus" size="sm" onPress={() => setAddOpen(true)} />
               </View>
-            </View>
-            <View className="mb-3 flex-row gap-2">
-              <View className="flex-1"><VoiceInputButton label="Voice add" onTranscript={handleVoice} /></View>
-              <Button label={identifying ? '…' : 'Photo AI'} icon="camera" size="sm" variant="secondary" onPress={handlePhotoIdentify} loading={identifying} />
-            </View>
-            <View className="mb-3 flex-row gap-2">
-              <Button label={selectMode ? 'Cancel select' : 'Select'} size="sm" variant="ghost" onPress={() => { setSelectMode((v) => !v); setSelected(new Set()); }} />
-              {selectMode && selected.size > 0 && (
-                <>
-                  <Button label={`Delete (${selected.size})`} size="sm" variant="danger" onPress={handleBulkDelete} />
-                  <Button label="→ Pantry" size="sm" variant="secondary" onPress={() => handleBulkMove('Pantry')} />
-                </>
-              )}
             </View>
             <TextField
               value={search}
@@ -341,6 +337,25 @@ export default function PantryScreen() {
               placeholder="Search items…"
               icon="search"
             />
+            <View className="mt-3 flex-row items-center gap-2">
+              <View className="flex-1"><VoiceInputButton label="Voice add" onTranscript={handleVoice} /></View>
+              <Button label={identifying ? '…' : 'Photo AI'} icon="camera" size="sm" variant="secondary" onPress={handlePhotoIdentify} loading={identifying} />
+              <Pressable
+                onPress={() => { setSelectMode((v) => !v); setSelected(new Set()); }}
+                testID="pantry-select-toggle"
+                className={`h-10 w-10 items-center justify-center rounded-full border ${selectMode ? 'border-ink bg-ink dark:border-ink-dark dark:bg-ink-dark' : 'border-line dark:border-line-dark bg-surface dark:bg-surface-dark'}`}
+                accessibilityRole="button"
+                accessibilityLabel={selectMode ? 'Cancel selection' : 'Select items'}
+              >
+                <Icon name="checkmark-done" size={16} color={selectMode ? c.canvas : c.ink} />
+              </Pressable>
+            </View>
+            {selectMode && selected.size > 0 && (
+              <View className="mt-3 flex-row gap-2">
+                <Button label={`Delete (${selected.size})`} size="sm" variant="danger" onPress={handleBulkDelete} />
+                <Button label="→ Pantry" size="sm" variant="secondary" onPress={() => handleBulkMove('Pantry')} />
+              </View>
+            )}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
               <View className="flex-row gap-2">
                 <Chip label="All" active={activeLocation === 'All'} onPress={() => dispatch({ type: 'SET_LOCATION', payload: 'All' })} />
