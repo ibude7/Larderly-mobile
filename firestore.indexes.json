@@ -52,27 +52,5 @@
         }
       ]
     }
-  ],
-  "fieldOverrides": [
-    {
-      "collectionGroup": "households",
-      "fieldPath": "members",
-      "indexes": [
-        {
-          "queryScope": "COLLECTION",
-          "arrayConfig": "CONTAINS"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "recipes",
-      "fieldPath": "tags",
-      "indexes": [
-        {
-          "queryScope": "COLLECTION",
-          "arrayConfig": "CONTAINS"
-        }
-      ]
-    }
   ]
 }

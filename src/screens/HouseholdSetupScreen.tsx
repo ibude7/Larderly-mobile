@@ -24,7 +24,7 @@ export default function HouseholdSetupScreen() {
     setLoading(true);
     try {
       const code = await ctxCreateHousehold(name);
-      showToast(`Household ready — invite code: ${code}`, 'success');
+      showToast(code ? `Household ready — invite code: ${code}` : 'Household ready', 'success');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not create household', 'error');
     } finally {

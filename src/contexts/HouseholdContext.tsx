@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import {
   doc,
   getDoc,
+  getDocFromServer,
   onSnapshot,
   updateDoc,
   setDoc,
@@ -44,56 +45,117 @@ function inviteExpiryDate(date = new Date()): Date {
 
 export function HouseholdProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const [profileHouseholdId, setProfileHouseholdId] = useState<string | null>(null);
   const [householdId, setHouseholdIdState] = useState<string | null>(null);
   const [role, setRole] = useState<Role>('admin');
   const { generateInviteCode } = useInvite();
 
   const setHouseholdId = useCallback((id: string | null) => {
+    setProfileHouseholdId(id);
     setHouseholdIdState(id);
   }, []);
 
   const canEdit = role !== 'viewer';
 
+  const clearInvalidHousehold = useCallback(() => {
+    setProfileHouseholdId(null);
+    setHouseholdIdState(null);
+    setRole('admin');
+  }, []);
+
   // Listen to the user's document to get the householdId
   useEffect(() => {
     if (!user) {
+      setProfileHouseholdId(null);
       setHouseholdIdState(null);
       setRole('admin');
       return;
     }
     const unsubUser = onSnapshot(doc(db, 'users', user.uid), (snap) => {
-      if (!snap.exists()) return;
+      if (!snap?.exists()) {
+        setProfileHouseholdId(null);
+        setHouseholdIdState(null);
+        return;
+      }
       const data = snap.data() ?? {};
-      setHouseholdIdState((data.householdId as string) || null);
+      const nextHouseholdId = (data.householdId as string) || null;
+      setProfileHouseholdId(nextHouseholdId);
+      if (!nextHouseholdId) setHouseholdIdState(null);
     });
     return unsubUser;
   }, [user]);
 
-  // Listen to the household document to get the member roles and compute the role
+  // Validate the profile household id before exposing it to app data hooks.
   useEffect(() => {
-    if (!user || !householdId) {
+    if (!user || !profileHouseholdId) {
+      setHouseholdIdState(null);
       setRole('admin');
       return;
     }
-    const unsubHousehold = onSnapshot(doc(db, 'households', householdId), (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data() ?? {};
+
+    setHouseholdIdState(null);
+    setRole('admin');
+
+    let active = true;
+    let unsubHousehold: (() => void) | undefined;
+    const householdRef = doc(db, 'households', profileHouseholdId);
+
+    const applyHousehold = (data: Record<string, unknown>) => {
+      const members = (data.members ?? []) as string[];
+      if (!members.includes(user.uid)) {
+        clearInvalidHousehold();
+        return false;
+      }
+
       const roles = (data.memberRoles ?? {}) as Record<string, Role>;
+      setHouseholdIdState(profileHouseholdId);
       if (data.ownerId === user.uid) {
         setRole('admin');
       } else {
         setRole(roles[user.uid] ?? 'editor');
       }
-    });
-    return unsubHousehold;
-  }, [user, householdId]);
+      return true;
+    };
+
+    const validateAndListen = async () => {
+      try {
+        const serverSnap = await getDocFromServer(householdRef);
+        if (!active) return;
+        if (!serverSnap.exists() || !applyHousehold(serverSnap.data() ?? {})) return;
+
+        unsubHousehold = onSnapshot(
+          householdRef,
+          (snap) => {
+            if (!snap?.exists()) {
+              clearInvalidHousehold();
+              return;
+            }
+            applyHousehold(snap.data() ?? {});
+          },
+          () => {
+            clearInvalidHousehold();
+          },
+        );
+      } catch {
+        if (active) clearInvalidHousehold();
+      }
+    };
+
+    validateAndListen();
+
+    return () => {
+      active = false;
+      if (unsubHousehold) unsubHousehold();
+    };
+  }, [user, profileHouseholdId, clearInvalidHousehold]);
 
   const createHousehold = useCallback(async (name: string): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
     const newHouseholdRef = doc(collection(db, 'households'));
     const newHouseholdId = newHouseholdRef.id;
-    const code = generateInviteCode();
-    const rateLimitKey = inviteRateLimitKey();
+    const shouldCreateInviteCode = !user.isAnonymous;
+    const code = shouldCreateInviteCode ? generateInviteCode() : '';
+    const rateLimitKey = shouldCreateInviteCode ? inviteRateLimitKey() : '';
     const batch = writeBatch(db);
 
     batch.set(newHouseholdRef, {
@@ -102,31 +164,33 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       members: [user.uid],
       memberRoles: { [user.uid]: 'admin' },
       memberNames: { [user.uid]: user.displayName || user.email || 'Owner' },
-      inviteCode: code,
+      inviteCode: code || null,
       dietaryPrefs: [],
       allergies: '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
 
-    batch.set(doc(db, 'inviteCodes', code), {
-      householdId: newHouseholdId,
-      ownerId: user.uid,
-      rateLimitKey,
-      createdAt: serverTimestamp(),
-      expiresAt: inviteExpiryDate(),
-    });
-
-    batch.set(
-      doc(db, 'users', user.uid, 'inviteCodeCounters', rateLimitKey),
-      {
+    if (shouldCreateInviteCode) {
+      batch.set(doc(db, 'inviteCodes', code), {
+        householdId: newHouseholdId,
         ownerId: user.uid,
-        count: increment(1),
-        windowStart: new Date(`${rateLimitKey}T00:00:00.000Z`),
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
+        rateLimitKey,
+        createdAt: serverTimestamp(),
+        expiresAt: inviteExpiryDate(),
+      });
+
+      batch.set(
+        doc(db, 'users', user.uid, 'inviteCodeCounters', rateLimitKey),
+        {
+          ownerId: user.uid,
+          count: increment(1),
+          windowStart: new Date(`${rateLimitKey}T00:00:00.000Z`),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+    }
 
     batch.update(doc(db, 'users', user.uid), {
       householdId: newHouseholdId,
@@ -144,6 +208,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       actorName: user.displayName || user.email || 'Owner',
     });
     
+    setProfileHouseholdId(newHouseholdId);
     setHouseholdIdState(newHouseholdId);
     return code;
   }, [user, generateInviteCode]);
@@ -172,6 +237,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       actorId: user.uid,
       actorName: user.displayName || user.email || 'Member',
     });
+    setProfileHouseholdId(targetHouseholdId);
     setHouseholdIdState(targetHouseholdId);
   }, [user]);
 
@@ -202,6 +268,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       actorName: name,
     });
 
+    setProfileHouseholdId(null);
     setHouseholdIdState(null);
   }, [user, householdId]);
 
