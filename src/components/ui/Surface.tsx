@@ -1,10 +1,9 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { GlassView } from 'expo-glass-effect';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
+import { canUseLiquidGlass } from '../../lib/liquidGlass';
 
 interface ScreenProps {
   children: ReactNode;
@@ -35,14 +34,6 @@ export function Screen({ children, padded = false, style }: ScreenProps) {
         style,
       ]}
     >
-      <LinearGradient
-        pointerEvents="none"
-        colors={[c.primaryGlow, 'transparent', c.tealGlow]}
-        locations={[0, 0.46, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
       {children}
     </View>
   );
@@ -55,13 +46,13 @@ export function Surface({
   style,
 }: SurfaceProps) {
   const c = useAppColors();
-  const theme = useTheme();
+  const useNativeGlass = variant === 'glass' && canUseLiquidGlass();
   const backgroundColor =
     variant === 'muted'
       ? c.surfaceMuted
       : variant === 'elevated'
         ? c.surfaceElevated
-        : variant === 'glass'
+        : variant === 'glass' && !useNativeGlass
           ? c.surfaceGlass
           : c.surface;
 
@@ -69,7 +60,7 @@ export function Surface({
     styles.surface,
     {
       backgroundColor,
-      borderColor: variant === 'glass' ? c.glassLine : c.line,
+      borderColor: variant === 'glass' ? c.lineStrong : c.line,
       padding: padded ? 18 : 0,
       shadowColor: c.shadow,
     },
@@ -77,14 +68,21 @@ export function Surface({
   ];
 
   if (variant === 'glass') {
+    if (useNativeGlass) {
+      return (
+        <GlassView
+          glassEffectStyle="regular"
+          colorScheme={c.blurTint === 'dark' ? 'dark' : 'light'}
+          tintColor={c.blurTint === 'dark' ? 'rgba(30, 29, 25, 0.26)' : 'rgba(255, 253, 246, 0.34)'}
+          style={[containerStyle, styles.nativeGlass]}
+        >
+          <View style={styles.glassContent}>{children}</View>
+        </GlassView>
+      );
+    }
+
     return (
       <View style={containerStyle}>
-        <BlurView intensity={c.blurIntensity} tint={theme} style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(255,255,255,0.12)', 'transparent']}
-          style={StyleSheet.absoluteFill}
-        />
         <View style={styles.glassContent}>{children}</View>
       </View>
     );
@@ -107,13 +105,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   surface: {
-    borderRadius: 24,
-    borderWidth: 1,
+    borderRadius: 8,
+    borderWidth: 1.5,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.16,
-    shadowRadius: 34,
-    elevation: 8,
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 0,
+    elevation: 2,
+  },
+  nativeGlass: {
+    backgroundColor: 'transparent',
   },
   glassContent: {
     position: 'relative',
