@@ -10,14 +10,33 @@ export type TabParamList = {
   Meals: undefined;
 };
 
-export type RootStackParamList = {
-  Main: NavigatorScreenParams<TabParamList> | undefined;
-  Auth: undefined;
-  HouseholdSetup: undefined;
-  Onboarding: undefined;
-  Join: { code: string };
+export type AuthStackParamList = {
+  Landing: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  ForgotPassword: undefined;
+  PhoneSignIn: undefined;
+  PhoneVerify: undefined;
+  MfaVerify: undefined;
+};
+
+export type OnboardingStackParamList = {
+  Profile: undefined;
+  Household: undefined;
+  Invite: undefined;
+  Dietary: undefined;
+  Stores: undefined;
+  Notifications: undefined;
+  Scan: undefined;
+  ConfirmPantry: undefined;
+  Finish: undefined;
+};
+
+export type MainStackParamList = {
+  Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Settings: undefined;
   Search: undefined;
+  Join: { code: string };
   Achievements: undefined;
   Notifications: undefined;
   Reminders: undefined;
@@ -26,14 +45,22 @@ export type RootStackParamList = {
   MealPlanner: undefined;
 };
 
-/** Stack screens pushed above the tab navigator. */
+export type RootStackParamList = {
+  Auth: undefined;
+  Onboarding: undefined;
+  Main: undefined;
+};
+
+export type AuthStackNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
+export type OnboardingStackNavigationProp = NativeStackNavigationProp<OnboardingStackParamList>;
+export type MainStackNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 /** Bottom-tab screens only (no stack routes). */
 export type TabNavigationProp = BottomTabNavigationProp<TabParamList>;
 
-/** Tab screens that also navigate to root stack routes (Settings, Search, …). */
+/** Tab screens that also navigate to main stack routes (Settings, Search, …). */
 export type TabScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList>,
-  NativeStackNavigationProp<RootStackParamList>
+  NativeStackNavigationProp<MainStackParamList>
 >;

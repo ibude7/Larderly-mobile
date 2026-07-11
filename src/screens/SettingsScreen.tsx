@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import {
   collection,
   doc,
@@ -19,10 +19,12 @@ import {
 } from '@react-native-firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import TextField from '../components/ui/TextField';
 import Button from '../components/ui/Button';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { Icon } from '../components/ui/Icon';
+import { GlassCard } from '../components/ui/Surface';
 import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useProfile } from '../contexts/ProfileContext';
@@ -64,7 +66,7 @@ function describeProvider(providerIds: string[], isAnonymous: boolean): string {
 
 export default function SettingsScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const {
     user,
     signOut,
@@ -366,32 +368,36 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
-          <View className="mb-1 flex-row items-center gap-1.5">
-            <Icon name="sparkles" size={14} color={c.primary} />
-            <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
-              Workspace settings
-            </Text>
-          </View>
-          <Text className="font-display text-3xl text-ink dark:text-ink-dark">Tune your pantry</Text>
-          <View className="mt-3 flex-row flex-wrap gap-2">
-            <Chip label={`${locations.length} locations`} />
-            <Chip label={providerLabel} highlight />
-            {user?.email ? (
-              <Chip
-                label={user.email}
-                icon={user.emailVerified ? 'success' : 'mail'}
-                warn={!user.emailVerified}
-              />
-            ) : null}
-          </View>
-        </View>
+        <Animated.View entering={FadeInUp.duration(500).springify()}>
+          <GlassCard padded>
+            <View className="mb-1 flex-row items-center gap-1.5">
+              <Icon name="sparkles" size={14} color={c.primary} />
+              <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+                WORKSPACE
+              </Text>
+            </View>
+            <Text className="font-display text-3xl text-ink dark:text-ink-dark">Tune your pantry</Text>
+            <View className="mt-3 flex-row flex-wrap gap-2">
+              <Chip label={`${locations.length} locations`} />
+              <Chip label={providerLabel} highlight />
+              {user?.email ? (
+                <Chip
+                  label={user.email}
+                  icon={user.emailVerified ? 'success' : 'mail'}
+                  warn={!user.emailVerified}
+                />
+              ) : null}
+            </View>
+          </GlassCard>
+        </Animated.View>
 
         {isAnonymous ? (
-          <Section title="Upgrade guest session" icon="sparkles" iconBg="bg-primary">
+          <Animated.View entering={FadeInUp.duration(500).delay(80).springify()}>
+            <Section title="Upgrade guest session" icon="sparkles" iconBg="bg-primary" eyebrow="ACCOUNT">
+
             <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
               Create an account to keep your items, meals, and shopping list backed up.
             </Text>
@@ -455,10 +461,12 @@ export default function SettingsScreen() {
               </View>
             )}
           </Section>
+          </Animated.View>
         ) : null}
 
         {needsVerification ? (
-          <Section title="Verify your email" icon="mail" iconBg="bg-warning/10">
+          <Animated.View entering={FadeInUp.duration(500).delay(120).springify()}>
+            <Section title="Verify your email" icon="mail" iconBg="bg-warning/10" eyebrow="SECURITY">
             <Text className="mb-3 text-sm text-muted dark:text-muted-dark">
               We sent a link to <Text className="font-bold text-ink dark:text-ink-dark">{user?.email}</Text>. Tap the
               link to confirm your address.
@@ -470,9 +478,11 @@ export default function SettingsScreen() {
               loading={resending}
             />
           </Section>
+          </Animated.View>
         ) : null}
 
-        <Section title="Profile" icon="user" iconBg="bg-primary/10">
+        <Animated.View entering={FadeInUp.duration(500).delay(160).springify()}>
+          <Section title="Profile" icon="user" iconBg="bg-primary/10" eyebrow="YOU">
           <View className="mb-4 items-center gap-3">
             {photoUrl ? (
               <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-line-dark" />
@@ -526,26 +536,32 @@ export default function SettingsScreen() {
             />
           </View>
         </Section>
+        </Animated.View>
 
         {householdId ? (
-          <Section title="Household" icon="user" iconBg="bg-info/10">
-            <HouseholdSettingsSection />
-          </Section>
+          <Animated.View entering={FadeInUp.duration(500).delay(200).springify()}>
+            <Section title="Household" icon="user" iconBg="bg-info/10" eyebrow="COLLABORATION">
+              <HouseholdSettingsSection />
+            </Section>
+          </Animated.View>
         ) : null}
 
-        <Section title="Preferences" icon="sparkles" iconBg="bg-primary/10">
-          <PreferencesSection />
-        </Section>
+        <Animated.View entering={FadeInUp.duration(500).delay(240).springify()}>
+          <Section title="Preferences" icon="sparkles" iconBg="bg-primary/10" eyebrow="SETTINGS">
+            <PreferencesSection />
+          </Section>
+        </Animated.View>
 
-        <Section title="Security & sync" icon="lock" iconBg="bg-warning/10">
-          <SecuritySection />
-          <View className="mt-4 rounded-xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
-            <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Sync status</Text>
-            <Text className="mt-1 text-xs text-muted dark:text-muted-dark">
-              {online ? (syncing ? 'Syncing…' : 'Online') : 'Offline'}
-              {lastSyncedAt ? ` · Last sync ${new Date(lastSyncedAt).toLocaleString()}` : ''}
-            </Text>
-          </View>
+        <Animated.View entering={FadeInUp.duration(500).delay(280).springify()}>
+          <Section title="Security & sync" icon="lock" iconBg="bg-warning/10" eyebrow="SECURITY">
+            <SecuritySection />
+            <View className="mt-4 overflow-hidden rounded-2xl bg-canvas/80 dark:bg-canvas-dark/80 p-3">
+              <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Sync status</Text>
+              <Text className="mt-1 text-xs text-muted dark:text-muted-dark">
+                {online ? (syncing ? 'Syncing…' : 'Online') : 'Offline'}
+                {lastSyncedAt ? ` · Last sync ${new Date(lastSyncedAt).toLocaleString()}` : ''}
+              </Text>
+            </View>
           {loginEvents.length > 0 && (
             <View className="mt-4">
               <Text className="mb-2 text-sm font-semibold text-ink dark:text-ink-dark">Recent sign-ins</Text>
@@ -563,8 +579,10 @@ export default function SettingsScreen() {
             </View>
           )}
         </Section>
+        </Animated.View>
 
-        <Section title="Storage locations" icon="shelf" iconBg="bg-info/10">
+        <Animated.View entering={FadeInUp.duration(500).delay(320).springify()}>
+          <Section title="Storage locations" icon="shelf" iconBg="bg-info/10" eyebrow="ORGANIZE">
           <View className="mb-4 flex-row items-center justify-between">
             <Text className="text-sm text-muted dark:text-muted-dark">Pantry, Fridge, Freezer, etc.</Text>
             <Button
@@ -624,72 +642,81 @@ export default function SettingsScreen() {
             </View>
           )}
         </Section>
+        </Animated.View>
 
-        <Section title="More" icon="grid" iconBg="bg-primary/10">
-          <View className="gap-2">
-            <Button label="Notifications" icon="bell" variant="secondary" onPress={() => navigation.navigate('Notifications')} />
-            <Button label="Reminders" icon="clock" variant="secondary" onPress={() => navigation.navigate('Reminders')} />
-            <Button label="Nutrition" icon="nutrition" variant="secondary" onPress={() => navigation.navigate('Nutrition')} />
-            <Button label="Analytics" icon="trending-down" variant="secondary" onPress={() => navigation.navigate('Analytics')} />
-            <Button label="Meal planner" icon="calendar" variant="secondary" onPress={() => navigation.navigate('MealPlanner')} />
-          </View>
-        </Section>
-
-        <Section title="Progress" icon="star" iconBg="bg-primary/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
-            Track streaks, badges, and milestones as you use Larderly.
-          </Text>
-          <Button
-            label="View achievements"
-            icon="star"
-            variant="secondary"
-            onPress={() => navigation.navigate('Achievements')}
-          />
-        </Section>
-
-        <Section title="Your data" icon="download" iconBg="bg-success/10">
-          <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
-            Download a copy of your pantry, shopping history, meal plans, and storage locations.
-          </Text>
-          <View className="gap-2">
-            <Button
-              label={exporting ? 'Preparing export…' : 'Export data'}
-              icon="download"
-              variant="secondary"
-              onPress={handleExport}
-              loading={exporting}
-            />
-            <Button
-              label="Export Pantry (CSV)"
-              icon="download"
-              variant="secondary"
-              onPress={handleExportPantryCsv}
-            />
-            <Button
-              label="Export Shopping History (CSV)"
-              icon="download"
-              variant="secondary"
-              onPress={handleExportShoppingCsv}
-            />
-          </View>
-        </Section>
-
-        <Section title="Account" icon="logout" iconBg="bg-danger/10">
-          <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
-            {isAnonymous
-              ? 'Signing out clears this guest session.'
-              : 'Securely end your session on this device.'}
-          </Text>
-          <Button label="Sign out" icon="logout" variant="danger" onPress={signOut} />
-          {!isAnonymous && (
-            <View className="mt-3">
-              <Button label="Delete account" variant="ghost" onPress={handleDeleteAccount} />
+        <Animated.View entering={FadeInUp.duration(500).delay(360).springify()}>
+          <Section title="More" icon="grid" iconBg="bg-primary/10" eyebrow="FEATURES">
+            <View className="gap-2">
+              <Button label="Notifications" icon="bell" variant="secondary" onPress={() => navigation.navigate('Notifications')} />
+              <Button label="Reminders" icon="clock" variant="secondary" onPress={() => navigation.navigate('Reminders')} />
+              <Button label="Nutrition" icon="nutrition" variant="secondary" onPress={() => navigation.navigate('Nutrition')} />
+              <Button label="Analytics" icon="trending-down" variant="secondary" onPress={() => navigation.navigate('Analytics')} />
+              <Button label="Meal planner" icon="calendar" variant="secondary" onPress={() => navigation.navigate('MealPlanner')} />
             </View>
-          )}
-        </Section>
+          </Section>
+        </Animated.View>
 
-        <View className="items-center pt-2">
-          <Text className="text-xs font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
+        <Animated.View entering={FadeInUp.duration(500).delay(400).springify()}>
+          <Section title="Progress" icon="star" iconBg="bg-primary/10" eyebrow="GAMIFICATION">
+            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
+              Track streaks, badges, and milestones as you use Larderly.
+            </Text>
+            <Button
+              label="View achievements"
+              icon="star"
+              variant="secondary"
+              onPress={() => navigation.navigate('Achievements')}
+            />
+          </Section>
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.duration(500).delay(440).springify()}>
+          <Section title="Your data" icon="download" iconBg="bg-success/10" eyebrow="EXPORT">
+            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
+              Download a copy of your pantry, shopping history, meal plans, and storage locations.
+            </Text>
+            <View className="gap-2">
+              <Button
+                label={exporting ? 'Preparing export…' : 'Export data'}
+                icon="download"
+                variant="secondary"
+                onPress={handleExport}
+                loading={exporting}
+              />
+              <Button
+                label="Export Pantry (CSV)"
+                icon="download"
+                variant="secondary"
+                onPress={handleExportPantryCsv}
+              />
+              <Button
+                label="Export Shopping History (CSV)"
+                icon="download"
+                variant="secondary"
+                onPress={handleExportShoppingCsv}
+              />
+          </View>
+        </Section>
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.duration(500).delay(480).springify()}>
+          <Section title="Account" icon="logout" iconBg="bg-danger/10" eyebrow="SESSION">
+            <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
+              {isAnonymous
+                ? 'Signing out clears this guest session.'
+                : 'Securely end your session on this device.'}
+            </Text>
+            <Button label="Sign out" icon="logout" variant="danger" onPress={signOut} />
+            {!isAnonymous && (
+              <View className="mt-3">
+                <Button label="Delete account" variant="ghost" onPress={handleDeleteAccount} />
+              </View>
+            )}
+          </Section>
+        </Animated.View>
+
+        <View className="items-center pt-4">
+          <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted dark:text-muted-dark">
             Larderly · v1.0
           </Text>
         </View>
@@ -713,24 +740,36 @@ function Section({
   title,
   icon,
   iconBg,
+  eyebrow,
   children,
 }: {
   title: string;
   icon: Parameters<typeof Icon>[0]['name'];
   iconBg: string;
+  eyebrow?: string;
   children: React.ReactNode;
 }) {
   const c = useAppColors();
   return (
-    <View className="rounded-card border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-5">
+    <GlassCard padded>
       <View className="mb-4 flex-row items-center gap-3">
-        <View className={`h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>
-          <Icon name={icon} size={22} color={c.ink} />
+        <View
+          className="h-11 w-11 items-center justify-center rounded-2xl"
+          style={{ backgroundColor: `${c.primary}12` }}
+        >
+          <Icon name={icon} size={22} color={c.primary} />
         </View>
-        <Text className="font-display text-lg text-ink dark:text-ink-dark">{title}</Text>
+        <View className="min-w-0 flex-1">
+          {eyebrow ? (
+            <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted dark:text-muted-dark">
+              {eyebrow}
+            </Text>
+          ) : null}
+          <Text className="font-display text-lg text-ink dark:text-ink-dark">{title}</Text>
+        </View>
       </View>
       {children}
-    </View>
+    </GlassCard>
   );
 }
 

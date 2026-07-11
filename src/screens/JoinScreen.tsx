@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import type { RootStackNavigationProp, RootStackParamList } from '../navigation/types';
+import type { MainStackNavigationProp, MainStackParamList } from '../navigation/types';
 import { doc, getDoc } from '@react-native-firebase/firestore';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -12,8 +12,8 @@ import { useToast } from '../contexts/ToastContext';
 import { db } from '../lib/firebase';
 
 export default function JoinScreen() {
-  const navigation = useNavigation<RootStackNavigationProp>();
-  const route = useRoute<RouteProp<RootStackParamList, 'Join'>>();
+  const navigation = useNavigation<MainStackNavigationProp>();
+  const route = useRoute<RouteProp<MainStackParamList, 'Join'>>();
   const code = route.params?.code?.toUpperCase() ?? '';
   const { user } = useAuth();
   const { joinHousehold } = useHousehold();
@@ -34,7 +34,7 @@ export default function JoinScreen() {
     try {
       await joinHousehold(code);
       showToast('Welcome to the household!', 'success');
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Join failed', 'error');
     } finally {
@@ -46,7 +46,6 @@ export default function JoinScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-canvas dark:bg-canvas-dark">
         <Text className="text-muted dark:text-muted-dark">Sign in to join a household.</Text>
-        <Button label="Sign in" className="mt-4" onPress={() => navigation.navigate('Auth')} />
       </SafeAreaView>
     );
   }

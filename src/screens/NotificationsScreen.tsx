@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import {
   collection,
   onSnapshot,
@@ -36,7 +36,7 @@ interface NotifItem {
 
 export default function NotificationsScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [items, setItems] = useState<NotifItem[]>([]);

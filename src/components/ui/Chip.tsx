@@ -33,9 +33,13 @@ function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' 
           {
             flexDirection: 'row', alignItems: 'center', gap: 5,
             paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100,
-            backgroundColor: active ? accentColor : 'transparent',
+            backgroundColor: active ? accentColor : `${c.surfaceMuted}`,
             borderWidth: 1,
-            borderColor: active ? accentColor : c.line,
+            borderColor: active ? accentColor : 'transparent',
+            shadowColor: active ? accentColor : 'transparent',
+            shadowOpacity: active ? 0.3 : 0,
+            shadowRadius: active ? 8 : 0,
+            elevation: active ? 4 : 0,
           }
         ]}
       >

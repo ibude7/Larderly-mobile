@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useReducer, useDeferredValue, useCallback } from 'react';
-import { View, Text, FlatList, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Text, FlatList, Pressable, ScrollView, Platform, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import AppHeader from '../components/layout/AppHeader';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
@@ -19,6 +20,7 @@ import { useInventory } from '../contexts/InventoryContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { CATEGORIES, STORAGE_LOCATIONS } from '../lib/categories';
+import { getCategoryIcon } from '../lib/appIcons';
 import { locationIdFromName } from '../lib/inventoryMapper';
 import { parsePantryVoiceCommand } from '../lib/voiceCommands';
 import { identifyFoodFromImage } from '../lib/foodIdentify';
@@ -153,6 +155,26 @@ export default function PantryScreen() {
   // Use the custom hook for filtering and sorting
   const filtered = useFilteredPantry(items, locations, debouncedFilterState);
   const deferredFiltered = useDeferredValue(filtered);
+  const expiringSoon = useMemo(() => {
+    const now = Date.now();
+    return items
+      .filter((item) => {
+        if (!item.expiry_date) return false;
+        const days = Math.ceil((new Date(item.expiry_date).getTime() - now) / 86400000);
+        return days >= 0 && days <= 7;
+      })
+      .slice(0, 6);
+  }, [items]);
+  const categorySummary = useMemo(() => {
+    return CATEGORIES.map((category) => ({
+      id: category.id,
+      name: category.name,
+      count: items.filter((item) => item.category === category.id).length,
+      icon: getCategoryIcon(category.id),
+    }))
+      .filter((category) => category.count > 0)
+      .slice(0, 6);
+  }, [items]);
 
   const hasActiveFilters =
     filterExpiration !== 'All' ||
@@ -315,7 +337,8 @@ export default function PantryScreen() {
           <View className="px-5 pb-4 pt-5">
             <View className="mb-3 flex-row items-center justify-between">
               <View>
-                <Text className="font-display text-4xl text-ink dark:text-ink-dark">Pantry</Text>
+                <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">LARDERLY</Text>
+                <Text className="font-display text-4xl text-ink dark:text-ink-dark">Pantry Inventory</Text>
                 <Text className="mt-0.5 text-sm font-medium text-muted dark:text-muted-dark">
                   {items.length} item{items.length === 1 ? '' : 's'} on your shelves
                 </Text>
@@ -324,19 +347,85 @@ export default function PantryScreen() {
                 <Pressable
                   onPress={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))}
                   testID="pantry-view-toggle"
-                  className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+                  className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/80"
                 >
                   <Icon name={viewMode === 'grid' ? 'grid' : 'shelf'} size={16} color={c.ink} />
                 </Pressable>
                 <Button label="Add" icon="plus" size="sm" onPress={() => setAddOpen(true)} />
               </View>
             </View>
+            {expiringSoon.length > 0 ? (
+              <View className="mb-4">
+                <View className="mb-2 flex-row items-center justify-between">
+                  <Text className="font-display text-xl text-ink dark:text-ink-dark">Expiring Soon</Text>
+                  <Pressable onPress={() => dispatch({ type: 'SET_EXPIRATION_FILTER', payload: 'Expiring Soon' })}>
+                    <Text className="text-xs font-bold text-primary">View all</Text>
+                  </Pressable>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row gap-3">
+                    {expiringSoon.map((item) => (
+                      <Pressable
+                        key={item.id}
+                        onPress={() => setSelectedItemId(item.id)}
+                        style={({ pressed }) => [
+                          styles.expiringCard,
+                          {
+                            backgroundColor: c.surfaceGlass,
+                            borderColor: c.glassLine,
+                            shadowColor: c.shadow,
+                            opacity: pressed ? 0.88 : 1,
+                          },
+                        ]}
+                      >
+                        <Icon name={getCategoryIcon(item.category)} size={24} color={c.primary} />
+                        <Text numberOfLines={1} className="mt-2 text-center text-sm font-bold text-ink dark:text-ink-dark">
+                          {item.name}
+                        </Text>
+                        <Text className="text-[11px] font-semibold text-muted dark:text-muted-dark">
+                          {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            ) : null}
             <TextField
               value={search}
               onChangeText={(v) => dispatch({ type: 'SET_SEARCH', payload: v })}
               placeholder="Search items…"
               icon="search"
             />
+            {categorySummary.length > 0 ? (
+              <View className="mt-4 flex-row flex-wrap gap-3">
+                {categorySummary.map((category) => (
+                  <Pressable
+                    key={category.id}
+                    onPress={() => dispatch({ type: 'SET_CATEGORY', payload: category.id })}
+                    style={({ pressed }) => [
+                      styles.categoryTile,
+                      {
+                        backgroundColor: activeCategory === category.id ? `${c.primary}16` : c.surfaceGlass,
+                        borderColor: activeCategory === category.id ? `${c.primary}44` : c.glassLine,
+                        shadowColor: c.shadow,
+                        opacity: pressed ? 0.9 : 1,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.categoryIcon, { backgroundColor: `${c.primary}14` }]}>
+                      <Icon name={category.icon} size={22} color={c.primary} />
+                    </View>
+                    <Text numberOfLines={2} className="mt-2 text-center text-sm font-bold leading-4 text-ink dark:text-ink-dark">
+                      {category.name}
+                    </Text>
+                    <Text className="mt-0.5 text-xs font-semibold text-muted dark:text-muted-dark">
+                      {category.count}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
             <View className="mt-3 flex-row items-center gap-2">
               <View className="flex-1"><VoiceInputButton label="Voice add" onTranscript={handleVoice} /></View>
               <Button label={identifying ? '…' : 'Photo AI'} icon="camera" size="sm" variant="secondary" onPress={handlePhotoIdentify} loading={identifying} />
@@ -381,7 +470,7 @@ export default function PantryScreen() {
               </Pressable>
             </View>
             {showFilters && (
-              <View className="mt-3 gap-3 rounded-2xl border border-line bg-surface p-3">
+              <Animated.View entering={FadeInUp.duration(300).springify()} className="mt-3 gap-3 overflow-hidden rounded-3xl border border-white/20 bg-surface/60 dark:bg-surface-dark/60 p-4">
                 <SelectField
                   label="Expiration"
                   value={filterExpiration}
@@ -437,7 +526,7 @@ export default function PantryScreen() {
                     onPress={() => dispatch({ type: 'CLEAR_FILTERS' })}
                   />
                 )}
-              </View>
+              </Animated.View>
             )}
           </View>
         }
@@ -466,19 +555,21 @@ export default function PantryScreen() {
             />
           </View>
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const isListMode = viewMode === 'list';
           const card = (
-            <InventoryCard
-              item={item}
-              c={c}
-              listMode={isListMode && selectMode}
-              selected={selected.has(item.id)}
-              selectMode={selectMode}
-              onToggleSelect={() => toggleSelect(item.id)}
-              onAddStock={() => updateItem(item.id, { quantity: item.quantity + 1 })}
-              onPress={() => (selectMode ? toggleSelect(item.id) : setSelectedItemId(item.id))}
-            />
+            <Animated.View entering={FadeInUp.duration(400).delay(Math.min(index, 8) * 50).springify()}>
+              <InventoryCard
+                item={item}
+                c={c}
+                listMode={isListMode && selectMode}
+                selected={selected.has(item.id)}
+                selectMode={selectMode}
+                onToggleSelect={() => toggleSelect(item.id)}
+                onAddStock={() => updateItem(item.id, { quantity: item.quantity + 1 })}
+                onPress={() => (selectMode ? toggleSelect(item.id) : setSelectedItemId(item.id))}
+              />
+            </Animated.View>
           );
 
           if (!isListMode || selectMode) return card;
@@ -525,3 +616,35 @@ export default function PantryScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  categoryIcon: {
+    alignItems: 'center',
+    borderRadius: 16,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  categoryTile: {
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: 1,
+    minHeight: 118,
+    padding: 12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    width: '30.8%',
+  },
+  expiringCard: {
+    alignItems: 'center',
+    borderRadius: 18,
+    borderWidth: 1,
+    minHeight: 112,
+    padding: 12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    width: 96,
+  },
+});

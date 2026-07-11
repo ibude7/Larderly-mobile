@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -12,7 +11,6 @@ import Animated, {
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Icon, IconName } from '../ui/Icon';
 import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
 
 const TAB_META: Record<string, { label: string; icon: IconName }> = {
   Dashboard: { label: 'Home', icon: 'dashboard' },
@@ -51,7 +49,7 @@ function TabButton({ focused, label, icon, onPress }: TabButtonProps) {
       <Animated.Text
         style={[
           styles.label,
-          { color: c.primary },
+          { color: focused ? c.ink : c.muted },
           labelStyle,
         ]}
       >
@@ -64,7 +62,6 @@ function TabButton({ focused, label, icon, onPress }: TabButtonProps) {
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const c = useAppColors();
-  const theme = useTheme();
 
   const [containerWidth, setContainerWidth] = useState(0);
   const tabWidth = containerWidth ? containerWidth / 5 : 0;
@@ -109,15 +106,13 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
     >
-      {/* Frosted Glass Floating Tab Bar */}
-      <BlurView
-        intensity={theme === 'dark' ? 75 : 80}
-        tint={theme}
+      <View
         style={[
-          styles.blurBar,
+          styles.dock,
           {
-            borderColor: c.line,
-            backgroundColor: theme === 'dark' ? 'rgba(26, 26, 34, 0.65)' : 'rgba(255, 255, 255, 0.45)',
+            borderColor: c.lineStrong,
+            backgroundColor: c.surface,
+            shadowColor: c.ink,
           },
         ]}
       >
@@ -142,8 +137,10 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: `${c.primary}12`,
-                  borderRadius: 24,
+                  backgroundColor: `${c.primary}14`,
+                  borderRadius: 7,
+                  borderWidth: 1.5,
+                  borderColor: c.primary,
                 }}
               />
             </Animated.View>
@@ -184,9 +181,8 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             );
           })}
         </View>
-      </BlurView>
+      </View>
 
-      {/* Elevated FAB Scanner Button outside the BlurView (to prevent clipping) */}
       <View
         pointerEvents="box-none"
         style={styles.scannerFabContainer}
@@ -196,8 +192,9 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           style={[
             styles.scannerFab,
             {
-              backgroundColor: c.primary,
-              shadowColor: c.primary,
+              backgroundColor: c.ink,
+              shadowColor: c.ink,
+              borderColor: c.lineStrong,
             },
           ]}
           accessibilityRole="button"
@@ -214,20 +211,19 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   floatingContainer: {
     position: 'absolute',
-    left: 24,
-    right: 24,
+    left: 18,
+    right: 18,
     zIndex: 100,
   },
-  blurBar: {
-    borderRadius: 36,
-    borderWidth: 1,
+  dock: {
+    borderRadius: 10,
+    borderWidth: 1.5,
     paddingHorizontal: 8,
-    paddingVertical: 10,
+    paddingVertical: 8,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 0,
+    shadowOffset: { width: 4, height: 4 },
     elevation: 4,
   },
   contentContainer: {
@@ -255,12 +251,13 @@ const styles = StyleSheet.create({
   scannerFab: {
     width: 54,
     height: 54,
-    borderRadius: 27,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
+    borderWidth: 1.5,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 0,
     elevation: 6,
   },
   label: {

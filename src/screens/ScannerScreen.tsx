@@ -138,7 +138,7 @@ export default function ScannerScreen() {
   const successOpacity = useSharedValue(0);
 
   useEffect(() => {
-    scanY.value = withRepeat(withTiming(104, { duration: 1600 }), -1, true);
+    scanY.value = withRepeat(withTiming(160, { duration: 1700 }), -1, true);
     cornerOpacity.value = withRepeat(withTiming(0.5, { duration: 900 }), -1, true);
   }, [cornerOpacity, scanY]);
 
@@ -444,22 +444,25 @@ export default function ScannerScreen() {
         }}
       >
         <View className="flex-row items-center justify-between">
-          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark/60 p-1">
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/25">
+            <Icon name="sparkles" size={18} color={c.primary} />
+          </View>
+          <View className="flex-1 flex-row gap-1.5 rounded-2xl border border-white/15 bg-black/20 p-1">
             {(['add', 'consume'] as const).map((m) => (
               <Pressable
                 key={m}
                 onPress={() => setScanMode(m)}
                 className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-xl py-2 ${
-                  scanMode === m ? 'bg-surface dark:bg-surface-dark' : ''
+                  scanMode === m ? 'bg-white/15' : ''
                 }`}
               >
                 <Icon
                   name={m === 'add' ? 'plus' : 'minus'}
                   size={16}
-                  color={scanMode === m ? c.primary : c.muted}
+                  color={scanMode === m ? c.primary : 'rgba(255,255,255,0.6)'}
                 />
                 <Text
-                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-muted dark:text-muted-dark'}`}
+                  className={`text-sm font-bold ${scanMode === m ? 'text-primary' : 'text-white/60'}`}
                 >
                   {m === 'add' ? 'Add' : 'Consume'}
                 </Text>
@@ -469,11 +472,12 @@ export default function ScannerScreen() {
           <Pressable
             onPress={() => navigation.navigate('Dashboard')}
             hitSlop={8}
-            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark/80"
+            className="ml-3 h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/25"
           >
-            <Icon name="close" size={18} color={c.ink} />
+            <Icon name="close" size={18} color="#FFFFFF" />
           </Pressable>
         </View>
+        <Text className="mt-3 text-center text-sm font-bold text-white/90">Liquid Light Scanner</Text>
       </BlurView>
 
       {!permissionDenied ? (
@@ -487,9 +491,16 @@ export default function ScannerScreen() {
         >
           <View
             style={{
-              width: 256,
-              height: 128,
-              borderRadius: 16,
+              width: 286,
+              height: 188,
+              borderRadius: 28,
+              borderWidth: 1,
+              borderColor: `${c.primary}88`,
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              shadowColor: c.primary,
+              shadowOpacity: 0.8,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 0 },
               overflow: 'hidden',
             }}
           >
@@ -508,12 +519,12 @@ export default function ScannerScreen() {
               style={[
                 beamStyle,
                 {
-                  height: 2,
+                  height: 3,
                   backgroundColor: c.primary,
-                  borderRadius: 1,
+                  borderRadius: 2,
                   shadowColor: c.primary,
                   shadowOpacity: 1,
-                  shadowRadius: 8,
+                  shadowRadius: 14,
                 },
               ]}
             />
@@ -535,10 +546,14 @@ export default function ScannerScreen() {
             height: 48,
             borderRadius: 24,
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.22)',
-            backgroundColor: torchOn ? c.primary : 'rgba(0,0,0,0.36)',
+            borderColor: torchOn ? 'rgba(255,51,102,0.4)' : 'rgba(255,255,255,0.18)',
+            backgroundColor: torchOn ? c.primary : 'rgba(0,0,0,0.4)',
             alignItems: 'center',
             justifyContent: 'center',
+            shadowColor: torchOn ? c.primary : 'transparent',
+            shadowOpacity: torchOn ? 0.5 : 0,
+            shadowRadius: torchOn ? 12 : 0,
+            elevation: torchOn ? 8 : 0,
           }}
         >
           <Icon name="flash" size={20} color="#FFFFFF" />
@@ -556,10 +571,13 @@ export default function ScannerScreen() {
             bottom: bottomSheetHeight + 24,
             borderRadius: 999,
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.22)',
-            backgroundColor: 'rgba(0,0,0,0.38)',
+            borderColor: `${c.primary}44`,
+            backgroundColor: 'rgba(0,0,0,0.46)',
             paddingHorizontal: 16,
             paddingVertical: 11,
+            shadowColor: c.primary,
+            shadowOpacity: 0.25,
+            shadowRadius: 14,
           }}
         >
           <Text className="text-xs font-bold text-white">Enter barcode manually</Text>
@@ -580,9 +598,11 @@ export default function ScannerScreen() {
             paddingHorizontal: 16,
             paddingTop: 16,
             borderTopWidth: 1,
-            borderTopColor: c.line,
+            borderTopColor: c.glassLine,
+            backgroundColor: c.surfaceGlass,
           }}
         >
+          <View className="mb-3 self-center rounded-full bg-white/30" style={{ width: 42, height: 4 }} />
           <View className="flex-row items-center justify-between">
             <Text className="text-[12px] font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
               Recent scans
@@ -603,7 +623,7 @@ export default function ScannerScreen() {
                   onPress={() => setHistoryItemId(s.pantryItemId)}
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${s.name}`}
-                  className="min-w-[148px] flex-row items-center gap-3 rounded-2xl border border-white/15 bg-black/25 px-3 py-3"
+                  className="min-w-[148px] flex-row items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-3"
                 >
                   <View
                     className="h-8 w-8 items-center justify-center rounded-full"
@@ -625,7 +645,7 @@ export default function ScannerScreen() {
               ))}
             </ScrollView>
           ) : (
-            <View className="mt-3 rounded-2xl border border-dashed border-white/15 bg-black/20 px-4 py-4">
+            <View className="mt-3 rounded-2xl border border-dashed border-white/12 bg-white/5 px-4 py-4">
               <Text className="text-sm font-semibold text-white/80">
                 Scan a pantry item to pin it here.
               </Text>

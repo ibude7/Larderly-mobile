@@ -152,11 +152,17 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
   if (title || onBack) {
     return (
       <View
-        style={{ paddingTop: insets.top + 8 }}
-        className="flex-row items-center gap-3 border-b border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-5 pb-3"
+        style={[
+          styles.headerBar,
+          {
+            paddingTop: insets.top + 8,
+            borderBottomColor: c.lineStrong,
+            backgroundColor: c.canvas,
+          },
+        ]}
       >
         {onBack ? (
-          <Pressable onPress={onBack} className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
+          <Pressable onPress={onBack} className="h-10 w-10 items-center justify-center rounded-field border border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
             <Icon name="chevron-left" size={20} color={c.ink} />
           </Pressable>
         ) : (
@@ -176,7 +182,7 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
     onOpenSettings ? (
       <Pressable
         onPress={onOpenSettings}
-        className="h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+        className="h-10 w-10 items-center justify-center overflow-hidden rounded-field border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
         accessibilityRole="button"
         accessibilityLabel="Open settings"
       >
@@ -191,8 +197,14 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
 
   return (
     <View
-      style={{ paddingTop: mainHeaderTop }}
-      className="flex-row items-center justify-between border-b border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark px-5 pb-3"
+      style={[
+        styles.headerBar,
+        {
+          paddingTop: mainHeaderTop,
+          borderBottomColor: c.lineStrong,
+          backgroundColor: c.canvas,
+        },
+      ]}
     >
       <View className="flex-row items-center gap-3">
         <AppLogoMark size="sm" />
@@ -213,6 +225,15 @@ export default function AppHeader({ title, onBack, onOpenSettings, right }: AppH
 }
 
 const styles = StyleSheet.create({
+  headerBar: {
+    alignItems: 'center',
+    borderBottomWidth: 1.5,
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    paddingHorizontal: 20,
+  },
   syncIndicator: {
     alignItems: 'center',
     height: 24,

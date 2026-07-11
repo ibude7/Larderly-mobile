@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import TextField from '../components/ui/TextField';
 import { Icon } from '../components/ui/Icon';
 import EmptyState from '../components/ui/EmptyState';
@@ -108,7 +108,7 @@ function ActivityResultRow({ activity }: { activity: ActivityEvent }) {
 
 export default function SearchScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
 
   // Fetch local contexts
   const { items, locations } = useInventory();

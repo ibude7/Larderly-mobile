@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import {
   collection,
   onSnapshot,
@@ -27,7 +27,7 @@ import { useAppColors } from '../hooks/useAppColors';
 
 export default function RemindersScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const { householdId } = useHousehold();
   const { showToast } = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);

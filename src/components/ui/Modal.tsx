@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect } from "react";
 import {
   Modal as RNModal,
   View,
@@ -8,13 +8,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Icon } from './Icon';
-import { BlurView } from 'expo-blur';
-import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { Icon } from "./Icon";
+import { BlurView } from "expo-blur";
+import { useAppColors } from "../../hooks/useAppColors";
+import { useTheme } from "../../hooks/useTheme";
+import { useScale } from "../../theme/scale";
 
 interface ModalProps {
   isOpen: boolean;
@@ -44,17 +49,19 @@ export default function Modal({
   const c = useAppColors();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(300);
+  const { height, s, fs, fsLayout } = useScale();
+  const sheetOffset = height * 0.4;
+  const translateY = useSharedValue(sheetOffset);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
     if (isOpen) {
-      translateY.value = 300;
+      translateY.value = sheetOffset;
       opacity.value = 0;
       translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
       opacity.value = withSpring(1, { damping: 20, stiffness: 200 });
     }
-  }, [isOpen, opacity, translateY]);
+  }, [isOpen, opacity, sheetOffset, translateY]);
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -74,55 +81,74 @@ export default function Modal({
           style={StyleSheet.absoluteFill}
           onPress={dismissable ? onClose : undefined}
         >
-          <BlurView intensity={15} tint={theme} style={StyleSheet.absoluteFill} />
+          <BlurView
+            intensity={15}
+            tint={theme}
+            style={StyleSheet.absoluteFill}
+          />
         </Pressable>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="w-full"
         >
           <Animated.View style={sheetStyle}>
             <BlurView
-              intensity={theme === 'dark' ? 75 : 80}
+              intensity={theme === "dark" ? 75 : 80}
               tint={theme}
               style={{
-                borderTopLeftRadius: 36,
-                borderTopRightRadius: 36,
-                borderWidth: 1,
+                borderTopLeftRadius: s(36),
+                borderTopRightRadius: s(36),
+                borderWidth: StyleSheet.hairlineWidth,
                 borderBottomWidth: 0,
                 borderColor: c.line,
-                overflow: 'hidden',
-                maxHeight: '92%',
+                overflow: "hidden",
+                maxHeight: height - insets.top - s(16),
                 paddingBottom: insets.bottom,
               }}
             >
               <View
                 style={{
-                  width: 40,
-                  height: 4,
-                  borderRadius: 2,
+                  width: s(40),
+                  height: s(4),
+                  borderRadius: s(2),
                   backgroundColor: c.muted,
-                  alignSelf: 'center',
-                  marginTop: 12,
-                  marginBottom: 8,
+                  alignSelf: "center",
+                  marginTop: s(12),
+                  marginBottom: s(8),
                 }}
               />
-              <View className="flex-row items-center justify-between border-b border-line dark:border-line-dark px-5 pb-4">
-                <Text numberOfLines={1} className="flex-1 pr-4 font-display text-xl text-ink dark:text-ink-dark">
+              <View
+                className="flex-row items-center justify-between border-b border-line dark:border-line-dark"
+                style={{
+                  paddingHorizontal: s(20),
+                  paddingBottom: s(16),
+                  gap: s(16),
+                }}
+              >
+                <Text
+                  className="flex-1 font-display text-ink dark:text-ink-dark"
+                  style={{ fontSize: fs(20), flexShrink: 1 }}
+                >
                   {title}
                 </Text>
                 <Pressable
                   onPress={onClose}
-                  hitSlop={8}
-                  className="h-10 w-10 items-center justify-center rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+                  hitSlop={s(8)}
+                  className="items-center justify-center border border-line bg-surface dark:border-line-dark dark:bg-surface-dark"
+                  style={{
+                    minWidth: fsLayout(40),
+                    minHeight: fsLayout(40),
+                    borderRadius: s(16),
+                  }}
                 >
-                  <Icon name="close" size={18} color={c.muted} />
+                  <Icon name="close" size={s(18)} color={c.muted} />
                 </Pressable>
               </View>
               {scroll ? (
                 <ScrollView
                   keyboardShouldPersistTaps="handled"
-                  contentContainerStyle={{ padding: 20 }}
+                  contentContainerStyle={{ padding: s(20) }}
                   showsVerticalScrollIndicator={false}
                 >
                   {children}

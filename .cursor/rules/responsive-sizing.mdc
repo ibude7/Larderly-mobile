@@ -1,0 +1,40 @@
+---
+description: Screen-relative UI sizing that survives text zoom without overlap
+globs: src/**/*.{tsx,ts}
+alwaysApply: true
+---
+
+# Responsive sizing
+
+UI must stay aligned at any screen size **and** any system text zoom. Hardcoded layout pixels and fixed-height text boxes are forbidden.
+
+## Source of truth
+
+`src/theme/scale.ts`:
+
+- `useScale()` → `s` / `fs` / `fsLayout` / `wp` for normal UI
+- `fitScale(width, height, designW, designH)` for absolute mock/illustration compositions
+
+## Hard rules
+
+1. **Real copy reflows.** Headline/body live in flex siblings with intrinsic height (`flexShrink: 0`). Never put them in a fixed `height` box.
+2. **Heroes shrink, they do not cover copy.** Flex children that share space with text need `flex: 1`, `minHeight: 0`, `overflow: 'hidden'`. Size media to the **measured** remaining box (`onLayout`), not a fixed aspect that can overflow upward.
+3. **Reserved chrome grows with zoom.** Top bars / footers use `fsLayout(...)` (+ safe-area insets), not constant `72` / `190`.
+4. **No module-level `Dimensions.get('window')`.** Use `useScale()` / `useWindowDimensions()` so rotation and split-screen update.
+5. **Decorative mock UI** (e.g. KitchenOverviewCard): scale with `fitScale` from container `onLayout`, and set `allowFontScaling={false}` / `maxFontSizeMultiplier={1}` so system zoom cannot blow out absolute art.
+6. **NativeWind:** no arbitrary pixel classes like `h-[54px]` / `text-[13px]` for layout-critical UI — use `style` + scale helpers.
+
+## Anti-patterns
+
+```tsx
+// ❌ BAD — card keeps full aspect height and paints over zoomed subhead
+<View style={{ flex: 1 }}>
+  <Text style={{ fontSize: 33 }}>...</Text>
+  <View style={{ width: HERO_W, aspectRatio: 1 }}><Card /></View>
+</View>
+
+// ✅ GOOD — measure remaining space, fit media inside it
+<View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }} onLayout={onHeroLayout}>
+  <View style={{ width: fittedW, aspectRatio }}><Card /></View>
+</View>
+```

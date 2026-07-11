@@ -300,15 +300,16 @@ export default function ShoppingScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <View className="flex-1 bg-canvas">
+    <View className="flex-1 bg-canvas dark:bg-canvas-dark">
       <AppHeader onOpenSettings={() => navigation.navigate('Settings')} />
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {/* List title + budget summary */}
         <View className="mb-4 flex-row items-center justify-between">
           <View className="flex-1">
+            <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">SHOPPING</Text>
             <Pressable onPress={() => setShowListPicker(true)} className="flex-row items-center gap-2">
-              <Text className="font-display text-4xl text-ink">{activeList?.name ?? 'Shopping'}</Text>
+              <Text className="font-display text-4xl text-ink dark:text-ink-dark">{activeList?.name ?? 'Shopping'}</Text>
               <Icon name="chevron-down" size={18} color={colors.muted} />
             </Pressable>
             {budget > 0 ? (
@@ -326,9 +327,9 @@ export default function ShoppingScreen() {
           </View>
           <Pressable
             onPress={() => setShopMode(true)}
-            className={`rounded-full px-3 py-2 ${shopMode ? 'bg-ink' : 'border border-line bg-surface'}`}
+            className={`rounded-full px-4 py-2.5 ${shopMode ? 'bg-primary' : 'border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/80'}`}
           >
-            <Text className={`text-xs font-bold ${shopMode ? 'text-white' : 'text-ink'}`}>Shop mode</Text>
+            <Text className={`text-xs font-bold ${shopMode ? 'text-white' : 'text-ink dark:text-ink-dark'}`}>Shop mode</Text>
           </Pressable>
         </View>
 
@@ -422,8 +423,10 @@ export default function ShoppingScreen() {
               />
             ))}
             {checked.length > 0 && (
-              <View className="mt-4">
-                <Text className="mb-2 font-semibold text-ink">Purchased ({checked.length})</Text>
+              <View className="mt-4 overflow-hidden rounded-3xl border border-white/20 bg-surface/60 dark:bg-surface-dark/60 p-4">
+                <Text className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-muted dark:text-muted-dark">
+                  Purchased ({checked.length})
+                </Text>
                 <Button label="Move to pantry" icon="pantry" onPress={handleCheckout} />
                 <Button label="Clear purchased" variant="secondary" onPress={() => clearCheckedItems()} className="mt-2" />
               </View>

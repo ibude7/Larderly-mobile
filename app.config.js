@@ -64,6 +64,21 @@ function withIosFirebasePodSettings(config) {
         '    end',
         'end',
       ].join('\n');
+      const reactModuleMapHelper = [
+        "def add_react_module_map_to_expo!(installer)",
+        "  react_module_map = '${PODS_ROOT}/Target Support Files/React-Core-prebuilt/React-use-frameworks.modulemap'",
+        '  installer.pods_project.targets.each do |target|',
+        "    next unless target.name == 'Expo'",
+        '',
+        '    target.build_configurations.each do |config|',
+        "      flags = config.build_settings['OTHER_SWIFT_FLAGS'] || '$(inherited)'",
+        "      next if flags.include?('React-use-frameworks.modulemap')",
+        '',
+        "      config.build_settings['OTHER_SWIFT_FLAGS'] = \"#{flags} -Xcc -fmodule-map-file=\\\"#{react_module_map}\\\"\"",
+        '    end',
+        '  end',
+        'end',
+      ].join('\n');
 
       podfile = podfile.replace(/\nuse_modular_headers!\n/g, '\n');
       if (!podfile.includes('$RNFirebaseAsStaticFramework = true')) {
@@ -71,6 +86,9 @@ function withIosFirebasePodSettings(config) {
       }
       if (!podfile.includes('def skip_crashlytics_when_google_services_missing!')) {
         podfile = podfile.replace(/\ntarget /, `\n${crashlyticsSkipHelper}\n\ntarget `);
+      }
+      if (!podfile.includes('def add_react_module_map_to_expo!')) {
+        podfile = podfile.replace(/\ntarget /, `\n${reactModuleMapHelper}\n\ntarget `);
       }
       if (!podfile.includes('  use_firebase_modular_headers!')) {
         podfile = podfile.replace(/(target 'Larderly' do\n)/, '$1  use_firebase_modular_headers!\n');
@@ -80,6 +98,12 @@ function withIosFirebasePodSettings(config) {
           /\n\s+skip_crashlytics_when_google_services_missing!\(installer\)\n/g,
           '\n'
         );
+        if (!podfile.includes('    add_react_module_map_to_expo!(installer)')) {
+          podfile = podfile.replace(
+            /(\n\s+react_native_post_install\([\s\S]*?\n\s+?\)\n)/,
+            '$1    add_react_module_map_to_expo!(installer)\n'
+          );
+        }
       }
       if (!podfile.includes('  post_integrate do |installer|')) {
         podfile = podfile.replace(

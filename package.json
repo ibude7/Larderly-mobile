@@ -5,6 +5,7 @@
   "dependencies": {
     "@callstack/liquid-glass": "^0.8.0",
     "@expo-google-fonts/fraunces": "^0.4.1",
+    "@expo-google-fonts/geist": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/vector-icons": "^15.0.2",

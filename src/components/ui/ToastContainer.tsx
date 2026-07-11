@@ -1,24 +1,19 @@
-import { View, Text, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  FadeInDown,
-} from 'react-native-reanimated';
-import { useToast, ToastType } from '../../contexts/ToastContext';
-import { Icon, IconName } from './Icon';
-import { BlurView } from 'expo-blur';
-import { toastColors } from '../../theme';
-import { useAppColors } from '../../hooks/useAppColors';
-import { useTheme } from '../../hooks/useTheme';
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useToast, ToastType } from "../../contexts/ToastContext";
+import { Icon, IconName } from "./Icon";
+import { BlurView } from "expo-blur";
+import { toastColors } from "../../theme";
+import { useAppColors } from "../../hooks/useAppColors";
+import { useTheme } from "../../hooks/useTheme";
+import { useScale } from "../../theme/scale";
 
 const ICON: Record<ToastType, IconName> = {
-  success: 'success',
-  error: 'error',
-  info: 'info',
-  warning: 'warning',
+  success: "success",
+  error: "error",
+  info: "info",
+  warning: "warning",
 };
 
 export default function ToastContainer() {
@@ -26,58 +21,86 @@ export default function ToastContainer() {
   const insets = useSafeAreaInsets();
   const c = useAppColors();
   const theme = useTheme();
+  const { s, fs } = useScale();
 
   if (toasts.length === 0) return null;
 
   return (
     <View
       pointerEvents="box-none"
-      style={{ top: insets.top + 8 }}
-      className="absolute inset-x-3 z-50 gap-2.5"
+      style={{
+        position: "absolute",
+        top: insets.top + s(8),
+        left: s(12),
+        right: s(12),
+        zIndex: 50,
+        gap: s(10),
+      }}
     >
       {toasts.map((toast) => {
         const accent = toastColors(c)[toast.type];
         return (
-          <Animated.View key={toast.id} entering={FadeInDown.springify().damping(18)}>
+          <Animated.View
+            key={toast.id}
+            entering={FadeInDown.springify().damping(18)}
+          >
             <BlurView
-              intensity={theme === 'dark' ? 75 : 80}
+              intensity={theme === "dark" ? 75 : 80}
               tint={theme}
               style={{
-                borderRadius: 22,
-                borderWidth: 1,
+                borderRadius: s(22),
+                borderWidth: StyleSheet.hairlineWidth,
                 borderColor: c.line,
-                overflow: 'hidden',
-                flexDirection: 'row',
-                alignItems: 'flex-start',
-                gap: 12,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                shadowColor: '#000',
+                overflow: "hidden",
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: s(12),
+                paddingHorizontal: s(16),
+                paddingVertical: s(14),
+                shadowColor: "#000",
                 shadowOpacity: 0.25,
-                shadowRadius: 20,
-                shadowOffset: { width: 0, height: 8 },
+                shadowRadius: s(20),
+                shadowOffset: { width: 0, height: s(8) },
               }}
             >
               <View
-                className="absolute inset-y-2 left-1.5 w-1 rounded-full"
                 style={{
+                  position: "absolute",
+                  top: s(8),
+                  bottom: s(8),
+                  left: s(6),
+                  width: s(4),
+                  borderRadius: s(999),
                   backgroundColor: accent,
                   shadowColor: accent,
                   shadowOpacity: 0.8,
-                  shadowRadius: 6,
+                  shadowRadius: s(6),
                 }}
               />
               <View
-                className="h-9 w-9 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: accent + '26' }}
+                style={{
+                  width: s(36),
+                  height: s(36),
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: s(16),
+                  backgroundColor: accent + "26",
+                }}
               >
-                <Icon name={ICON[toast.type]} size={20} color={accent} />
+                <Icon name={ICON[toast.type]} size={s(20)} color={accent} />
               </View>
-              <Text className="flex-1 pt-1 text-sm font-semibold leading-5 text-ink dark:text-ink-dark">
+              <Text
+                className="flex-1 font-semibold text-ink dark:text-ink-dark"
+                style={{ paddingTop: s(4), fontSize: fs(14) }}
+              >
                 {toast.message}
               </Text>
-              <Pressable onPress={() => removeToast(toast.id)} hitSlop={8} className="p-1">
-                <Icon name="close" size={16} color={c.muted} />
+              <Pressable
+                onPress={() => removeToast(toast.id)}
+                hitSlop={s(8)}
+                style={{ padding: s(4) }}
+              >
+                <Icon name="close" size={s(16)} color={c.muted} />
               </Pressable>
             </BlurView>
           </Animated.View>

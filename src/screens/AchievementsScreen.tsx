@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import { doc, onSnapshot } from '@react-native-firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,7 +36,7 @@ const COUNTER_LABEL: Partial<
 
 export default function AchievementsScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const { user } = useAuth();
   const [counters, setCounters] = useState<AchievementCounters>(DEFAULT_COUNTERS);
 

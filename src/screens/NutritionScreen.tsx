@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import { onSnapshot } from '@react-native-firebase/firestore';
 import AppHeader from '../components/layout/AppHeader';
 import Button from '../components/ui/Button';
@@ -161,7 +161,7 @@ function MacroDonut({ intake, goals }: { intake: DailyIntake; goals: NutritionGo
 
 export default function NutritionScreen() {
   const c = useAppColors();
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const { user } = useAuth();
   const { userProfile } = useProfile();
   const { showToast } = useToast();

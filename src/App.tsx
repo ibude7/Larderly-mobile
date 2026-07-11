@@ -9,7 +9,8 @@ import {
   Outfit_700Bold,
   Outfit_800ExtraBold,
 } from '@expo-google-fonts/outfit';
-import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
+import { Geist_600SemiBold, Geist_600SemiBold_Italic } from '@expo-google-fonts/geist';
+import { Fraunces_600SemiBold, Fraunces_600SemiBold_Italic, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -84,7 +85,10 @@ export default function App() {
     Outfit_600SemiBold,
     Outfit_700Bold,
     Outfit_800ExtraBold,
+    Geist_600SemiBold,
+    Geist_600SemiBold_Italic,
     Fraunces_600SemiBold,
+    Fraunces_600SemiBold_Italic,
     Fraunces_700Bold,
   });
 

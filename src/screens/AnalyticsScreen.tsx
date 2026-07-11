@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Share } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackNavigationProp } from '../navigation/types';
+import type { MainStackNavigationProp } from '../navigation/types';
 import { collection, onSnapshot } from '@react-native-firebase/firestore';
 import AppHeader from '../components/layout/AppHeader';
 import Button from '../components/ui/Button';
@@ -27,7 +27,7 @@ const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
 
 export default function AnalyticsScreen() {
-  const navigation = useNavigation<RootStackNavigationProp>();
+  const navigation = useNavigation<MainStackNavigationProp>();
   const { householdId } = useHousehold();
   const { prefs } = usePrefs();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
