@@ -9,8 +9,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { GlassView } from 'expo-glass-effect';
+import { LiquidGlassView } from '@callstack/liquid-glass';
 import { ChevronRight } from 'lucide-react-native';
 import Animated, {
   useAnimatedStyle,
@@ -205,9 +204,9 @@ export function GlassButton({
       >
         {isFrostedLight ? (
           <View style={[styles.glass, sizeStyle, frostedGlassStyle]}>{glassContent}</View>
-        ) : useNativeGlass ? (
-          <GlassView
-            glassEffectStyle={isLight ? 'clear' : 'regular'}
+        ) : (
+          <LiquidGlassView
+            effect={isLight ? 'clear' : 'regular'}
             colorScheme={isLight ? 'light' : 'dark'}
             tintColor={
               isLight
@@ -216,31 +215,16 @@ export function GlassButton({
                   ? 'rgba(194, 102, 45, 0.42)'
                   : 'rgba(0, 0, 0, 0.92)'
             }
-            isInteractive
-            style={[styles.glass, sizeStyle, variantStyle]}
-          >
-            {glassContent}
-          </GlassView>
-        ) : (
-          <BlurView
-            intensity={
-              Platform.OS === 'ios'
-                ? isLight
-                  ? 22
-                  : 40
-                : isLight
-                  ? 18
-                  : 32
-            }
-            tint={isLight ? 'default' : 'dark'}
+            interactive
             style={[
               styles.glass,
               sizeStyle,
-              isLight ? styles.glassLight : isAmber ? styles.glassAmber : styles.glassDark,
+              variantStyle,
+              !useNativeGlass && (isLight ? styles.fallbackGlassLight : isAmber ? styles.fallbackGlassAmber : styles.fallbackGlassDark),
             ]}
           >
             {glassContent}
-          </BlurView>
+          </LiquidGlassView>
         )}
       </Pressable>
     </Animated.View>
@@ -266,15 +250,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
   },
-  glassDark: {
+  fallbackGlassDark: {
     backgroundColor: '#000000',
     borderColor: 'rgba(255,255,255,0.12)',
   },
-  glassAmber: {
+  fallbackGlassAmber: {
     backgroundColor: '#C2662D',
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  glassLight: {
+  fallbackGlassLight: {
     backgroundColor: 'transparent',
     borderColor: 'rgba(0, 0, 0, 0.14)',
   },

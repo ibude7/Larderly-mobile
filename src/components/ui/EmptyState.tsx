@@ -1,5 +1,5 @@
 import { memo, ReactNode } from 'react';
-import { View, Text } from 'react-native';
+import { Text, View, XStack } from 'tamagui';
 import { IconName } from './Icon';
 import Button from './Button';
 import EmptyIllustration from './EmptyIllustration';
@@ -51,14 +51,14 @@ function EmptyState({
         </Text>
       ) : null}
       {(actionLabel || secondaryActionLabel) && (
-        <View className="mt-5 flex-row flex-wrap items-center justify-center gap-2">
+        <XStack className="mt-5 flex-row flex-wrap items-center justify-center gap-2">
           {actionLabel && onAction ? (
             <Button label={actionLabel} onPress={onAction} variant="primary" />
           ) : null}
           {secondaryActionLabel && onSecondaryAction ? (
             <Button label={secondaryActionLabel} onPress={onSecondaryAction} variant="secondary" />
           ) : null}
-        </View>
+        </XStack>
       )}
       {extra ? <View className="mt-4">{extra}</View> : null}
     </View>

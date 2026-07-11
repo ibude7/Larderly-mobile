@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { Pressable, ScrollView } from "react-native";
+import { Text, View } from "tamagui";
 import Modal from "./Modal";
 import { Icon } from "./Icon";
 import { useAppColors } from "../../hooks/useAppColors";

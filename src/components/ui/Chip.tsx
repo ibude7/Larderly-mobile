@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Button as TamaguiButton, Text } from 'tamagui';
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 import { useAppColors } from '../../hooks/useAppColors';
 import { Icon, IconName } from './Icon';
@@ -22,7 +22,8 @@ function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' 
   const accentColor = variant === 'danger' ? c.danger : variant === 'success' ? c.success : c.primary;
 
   return (
-    <Pressable
+    <TamaguiButton
+      unstyled
       onPress={onPress}
       onPressIn={() => { scale.value = withSpring(0.93, { damping: 15 }); }}
       onPressOut={() => { scale.value = withSpring(1, { damping: 12 }); }}
@@ -56,7 +57,7 @@ function Chip({ label, active, onPress, emoji, icon, count, variant = 'default' 
           </Text>
         ) : null}
       </Animated.View>
-    </Pressable>
+    </TamaguiButton>
   );
 }
 

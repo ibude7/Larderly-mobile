@@ -1,13 +1,11 @@
 import { useState, forwardRef } from 'react';
 import {
-  View,
-  Text,
   TextInput,
   TextInputProps,
-  Pressable,
   StyleSheet,
   Platform,
 } from 'react-native';
+import { Button as TamaguiButton, Text, View, XStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
 import { landing, landingFonts as SF } from '../../theme/landing';
@@ -74,7 +72,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
             {label}
           </Text>
         ) : null}
-        <View
+        <XStack
           style={[
             styles.landingField,
             {
@@ -110,13 +108,13 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
             {...inputProps}
           />
           {rightIcon ? (
-            <Pressable onPress={onRightIconPress} hitSlop={10} style={{ padding: s(2) }}>
+            <TamaguiButton unstyled onPress={onRightIconPress} hitSlop={10} style={{ padding: s(2) }}>
               <Icon name={rightIcon} size={fs(18)} color={landing.muted} />
-            </Pressable>
+            </TamaguiButton>
           ) : success && !error ? (
             <Icon name="success" size={fs(16)} color={landing.success} />
           ) : null}
-        </View>
+        </XStack>
         {error ? (
           <Text style={{ color: landing.danger, fontSize: fs(12), marginTop: s(6) }}>
             {error}
@@ -153,7 +151,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
           {label}
         </Text>
       ) : null}
-      <View
+      <XStack
         className="flex-row items-center rounded-field border px-3.5"
         style={[
           styles.field,
@@ -185,15 +183,15 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
           {...inputProps}
         />
         {rightIcon ? (
-          <Pressable onPress={onRightIconPress} hitSlop={8} className="ml-2 p-1">
+          <TamaguiButton unstyled onPress={onRightIconPress} hitSlop={8} className="ml-2 p-1">
             <Icon name={rightIcon} size={18} color={c.muted} />
-          </Pressable>
+          </TamaguiButton>
         ) : success && !error ? (
           <View className="ml-2 p-1">
             <Icon name="success" size={16} color={c.success} />
           </View>
         ) : null}
-      </View>
+      </XStack>
       {error ? (
         <Text style={{ color: c.danger, fontSize: 12, marginTop: 6 }}>{error}</Text>
       ) : null}

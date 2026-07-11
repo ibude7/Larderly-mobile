@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { LiquidGlassView } from '@callstack/liquid-glass';
 import { X } from 'lucide-react-native';
 import Animated, {
   useAnimatedStyle,
@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePreferenceValues } from '../../contexts/PreferenceValueContext';
+import { canUseLiquidGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
@@ -38,6 +39,7 @@ export function SettingsSheet({ isOpen, onClose, title, children }: SettingsShee
   const insets = useSafeAreaInsets();
   const { s, fs, fsLayout, height } = useScale();
   const c = useSettingsTheme();
+  const useNativeGlass = canUseLiquidGlass();
   const { reduceMotion } = usePreferenceValues();
   const sheetOffset = Math.min(height * 0.35, s(280));
   const translateY = useSharedValue(sheetOffset);
@@ -82,19 +84,27 @@ export function SettingsSheet({ isOpen, onClose, title, children }: SettingsShee
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.root}
       >
-        <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, scrimStyle]}>
+        <Animated.View style={[StyleSheet.absoluteFill, scrimStyle]}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Dismiss"
             onPress={onClose}
             style={StyleSheet.absoluteFill}
-          />
-          <BlurView
-            intensity={c.blurIntensity}
-            tint={c.blurTint}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
+          >
+            <LiquidGlassView
+              effect="regular"
+              colorScheme={c.blurTint === 'dark' ? 'dark' : 'light'}
+              tintColor={
+                c.blurTint === 'dark' ? 'rgba(10, 10, 12, 0.36)' : 'rgba(255, 255, 255, 0.28)'
+              }
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: useNativeGlass ? 'transparent' : 'rgba(15, 18, 22, 0.35)',
+                },
+              ]}
+            />
+          </Pressable>
         </Animated.View>
 
         <Animated.View
@@ -172,9 +182,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'flex-end',
-  },
-  scrim: {
-    backgroundColor: 'rgba(15, 18, 22, 0.35)',
   },
   sheet: {
     borderTopLeftRadius: 22,

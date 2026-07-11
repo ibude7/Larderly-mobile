@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { View } from 'tamagui';
 import { useAppColors } from '../../hooks/useAppColors';
 
 interface LoadingSpinnerProps {

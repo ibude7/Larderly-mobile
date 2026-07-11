@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { View, Text, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, ViewStyle } from 'react-native';
+import { Button as TamaguiButton, Text, View, XStack, YStack } from 'tamagui';
 import { GlassCard } from './Surface';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
@@ -84,15 +85,15 @@ export function CardHeader({
   const color = iconColor ?? c.primary;
 
   return (
-    <View className="mb-4 flex-row items-center justify-between gap-3">
-      <View className="min-w-0 flex-1 flex-row items-center gap-3">
+    <XStack style={styles.header}>
+      <XStack style={styles.headerTitleRow}>
         <View
           className="h-10 w-10 items-center justify-center rounded-field"
           style={{ backgroundColor: `${color}18`, borderWidth: 1.5, borderColor: color }}
         >
           <Icon name={icon} size={18} color={color} />
         </View>
-        <View className="min-w-0 flex-1">
+        <YStack style={styles.headerText}>
           {eyebrow ? (
             <Text className="text-[10px] font-bold uppercase tracking-widest text-muted dark:text-muted-dark">
               {eyebrow}
@@ -101,13 +102,38 @@ export function CardHeader({
           <Text numberOfLines={1} className="font-display text-xl text-ink dark:text-ink-dark">
             {title}
           </Text>
-        </View>
-      </View>
+        </YStack>
+      </XStack>
       {actionLabel && onAction ? (
-        <Pressable onPress={onAction} className="px-3 py-1.5">
+        <TamaguiButton unstyled onPress={onAction} style={styles.headerAction}>
           <Text className="text-xs font-bold uppercase tracking-wider text-primary">{actionLabel}</Text>
-        </Pressable>
+        </TamaguiButton>
       ) : null}
-    </View>
+    </XStack>
   );
 }
+
+const styles = {
+  header: {
+    alignItems: 'center' as const,
+    flexDirection: 'row' as const,
+    gap: 12,
+    justifyContent: 'space-between' as const,
+    marginBottom: 16,
+  },
+  headerTitleRow: {
+    alignItems: 'center' as const,
+    flex: 1,
+    flexDirection: 'row' as const,
+    gap: 12,
+    minWidth: 0,
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  headerAction: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+};

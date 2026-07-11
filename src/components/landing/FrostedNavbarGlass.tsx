@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
-import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { GlassView } from 'expo-glass-effect';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { LiquidGlassView } from '@callstack/liquid-glass';
 import { LinearGradient } from 'expo-linear-gradient';
 import { canUseLiquidGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
@@ -41,38 +40,22 @@ export function FrostedNavbarGlass({
         style,
       ]}
     >
-      {useNativeGlass ? (
-        <GlassView
-          glassEffectStyle="regular"
-          colorScheme="light"
-          tintColor={canvasTint}
-          isInteractive
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              borderRadius,
-              borderWidth: StyleSheet.hairlineWidth * 1.5,
-              borderColor: landing.ink,
-              overflow: 'hidden',
-            },
-          ]}
-        />
-      ) : (
-        <BlurView
-          intensity={Platform.OS === 'ios' ? 48 : 36}
-          tint="light"
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              borderRadius,
-              borderWidth: StyleSheet.hairlineWidth * 1.5,
-              borderColor: landing.ink,
-              backgroundColor: canvasTint,
-              overflow: 'hidden',
-            },
-          ]}
-        />
-      )}
+      <LiquidGlassView
+        effect="regular"
+        colorScheme="light"
+        tintColor={canvasTint}
+        interactive
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            borderRadius,
+            borderWidth: StyleSheet.hairlineWidth * 1.5,
+            borderColor: landing.ink,
+            backgroundColor: useNativeGlass ? 'transparent' : canvasTint,
+            overflow: 'hidden',
+          },
+        ]}
+      />
 
       <LinearGradient
         pointerEvents="none"

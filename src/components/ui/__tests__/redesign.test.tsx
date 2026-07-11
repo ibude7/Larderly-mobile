@@ -1,11 +1,21 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { TamaguiProvider } from 'tamagui';
+import { tamaguiConfig } from '../../../../tamagui.config';
 import Badge from '../Badge';
 import { Icon, IconName } from '../Icon';
 
+function renderWithTamagui(children: React.ReactElement) {
+  return render(
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+      {children}
+    </TamaguiProvider>,
+  );
+}
+
 describe('Orchard OS redesigned UI components', () => {
   it('renders Badge variants with vivid palette', async () => {
-    const { getByText } = await render(
+    const { getByText } = await renderWithTamagui(
       <>
         <Badge label="Low stock" variant="warning" />
         <Badge label="Expired" variant="danger" />
@@ -23,7 +33,7 @@ describe('Orchard OS redesigned UI components', () => {
       'vegetables', 'dairy', 'seafood', 'fridge', 'freezer', 'shelf', 'sun', 'egg',
       'google', 'apple',
     ];
-    const tree = await render(
+    const tree = await renderWithTamagui(
       <>
         {names.map((n) => (
           <Icon key={n} name={n} size={20} />

@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Text, View, XStack, YStack } from 'tamagui';
 import AnimatedNumber from './AnimatedNumber';
 import { GlassCard } from './Surface';
 import { Icon, IconName } from './Icon';
@@ -33,9 +33,9 @@ export default function MetricTile({
 
   return (
     <GlassCard style={{ width: '47.5%' }}>
-      <View className="min-h-[104px] justify-between">
-        <View className="flex-row items-start justify-between gap-3">
-          <View>
+      <YStack className="min-h-[104px] justify-between">
+        <XStack className="flex-row items-start justify-between gap-3">
+          <YStack>
             <AnimatedNumber
               value={value}
               duration={800}
@@ -44,20 +44,20 @@ export default function MetricTile({
             <Text className="mt-1 text-xs font-bold uppercase text-muted dark:text-muted-dark">
               {label}
             </Text>
-          </View>
+          </YStack>
           <View
             className="h-9 w-9 items-center justify-center rounded-2xl"
             style={{ backgroundColor: `${color}22`, borderWidth: 1, borderColor: `${color}44` }}
           >
             <Icon name={icon} size={17} color={color} />
           </View>
-        </View>
+        </XStack>
         {trend ? (
           <Text numberOfLines={1} className="mt-4 text-xs font-semibold text-muted dark:text-muted-dark">
             {trend}
           </Text>
         ) : null}
-      </View>
+      </YStack>
     </GlassCard>
   );
 }

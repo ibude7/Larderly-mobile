@@ -1,5 +1,6 @@
 import { type ElementRef, type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { Text, View } from 'tamagui';
 import GorhomBottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,

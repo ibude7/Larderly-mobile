@@ -1,5 +1,6 @@
 import { type ReactNode, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { Text, View } from 'tamagui';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as Haptics from 'expo-haptics';
 import { Icon, type IconName } from './Icon';

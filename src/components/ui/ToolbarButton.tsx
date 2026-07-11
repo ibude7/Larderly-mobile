@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Button as TamaguiButton } from 'tamagui';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
@@ -26,7 +27,8 @@ export default function ToolbarButton({ icon, label, onPress, active, danger }: 
 
   return (
     <Animated.View style={[animatedStyle, { shadowColor: active ? tone : c.shadow }, styles.shadow]}>
-      <Pressable
+      <TamaguiButton
+        unstyled
         onPress={() => {
           haptics.tap();
           onPress();
@@ -48,7 +50,7 @@ export default function ToolbarButton({ icon, label, onPress, active, danger }: 
         ]}
       >
         <Icon name={icon} size={18} color={tone} />
-      </Pressable>
+      </TamaguiButton>
     </Animated.View>
   );
 }

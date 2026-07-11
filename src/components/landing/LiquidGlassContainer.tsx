@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
-import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { GlassView } from 'expo-glass-effect';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { LiquidGlassView } from '@callstack/liquid-glass';
 import { LinearGradient } from 'expo-linear-gradient';
 import { canUseLiquidGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
@@ -17,7 +16,7 @@ interface LiquidGlassContainerProps {
 
 /**
  * 3D liquid-glass panel sized to its children.
- * Glass fills via absoluteFill so BlurView/GlassView cannot collapse layout.
+ * Glass fills via absoluteFill so LiquidGlassView cannot collapse layout.
  */
 export function LiquidGlassContainer({
   children,
@@ -41,37 +40,21 @@ export function LiquidGlassContainer({
         style,
       ]}
     >
-      {useNativeGlass ? (
-        <GlassView
-          glassEffectStyle="regular"
-          colorScheme="light"
-          tintColor={`${tintColor}18`}
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              borderRadius: radius,
-              borderWidth: StyleSheet.hairlineWidth * 1.5,
-              borderColor: 'rgba(255,255,255,0.55)',
-              overflow: 'hidden',
-            },
-          ]}
-        />
-      ) : (
-        <BlurView
-          intensity={Platform.OS === 'ios' ? 52 : 40}
-          tint="light"
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              borderRadius: radius,
-              borderWidth: StyleSheet.hairlineWidth * 1.5,
-              borderColor: 'rgba(255,255,255,0.55)',
-              backgroundColor: 'rgba(255, 253, 246, 0.62)',
-              overflow: 'hidden',
-            },
-          ]}
-        />
-      )}
+      <LiquidGlassView
+        effect="regular"
+        colorScheme="light"
+        tintColor={`${tintColor}18`}
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            borderRadius: radius,
+            borderWidth: StyleSheet.hairlineWidth * 1.5,
+            borderColor: 'rgba(255,255,255,0.55)',
+            backgroundColor: useNativeGlass ? 'transparent' : 'rgba(255, 253, 246, 0.62)',
+            overflow: 'hidden',
+          },
+        ]}
+      />
 
       <LinearGradient
         pointerEvents="none"

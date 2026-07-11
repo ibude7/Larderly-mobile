@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { View, Text } from "react-native";
+import { Text, View } from "tamagui";
 import Modal from "./Modal";
 import Button from "./Button";
 import { Icon, IconName } from "./Icon";

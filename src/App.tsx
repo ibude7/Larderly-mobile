@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { View, useColorScheme as useSystemColorScheme } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { useFonts } from '@expo-google-fonts/outfit';
+import { TamaguiProvider } from 'tamagui';
 import {
   Outfit_400Regular,
   Outfit_500Medium,
@@ -35,6 +36,7 @@ import { setAnalyticsPreferenceEnabled } from './lib/analytics';
 import { analytics } from './lib/firebase';
 import { toFirestoreNotificationPrefs } from './lib/notificationPrefs';
 import { setNotificationPresentationPrefs } from './lib/push';
+import { tamaguiConfig } from '../tamagui.config';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -132,15 +134,17 @@ function ThemedRoot() {
     THEME_COLOR_TOKENS[prefs.themeColor]?.primary ?? THEME_COLOR_TOKENS.orange.primary;
 
   return (
-    <AccentProvider color={accentColor}>
-      <View className={isDark ? 'dark flex-1' : 'flex-1'}>
-        <ThemedStatusBar />
-        <ErrorBoundary>
-          <RootNavigator />
-        </ErrorBoundary>
-        <ToastContainer />
-      </View>
-    </AccentProvider>
+    <TamaguiProvider config={tamaguiConfig} defaultTheme={isDark ? 'dark' : 'light'}>
+      <AccentProvider color={accentColor}>
+        <View className={isDark ? 'dark flex-1' : 'flex-1'}>
+          <ThemedStatusBar />
+          <ErrorBoundary>
+            <RootNavigator />
+          </ErrorBoundary>
+          <ToastContainer />
+        </View>
+      </AccentProvider>
+    </TamaguiProvider>
   );
 }
 

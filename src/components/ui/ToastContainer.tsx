@@ -1,13 +1,15 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+import { Text, View } from "tamagui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { LiquidGlassView } from "@callstack/liquid-glass";
 import { useToast, ToastType } from "../../contexts/ToastContext";
 import { Icon, IconName } from "./Icon";
-import { BlurView } from "expo-blur";
 import { toastColors } from "../../theme";
 import { useAppColors } from "../../hooks/useAppColors";
 import { useTheme } from "../../hooks/useTheme";
 import { useScale } from "../../theme/scale";
+import { canUseLiquidGlass } from "../../lib/liquidGlass";
 
 const ICON: Record<ToastType, IconName> = {
   success: "success",
@@ -21,6 +23,7 @@ export default function ToastContainer() {
   const insets = useSafeAreaInsets();
   const c = useAppColors();
   const theme = useTheme();
+  const useNativeGlass = canUseLiquidGlass();
   const { s, fs } = useScale();
 
   if (toasts.length === 0) return null;
@@ -44,14 +47,16 @@ export default function ToastContainer() {
             key={toast.id}
             entering={FadeInDown.springify().damping(18)}
           >
-            <BlurView
-              intensity={theme === "dark" ? 75 : 80}
-              tint={theme}
+            <LiquidGlassView
+              effect="regular"
+              colorScheme={theme}
+              tintColor={theme === "dark" ? "rgba(22, 22, 24, 0.66)" : "rgba(255, 255, 255, 0.66)"}
               style={{
                 borderRadius: s(22),
                 borderWidth: StyleSheet.hairlineWidth,
                 borderColor: c.line,
                 overflow: "hidden",
+                backgroundColor: useNativeGlass ? "transparent" : c.surfaceGlass,
                 flexDirection: "row",
                 alignItems: "flex-start",
                 gap: s(12),
@@ -102,7 +107,7 @@ export default function ToastContainer() {
               >
                 <Icon name="close" size={s(16)} color={c.muted} />
               </Pressable>
-            </BlurView>
+            </LiquidGlassView>
           </Animated.View>
         );
       })}

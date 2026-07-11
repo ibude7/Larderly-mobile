@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable } from 'react-native';
+import { Text, View } from 'tamagui';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { parseStoredDate, formatDateString } from '../../lib/date';
 import { Icon } from './Icon';

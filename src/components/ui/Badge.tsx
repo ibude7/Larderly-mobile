@@ -1,4 +1,5 @@
-import { Text, View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Text, View } from 'tamagui';
 import { useAppColors } from '../../hooks/useAppColors';
 
 type BadgeVariant = 'success' | 'warning' | 'danger' | 'neutral' | 'primary';

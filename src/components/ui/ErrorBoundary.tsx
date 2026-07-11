@@ -1,5 +1,6 @@
 import { Component, ReactNode } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
+import { Text, View } from "tamagui";
 import Button from "./Button";
 import { Icon } from "./Icon";
 import { useAppColors } from "../../hooks/useAppColors";

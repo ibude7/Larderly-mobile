@@ -1,12 +1,9 @@
 import { memo } from "react";
 import {
-  Pressable,
-  Text,
-  View,
-  ActivityIndicator,
   PressableProps,
   StyleSheet,
 } from "react-native";
+import { Button as TamaguiButton, Spinner, Text, View, XStack } from "tamagui";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -32,14 +29,6 @@ interface ButtonProps {
   className?: string;
   hitSlop?: PressableProps["hitSlop"];
 }
-
-const LABEL: Record<Variant, string> = {
-  primary: "text-white",
-  secondary: "text-ink dark:text-ink-dark",
-  ghost: "text-muted dark:text-muted-dark",
-  danger: "text-white",
-  outline: "text-ink dark:text-ink-dark",
-};
 
 const SPRING = { damping: 14, stiffness: 160 };
 
@@ -71,10 +60,16 @@ function Button({
   const c = useAppColors();
   const haptics = useHaptics();
   const scale = useSharedValue(1);
-  const pad = size === "sm" ? "px-4 py-2" : "px-6 py-3.5";
+  const pad = size === "sm" ? styles.padSm : styles.padMd;
   const isDisabled = disabled || loading;
   const labelSize = size === "sm" ? 13 : 15;
   const iconColor = getIconColor(variant, c);
+  const labelColor =
+    variant === "primary" || variant === "danger"
+      ? "#FFFFFF"
+      : variant === "ghost"
+        ? c.muted
+        : c.ink;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -105,7 +100,7 @@ function Button({
   const borderColor = variant === "ghost" ? "transparent" : c.lineStrong;
 
   const content = loading ? (
-    <ActivityIndicator size={18} color={iconColor} />
+    <Spinner size="small" color={iconColor} />
   ) : (
     <>
       {icon && (
@@ -114,8 +109,7 @@ function Button({
         </View>
       )}
       <Text
-        style={{ fontSize: labelSize }}
-        className={`font-bold ${LABEL[variant]}`}
+        style={{ fontSize: labelSize, color: labelColor, fontFamily: "Outfit_700Bold" }}
       >
         {label}
       </Text>
@@ -123,11 +117,9 @@ function Button({
   );
 
   return (
-    <Animated.View
-      style={[animatedStyle, primaryGlow]}
-      className={full ? "w-full" : undefined}
-    >
-      <Pressable
+    <Animated.View style={[animatedStyle, primaryGlow, full && styles.full]}>
+      <TamaguiButton
+        unstyled
         onPress={() => {
           haptics.tap();
           onPress();
@@ -142,19 +134,21 @@ function Button({
         hitSlop={hitSlop}
         style={[
           styles.button,
+          pad,
           {
             opacity: isDisabled ? 0.55 : 1,
             backgroundColor,
             borderColor,
             overflow: "hidden",
           },
+          full && styles.full,
         ]}
-        className={`flex-row items-center justify-center gap-2 rounded-field ${pad} ${
-          full ? "w-full" : ""
-        } ${className}`}
+        className={className}
       >
-        {content}
-      </Pressable>
+        <XStack style={styles.content}>
+          {content}
+        </XStack>
+      </TamaguiButton>
     </Animated.View>
   );
 }
@@ -162,7 +156,27 @@ function Button({
 export default memo(Button);
 
 const styles = StyleSheet.create({
+  full: {
+    width: "100%",
+  },
   button: {
     borderWidth: 1.5,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  content: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+  },
+  padSm: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  padMd: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
   },
 });

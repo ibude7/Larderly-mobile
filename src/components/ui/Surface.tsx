@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { GlassView } from 'expo-glass-effect';
+import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { LiquidGlassView } from '@callstack/liquid-glass';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'tamagui';
 import { useAppColors } from '../../hooks/useAppColors';
 import { canUseLiquidGlass } from '../../lib/liquidGlass';
 
@@ -70,14 +71,14 @@ export function Surface({
   if (variant === 'glass') {
     if (useNativeGlass) {
       return (
-        <GlassView
-          glassEffectStyle="regular"
+        <LiquidGlassView
+          effect="regular"
           colorScheme={c.blurTint === 'dark' ? 'dark' : 'light'}
           tintColor={c.blurTint === 'dark' ? 'rgba(30, 29, 25, 0.26)' : 'rgba(255, 253, 246, 0.34)'}
           style={[containerStyle, styles.nativeGlass]}
         >
           <View style={styles.glassContent}>{children}</View>
-        </GlassView>
+        </LiquidGlassView>
       );
     }
 

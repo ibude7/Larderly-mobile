@@ -1,25 +1,25 @@
 import { ReactNode, useEffect } from "react";
 import {
   Modal as RNModal,
-  View,
-  Text,
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from "react-native";
+import { Text, View } from "tamagui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { LiquidGlassView } from "@callstack/liquid-glass";
 import { Icon } from "./Icon";
-import { BlurView } from "expo-blur";
 import { useAppColors } from "../../hooks/useAppColors";
 import { useTheme } from "../../hooks/useTheme";
 import { useScale } from "../../theme/scale";
+import { canUseLiquidGlass } from "../../lib/liquidGlass";
 
 interface ModalProps {
   isOpen: boolean;
@@ -48,6 +48,7 @@ export default function Modal({
 }: ModalProps) {
   const c = useAppColors();
   const theme = useTheme();
+  const useNativeGlass = canUseLiquidGlass();
   const insets = useSafeAreaInsets();
   const { height, s, fs, fsLayout } = useScale();
   const sheetOffset = height * 0.4;
@@ -81,10 +82,11 @@ export default function Modal({
           style={StyleSheet.absoluteFill}
           onPress={dismissable ? onClose : undefined}
         >
-          <BlurView
-            intensity={15}
-            tint={theme}
-            style={StyleSheet.absoluteFill}
+          <LiquidGlassView
+            effect="regular"
+            colorScheme={theme}
+            tintColor={theme === "dark" ? "rgba(10, 10, 12, 0.36)" : "rgba(255, 255, 255, 0.28)"}
+            style={[StyleSheet.absoluteFill, { backgroundColor: useNativeGlass ? "transparent" : "rgba(15, 18, 22, 0.22)" }]}
           />
         </Pressable>
 
@@ -93,9 +95,10 @@ export default function Modal({
           className="w-full"
         >
           <Animated.View style={sheetStyle}>
-            <BlurView
-              intensity={theme === "dark" ? 75 : 80}
-              tint={theme}
+            <LiquidGlassView
+              effect="regular"
+              colorScheme={theme}
+              tintColor={theme === "dark" ? "rgba(22, 22, 24, 0.72)" : "rgba(255, 255, 255, 0.72)"}
               style={{
                 borderTopLeftRadius: s(36),
                 borderTopRightRadius: s(36),
@@ -103,6 +106,7 @@ export default function Modal({
                 borderBottomWidth: 0,
                 borderColor: c.line,
                 overflow: "hidden",
+                backgroundColor: useNativeGlass ? "transparent" : c.surfaceGlass,
                 maxHeight: height - insets.top - s(16),
                 paddingBottom: insets.bottom,
               }}
@@ -156,7 +160,7 @@ export default function Modal({
               ) : (
                 children
               )}
-            </BlurView>
+            </LiquidGlassView>
           </Animated.View>
         </KeyboardAvoidingView>
       </View>

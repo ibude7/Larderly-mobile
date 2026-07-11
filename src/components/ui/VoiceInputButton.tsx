@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, Linking } from 'react-native';
+import { Pressable, Linking } from 'react-native';
+import { Text, View } from 'tamagui';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
