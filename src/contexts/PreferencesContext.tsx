@@ -1,131 +1,271 @@
-import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Currency, UnitSystem } from '../lib/format';
+import { doc, getDoc, onSnapshot, setDoc } from '@react-native-firebase/firestore';
+import { useAuth } from './AuthContext';
+import { PreferenceValueProvider } from './PreferenceValueContext';
+import { db } from '../lib/firebase';
+import {
+  createDefaultPreferences,
+  createPreferencesEnvelope,
+  migratePreferences,
+  type Preferences,
+  type PreferencesEnvelope,
+} from './preferencesSchema';
 
-export type Theme = 'light' | 'dark' | 'system';
-export type ThemeColor = 'orange' | 'blue' | 'green' | 'purple' | 'rose';
-export type Language = 'en' | 'es' | 'fr';
-export type FontScale = 'sm' | 'md' | 'lg';
-export type NotifFrequency = 'realtime' | 'daily' | 'weekly';
-export type ColorBlindMode = 'none' | 'deuteranopia' | 'protanopia' | 'tritanopia';
-
-export interface Preferences {
-  theme: Theme;
-  themeColor: ThemeColor;
-  language: Language;
-  currency: Currency;
-  units: UnitSystem;
-  fontScale: FontScale;
-  colorBlindMode: ColorBlindMode;
-  notifications: {
-    expiration: boolean;
-    lowStock: boolean;
-    activity: boolean;
-    deals: boolean;
-    recipes: boolean;
-    budget: boolean;
-    achievements: boolean;
-    quietHoursStart: number;
-    quietHoursEnd: number;
-    frequency: NotifFrequency;
-    sound: boolean;
-    vibrate: boolean;
-  };
-  privacy: {
-    analytics: boolean;
-    personalizedAds: boolean;
-  };
-  integrations: {
-    appleHealth: boolean;
-    googleFit: boolean;
-    smartHome: boolean;
-  };
-}
-
-const DEFAULTS: Preferences = {
-  theme: 'system',
-  themeColor: 'orange',
-  language: 'en',
-  currency: 'USD',
-  units: 'imperial',
-  fontScale: 'md',
-  colorBlindMode: 'none',
-  notifications: {
-    expiration: true,
-    lowStock: true,
-    activity: true,
-    deals: false,
-    recipes: true,
-    budget: true,
-    achievements: true,
-    quietHoursStart: 21,
-    quietHoursEnd: 8,
-    frequency: 'realtime',
-    sound: true,
-    vibrate: true,
-  },
-  privacy: { analytics: true, personalizedAds: false },
-  integrations: { appleHealth: false, googleFit: false, smartHome: false },
-};
+export {
+  PREFERENCES_SCHEMA_VERSION,
+  createDefaultPreferences,
+  createPreferencesEnvelope,
+  migratePreferences,
+  normalizePreferences,
+} from './preferencesSchema';
+export type {
+  ColorBlindMode,
+  FontScale,
+  Language,
+  NotifFrequency,
+  Preferences,
+  PreferencesEnvelope,
+  Theme,
+  ThemeColor,
+} from './preferencesSchema';
 
 const STORAGE_KEY = 'larderly:prefs';
+const LOCAL_WRITE_DELAY_MS = 250;
+const REMOTE_WRITE_DELAY_MS = 800;
 
 interface PreferencesContextType {
   prefs: Preferences;
   setPrefs: (next: Partial<Preferences>) => void;
-  setNotificationPref: (key: keyof Preferences['notifications'], value: boolean | number) => void;
+  setNotificationPref: (
+    key: keyof Preferences['notifications'],
+    value: Preferences['notifications'][keyof Preferences['notifications']],
+  ) => void;
   reset: () => void;
   ready: boolean;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
 
-async function loadPrefs(): Promise<Preferences> {
+async function loadEnvelope(key: string): Promise<PreferencesEnvelope | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw);
-    return {
-      ...DEFAULTS,
-      ...parsed,
-      notifications: { ...DEFAULTS.notifications, ...(parsed.notifications ?? {}) },
-      privacy: { ...DEFAULTS.privacy, ...(parsed.privacy ?? {}) },
-      integrations: { ...DEFAULTS.integrations, ...(parsed.integrations ?? {}) },
-    };
+    const raw = await AsyncStorage.getItem(key);
+    return raw ? migratePreferences(JSON.parse(raw)) : null;
   } catch {
-    return DEFAULTS;
+    return null;
   }
 }
 
+function remoteUpdatedAt(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (value && typeof value === 'object' && 'toMillis' in value) {
+    const toMillis = (value as { toMillis?: () => number }).toMillis;
+    if (typeof toMillis === 'function') return toMillis.call(value);
+  }
+  return 0;
+}
+
+function nextUpdatedAt(previous: number): number {
+  return Math.max(Date.now(), previous + 1);
+}
+
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [prefs, setPrefsState] = useState<Preferences>(DEFAULTS);
+  const { user, isAnonymous, loading: authLoading } = useAuth();
+  const [envelope, setEnvelope] = useState<PreferencesEnvelope>(() =>
+    createPreferencesEnvelope(createDefaultPreferences(), 0),
+  );
   const [ready, setReady] = useState(false);
+  const [remoteReady, setRemoteReady] = useState(false);
+  const generationRef = useRef(0);
+  const updatedAtRef = useRef(0);
+  const serverUpdatedAtRef = useRef(0);
+  const authenticatedUid = user && !isAnonymous ? user.uid : null;
+  const storageKey = authenticatedUid ? `${STORAGE_KEY}:${authenticatedUid}` : STORAGE_KEY;
 
   useEffect(() => {
-    loadPrefs().then((p) => {
-      setPrefsState(p);
+    if (authLoading) return;
+
+    const generation = ++generationRef.current;
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+    setReady(false);
+    setRemoteReady(false);
+    serverUpdatedAtRef.current = 0;
+
+    const initialize = async () => {
+      const scopedLocal = await loadEnvelope(storageKey);
+      if (cancelled || generation !== generationRef.current) return;
+
+      let selected = scopedLocal;
+      let serverEnvelope: PreferencesEnvelope | null = null;
+      const preferenceRef = authenticatedUid
+        ? doc(db, 'users', authenticatedUid, 'settings', 'preferences')
+        : null;
+
+      if (preferenceRef) {
+        try {
+          const snapshot = await getDoc(preferenceRef);
+          if (cancelled || generation !== generationRef.current) return;
+          if (snapshot.metadata.fromCache !== true) setRemoteReady(true);
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            serverEnvelope = migratePreferences({
+              ...data,
+              updatedAt: remoteUpdatedAt(data.updatedAt),
+            });
+            serverUpdatedAtRef.current = serverEnvelope.updatedAt;
+          }
+        } catch {
+          // Local preferences remain usable while Firestore is unavailable.
+        }
+
+        // A pre-versioned install only has the former global key. Use it as a
+        // one-time seed when neither this account nor the server has settings.
+        if (!selected && !serverEnvelope) {
+          selected = await loadEnvelope(STORAGE_KEY);
+        }
+      }
+
+      if (serverEnvelope && (!selected || serverEnvelope.updatedAt >= selected.updatedAt)) {
+        selected = serverEnvelope;
+      }
+      if (!selected) {
+        selected = createPreferencesEnvelope(createDefaultPreferences(), Date.now());
+      } else if (selected.updatedAt === 0 && !serverEnvelope) {
+        selected = createPreferencesEnvelope(selected.preferences, Date.now());
+      }
+
+      if (cancelled || generation !== generationRef.current) return;
+      updatedAtRef.current = selected.updatedAt;
+      setEnvelope(selected);
       setReady(true);
+
+      if (preferenceRef) {
+        unsubscribe = onSnapshot(
+          preferenceRef,
+          (snapshot) => {
+            if (generation !== generationRef.current) return;
+            if (snapshot.metadata.fromCache !== true) setRemoteReady(true);
+            if (!snapshot.exists()) return;
+            const data = snapshot.data();
+            const incoming = migratePreferences({
+              ...data,
+              updatedAt: remoteUpdatedAt(data.updatedAt),
+            });
+            serverUpdatedAtRef.current = Math.max(
+              serverUpdatedAtRef.current,
+              incoming.updatedAt,
+            );
+            if (incoming.updatedAt > updatedAtRef.current) {
+              updatedAtRef.current = incoming.updatedAt;
+              setEnvelope(incoming);
+            }
+          },
+          () => {
+            // Preference sync failures must not block the app.
+          },
+        );
+      }
+    };
+
+    initialize().catch(() => {
+      if (!cancelled && generation === generationRef.current) {
+        const fallback = createPreferencesEnvelope(createDefaultPreferences(), Date.now());
+        updatedAtRef.current = fallback.updatedAt;
+        setEnvelope(fallback);
+        setReady(true);
+      }
     });
-  }, []);
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }, [authLoading, authenticatedUid, storageKey]);
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)).catch(() => {});
-  }, [prefs, ready]);
+    const localTimer = setTimeout(() => {
+      AsyncStorage.setItem(storageKey, JSON.stringify(envelope)).catch(() => {});
+    }, LOCAL_WRITE_DELAY_MS);
+
+    const remoteTimer = authenticatedUid && remoteReady
+      ? setTimeout(() => {
+          if (envelope.updatedAt <= serverUpdatedAtRef.current) return;
+          setDoc(
+            doc(db, 'users', authenticatedUid, 'settings', 'preferences'),
+            envelope,
+            { merge: true },
+          )
+            .then(() => {
+              serverUpdatedAtRef.current = Math.max(
+                serverUpdatedAtRef.current,
+                envelope.updatedAt,
+              );
+            })
+            .catch(() => {});
+        }, REMOTE_WRITE_DELAY_MS)
+      : undefined;
+
+    return () => {
+      clearTimeout(localTimer);
+      if (remoteTimer) clearTimeout(remoteTimer);
+    };
+  }, [authenticatedUid, envelope, ready, remoteReady, storageKey]);
 
   const setPrefs = useCallback((next: Partial<Preferences>) => {
-    setPrefsState((prev) => ({ ...prev, ...next }));
+    setEnvelope((previous) => {
+      const updatedAt = nextUpdatedAt(updatedAtRef.current);
+      updatedAtRef.current = updatedAt;
+      return createPreferencesEnvelope(
+        { ...previous.preferences, ...next },
+        updatedAt,
+      );
+    });
   }, []);
 
-  const setNotificationPref = useCallback((key: keyof Preferences['notifications'], value: boolean | number) => {
-    setPrefsState((prev) => ({ ...prev, notifications: { ...prev.notifications, [key]: value } }));
+  const setNotificationPref = useCallback((
+    key: keyof Preferences['notifications'],
+    value: Preferences['notifications'][keyof Preferences['notifications']],
+  ) => {
+    setEnvelope((previous) => {
+      const updatedAt = nextUpdatedAt(updatedAtRef.current);
+      updatedAtRef.current = updatedAt;
+      return createPreferencesEnvelope(
+        {
+          ...previous.preferences,
+          notifications: { ...previous.preferences.notifications, [key]: value },
+        },
+        updatedAt,
+      );
+    });
   }, []);
 
-  const reset = useCallback(() => setPrefsState(DEFAULTS), []);
+  const reset = useCallback(() => {
+    const updatedAt = nextUpdatedAt(updatedAtRef.current);
+    updatedAtRef.current = updatedAt;
+    setEnvelope(createPreferencesEnvelope(createDefaultPreferences(), updatedAt));
+  }, []);
+
+  const value = useMemo(
+    () => ({ prefs: envelope.preferences, setPrefs, setNotificationPref, reset, ready }),
+    [envelope.preferences, ready, reset, setNotificationPref, setPrefs],
+  );
 
   return (
-    <PreferencesContext.Provider value={{ prefs, setPrefs, setNotificationPref, reset, ready }}>
-      {children}
+    <PreferencesContext.Provider value={value}>
+      <PreferenceValueProvider value={envelope.preferences}>
+        {children}
+      </PreferenceValueProvider>
     </PreferencesContext.Provider>
   );
 }

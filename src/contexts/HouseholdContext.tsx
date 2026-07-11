@@ -244,29 +244,39 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   const leaveHousehold = useCallback(async () => {
     if (!user || !householdId) throw new Error('No active household or not authenticated');
     const uid = user.uid;
-    
-    const userSnap = await getDoc(doc(db, 'users', uid));
+
+    const householdRef = doc(db, 'households', householdId);
+    const userRef = doc(db, 'users', uid);
+    const [householdSnap, userSnap] = await Promise.all([getDoc(householdRef), getDoc(userRef)]);
+    if (!householdSnap.exists()) throw new Error('The household is no longer available.');
+    if (householdSnap.data()?.ownerId === uid) {
+      throw new Error(
+        'The household owner cannot leave. Ownership transfer or household deletion is required, and is not supported here.',
+      );
+    }
+
     const userData = userSnap.data() ?? {};
     const name = userData.firstName || user.displayName || user.email || 'Member';
 
-    await updateDoc(doc(db, 'households', householdId), {
+    const batch = writeBatch(db);
+    batch.update(householdRef, {
       members: arrayRemove(uid),
       [`memberRoles.${uid}`]: deleteField(),
       [`memberNames.${uid}`]: deleteField(),
       updatedAt: serverTimestamp(),
     });
-
-    await updateDoc(doc(db, 'users', uid), {
+    batch.update(userRef, {
       householdId: '',
       updated_at: serverTimestamp(),
     });
+    await batch.commit();
 
-    await recordActivity(householdId, {
+    recordActivity(householdId, {
       verb: 'member.removed',
       target: 'household',
       actorId: uid,
       actorName: name,
-    });
+    }).catch(() => {});
 
     setProfileHouseholdId(null);
     setHouseholdIdState(null);

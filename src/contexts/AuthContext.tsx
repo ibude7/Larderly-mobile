@@ -49,6 +49,9 @@ import {
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { analytics, auth, crashlytics, db } from '../lib/firebase';
+import { isAnalyticsPreferenceEnabled } from '../lib/analytics';
+import { bestEffortPushCleanup } from '../lib/pushCleanup';
+import { unregisterPush } from '../lib/push';
 import { initializeNewUser } from '../lib/userProfile';
 
 type FbUser = Awaited<ReturnType<typeof signInWithCredential>>['user'];
@@ -179,13 +182,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(fbUser);
       if (!fbUser) {
         await crashlytics().setUserId('');
-        await analytics().setUserId(null);
+        if (isAnalyticsPreferenceEnabled()) {
+          await analytics().setUserId(null);
+        }
         setLoading(false);
         return;
       }
       try {
         await crashlytics().setUserId(fbUser.uid);
-        await analytics().setUserId(fbUser.uid);
+        if (isAnalyticsPreferenceEnabled()) {
+          await analytics().setUserId(fbUser.uid);
+        }
         const displayName = fbUser.displayName ?? '';
         await initializeNewUser(fbUser.uid, displayName);
       } catch (err) {
@@ -209,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const serverVersion = snap.data()?.authVersion ?? 0;
       const localVersion = Number((await AsyncStorage.getItem(localVersionKey)) ?? '0');
       if (serverVersion > localVersion) {
+        await bestEffortPushCleanup(user.uid, unregisterPush);
         await fbSignOut(auth);
       }
     });
@@ -332,9 +340,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    const uid = auth.currentUser?.uid;
     setMfaResolver(null);
     mfaEnrollmentVerificationIdRef.current = null;
     mfaChallengeVerificationIdRef.current = null;
+    if (uid) {
+      await bestEffortPushCleanup(uid, unregisterPush);
+    }
     if (googleConfigured) {
       try {
         await GoogleSignin.signOut();
@@ -425,12 +437,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const revokeAllSessions = async () => {
     if (!user) return { error: new Error('Not authenticated') };
     try {
-      const userRef = doc(db, 'users', user.uid);
+      const uid = user.uid;
+      const userRef = doc(db, 'users', uid);
       const snap = await getDoc(userRef);
       const currentVersion = (snap.data()?.authVersion as number) ?? 0;
       const newVersion = currentVersion + 1;
       await updateDoc(userRef, { authVersion: newVersion, updated_at: serverTimestamp() });
-      await AsyncStorage.setItem(`larderly:av:${user.uid}`, String(newVersion));
+      await AsyncStorage.setItem(`larderly:av:${uid}`, String(newVersion));
+      await bestEffortPushCleanup(uid, unregisterPush);
       await fbSignOut(auth);
       return { error: null };
     } catch (err) {
@@ -443,6 +457,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current) return { error: new Error('Not authenticated') };
     try {
       const uid = current.uid;
+      await bestEffortPushCleanup(uid, unregisterPush);
       try {
         const batch = writeBatch(db);
         const storageLocationsSnap = await getDocs(

@@ -75,6 +75,7 @@ export default function SignInScreen() {
           <GlassButton
             label="Explore without an account"
             variant="light"
+            frosted
             onPress={onGuest}
             loading={guestLoading}
             disabled={loading}

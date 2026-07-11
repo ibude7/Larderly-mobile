@@ -36,6 +36,29 @@ service cloud.firestore {
       return isHouseholdMember(householdId) && householdRole(householdId) != 'viewer';
     }
 
+    function isAdminRemovingHouseholdMember(userId) {
+      return resource.data.householdId is string
+        && isAdminRemovingHouseholdMemberFrom(userId, resource.data.householdId);
+    }
+
+    function isAdminRemovingHouseholdMemberFrom(userId, householdId) {
+      let householdPath = /databases/$(database)/documents/households/$(householdId);
+      return isSignedIn()
+        && householdId != ''
+        && exists(householdPath)
+        && existsAfter(householdPath)
+        && get(householdPath).data.ownerId != userId
+        && userId in get(householdPath).data.members
+        && !(userId in getAfter(householdPath).data.members)
+        && (
+          get(householdPath).data.ownerId == request.auth.uid
+          || get(householdPath).data.memberRoles.get(request.auth.uid, 'editor') == 'admin'
+        )
+        && request.resource.data.householdId == ''
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['householdId', 'updated_at']);
+    }
+
     function validShortString(value, maxLen) {
       return value is string && value.size() <= maxLen;
     }
@@ -88,10 +111,11 @@ service cloud.firestore {
     // ── User profile & private subcollections ───────────────────────────────
     match /users/{userId} {
       allow read, write: if isOwner(userId);
+      allow update: if isAdminRemovingHouseholdMember(userId);
 
       match /loginEvents/{eventId} {
-        allow read, create: if isOwner(userId);
-        allow update, delete: if false;
+        allow read, create, delete: if isOwner(userId);
+        allow update: if false;
       }
 
       match /favorites/{docId} {
@@ -115,6 +139,10 @@ service cloud.firestore {
       }
 
       match /nutrition/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /settings/{docId} {
         allow read, write: if isOwner(userId);
       }
 
@@ -149,9 +177,13 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.ownerId == request.auth.uid
         && request.auth.uid in request.resource.data.members;
-      allow update: if isHouseholdOwner(householdId)
-        || isJoiningHousehold()
-        || (isHouseholdMember(householdId) && canEditHousehold(householdId));
+      allow update: if (
+          isHouseholdOwner(householdId)
+          || isJoiningHousehold()
+          || (isHouseholdMember(householdId) && canEditHousehold(householdId))
+        )
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.ownerId in request.resource.data.members;
       allow delete: if isHouseholdOwner(householdId);
 
       match /inventory/{itemId} {

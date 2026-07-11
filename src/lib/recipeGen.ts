@@ -3,7 +3,7 @@
  *
  * Delegates to dedicated Firebase Cloud Functions instead of calling the
  * Vertex AI Gemini API directly. All exported function signatures are
- * unchanged; callers (RecipesScreen, DashboardScreen) require no updates.
+ * unchanged for when those screens are rebuilt.
  */
 
 import { httpsCallable } from '@react-native-firebase/functions';

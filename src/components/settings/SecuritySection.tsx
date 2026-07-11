@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import Button from '../ui/Button';
-import TextField from '../ui/TextField';
-import Modal from '../ui/Modal';
+import { View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useReauth, withReauth } from '../auth/ReauthDialog';
 import { toE164 } from '../../lib/phone';
+import { useScale } from '../../theme/scale';
+import { SettingsActionButton } from './SettingsActionButton';
+import { SettingsBodyText } from './SettingsBodyText';
+import { SettingsFieldLabel } from './SettingsFieldLabel';
+import { SettingsSurface } from './SettingsSurface';
+import { SettingsTextField } from './SettingsTextField';
+import { SettingsSheet } from './SettingsSheet';
+import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
+
+const ACCENT = SETTINGS_SECTION_COLORS.security;
 
 type EnrollStep = 'enter-phone' | 'enter-code';
 
-export default function SecuritySection() {
+export function SecuritySection() {
+  const { s } = useScale();
   const {
     user,
     isAnonymous,
@@ -45,12 +53,13 @@ export default function SecuritySection() {
 
   if (isAnonymous) {
     return (
-      <View className="rounded-2xl border border-warning/30 bg-warning/10 p-4">
-        <Text className="font-semibold text-ink dark:text-ink-dark">Security</Text>
-        <Text className="mt-2 text-sm text-muted dark:text-muted-dark">
-          Two-factor authentication requires a full account. Upgrade from guest mode in Settings.
-        </Text>
-      </View>
+      <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(14), gap: s(8) }}>
+        <SettingsBodyText accent>Two-factor authentication</SettingsBodyText>
+        <SettingsBodyText>
+          Two-factor authentication requires a full account. Create an account from Account settings
+          to enable SMS 2FA.
+        </SettingsBodyText>
+      </SettingsSurface>
     );
   }
 
@@ -109,70 +118,89 @@ export default function SecuritySection() {
   };
 
   return (
-    <View className="rounded-2xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-4">
-      <View className="mb-3 flex-row items-center justify-between">
-        <Text className="font-semibold text-ink dark:text-ink-dark">Security</Text>
-        <Text className="text-xs font-bold uppercase text-muted dark:text-muted-dark">{factors.length > 0 ? '2FA on' : '2FA off'}</Text>
-      </View>
-      <Text className="mb-3 text-sm text-muted dark:text-muted-dark">
+    <View style={{ gap: s(12) }}>
+      <SettingsBodyText>
         Add your phone as a second factor. You&apos;ll receive an SMS code on new sign-ins.
-      </Text>
+      </SettingsBodyText>
+      <SettingsFieldLabel color={ACCENT}>{factors.length > 0 ? '2FA on' : '2FA off'}</SettingsFieldLabel>
+
       {factors.length === 0 ? (
-        <Text className="mb-3 text-sm text-muted dark:text-muted-dark">No second factor enrolled.</Text>
+        <SettingsBodyText>No second factor enrolled.</SettingsBodyText>
       ) : (
         factors.map((f) => (
-          <View key={f.uid} className="mb-2 flex-row items-center justify-between rounded-xl bg-canvas dark:bg-canvas-dark px-3 py-2">
-            <View>
-              <Text className="font-medium text-ink dark:text-ink-dark">{f.displayName ?? 'Phone'}</Text>
-              <Text className="text-xs text-muted dark:text-muted-dark">{f.phoneNumber ?? 'SMS factor'}</Text>
+          <SettingsSurface
+            key={f.uid}
+            contentStyle={{
+              paddingHorizontal: s(12),
+              paddingVertical: s(10),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: s(8),
+            }}
+          >
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <SettingsBodyText accent>{f.displayName ?? 'Phone'}</SettingsBodyText>
+              <SettingsBodyText>{f.phoneNumber ?? 'SMS factor'}</SettingsBodyText>
             </View>
-            <Button label="Remove" size="sm" variant="danger" onPress={() => removeFactor(f.uid, f.displayName ?? 'factor')} />
-          </View>
+            <SettingsActionButton
+              label="Remove"
+              tone="danger"
+              onPress={() => void removeFactor(f.uid, f.displayName ?? 'factor')}
+              style={{ paddingHorizontal: s(10), paddingVertical: s(6), minHeight: undefined }}
+            />
+          </SettingsSurface>
         ))
       )}
-      <Button label="Add 2FA via SMS" onPress={() => setOpen(true)} />
 
-      <Modal isOpen={open} onClose={() => setOpen(false)} title="Add SMS two-factor">
+      <SettingsActionButton label="Add 2FA via SMS" onPress={() => setOpen(true)} />
+
+      <SettingsSheet isOpen={open} onClose={() => setOpen(false)} title="Add SMS two-factor">
         {step === 'enter-phone' ? (
-          <View className="gap-3">
-            <TextField
+          <View style={{ gap: s(12) }}>
+            <SettingsTextField
               label="Phone number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               placeholder="+1 (555) 555-5555"
               keyboardType="phone-pad"
             />
-            <TextField
+            <SettingsTextField
               label="Display name"
               value={displayName}
               onChangeText={setDisplayName}
               placeholder="e.g. iPhone"
             />
-            <Text className="text-xs text-muted dark:text-muted-dark">
+            <SettingsBodyText>
               By enrolling you agree to receive an SMS verification code. Standard rates apply.
-            </Text>
-            <Button label={submitting ? 'Sending…' : 'Send code'} onPress={sendCode} loading={submitting} />
+            </SettingsBodyText>
+            <SettingsActionButton
+              label={submitting ? 'Sending…' : 'Send code'}
+              tone="primary"
+              loading={submitting}
+              onPress={() => void sendCode()}
+            />
           </View>
         ) : (
-          <View className="gap-3">
-            <Text className="text-sm text-muted dark:text-muted-dark">Enter the 6-digit code sent to {toE164(phoneNumber)}.</Text>
-            <TextField
+          <View style={{ gap: s(12) }}>
+            <SettingsBodyText>Enter the 6-digit code sent to {toE164(phoneNumber)}.</SettingsBodyText>
+            <SettingsTextField
               label="Verification code"
               value={code}
               onChangeText={(v) => setCode(v.replace(/[^\d]/g, ''))}
               keyboardType="number-pad"
-              maxLength={6}
             />
-            <Button
+            <SettingsActionButton
               label={submitting ? 'Verifying…' : 'Verify & enable'}
-              onPress={verifyCode}
+              tone="primary"
               loading={submitting}
               disabled={code.length < 6}
+              onPress={() => void verifyCode()}
             />
-            <Button label="Use a different number" variant="ghost" onPress={() => setStep('enter-phone')} />
+            <SettingsActionButton label="Use a different number" onPress={() => setStep('enter-phone')} />
           </View>
         )}
-      </Modal>
+      </SettingsSheet>
     </View>
   );
 }

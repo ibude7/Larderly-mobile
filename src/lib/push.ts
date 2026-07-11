@@ -2,16 +2,32 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import { db } from './firebase';
+import { createDefaultPreferences } from '../contexts/preferencesSchema';
+
+let foregroundSound = true;
+
+/** Apply sound preference to the foreground notification handler. */
+export function setNotificationPresentationPrefs(prefs: {
+  sound?: boolean;
+  vibrate?: boolean;
+}): void {
+  if (typeof prefs.sound === 'boolean') foregroundSound = prefs.sound;
+  // Vibration is delivered via server/OS prefs; tracked on the user profile.
+  void prefs.vibrate;
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,
+    shouldPlaySound: foregroundSound,
     shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
+
+// Seed defaults so the handler has a defined preference before prefs hydrate.
+setNotificationPresentationPrefs(createDefaultPreferences().notifications);
 
 export async function requestNotificationPermission(): Promise<boolean> {
   const { status: existing } = await Notifications.getPermissionsAsync();

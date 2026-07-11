@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  useDerivedValue,
-} from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { FrostedNavbarGlass } from '../landing/FrostedNavbarGlass';
 import { Icon, IconName } from '../ui/Icon';
-import { useAppColors } from '../../hooks/useAppColors';
+import { useScale } from '../../theme/scale';
+import { landing, landingFonts as SF } from '../../theme/landing';
 
 const TAB_META: Record<string, { label: string; icon: IconName }> = {
   Dashboard: { label: 'Home', icon: 'dashboard' },
@@ -20,135 +14,91 @@ const TAB_META: Record<string, { label: string; icon: IconName }> = {
   Meals: { label: 'Meals', icon: 'chef' },
 };
 
-interface TabButtonProps {
-  focused: boolean;
+interface TabItemProps {
   label: string;
   icon: IconName;
+  focused: boolean;
   onPress: () => void;
+  onLongPress: () => void;
 }
 
-function TabButton({ focused, label, icon, onPress }: TabButtonProps) {
-  const c = useAppColors();
-
-  const labelOpacity = useDerivedValue(() => {
-    return withTiming(focused ? 1 : 0, { duration: 150 });
-  });
-
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: labelOpacity.value,
-  }));
+function TabItem({ label, icon, focused, onPress, onLongPress }: TabItemProps) {
+  const { s, fs, fsLayout } = useScale();
+  const iconSize = fs(20);
+  const labelSize = fs(10);
 
   return (
     <Pressable
       onPress={onPress}
-      style={styles.tabButton}
+      onLongPress={onLongPress}
+      style={[styles.tab, { minHeight: fsLayout(52), paddingVertical: s(4) }]}
       accessibilityRole="button"
       accessibilityState={focused ? { selected: true } : {}}
+      accessibilityLabel={label}
     >
-      <Icon name={icon} size={22} color={focused ? c.primary : c.muted} />
-      <Animated.Text
+      <View
         style={[
-          styles.label,
-          { color: focused ? c.ink : c.muted },
-          labelStyle,
+          styles.tabInner,
+          {
+            paddingHorizontal: s(8),
+            paddingVertical: s(6),
+            borderRadius: s(16),
+            backgroundColor: focused ? `${landing.accent}18` : 'transparent',
+            borderWidth: focused ? StyleSheet.hairlineWidth * 1.5 : 0,
+            borderColor: focused ? `${landing.accent}40` : 'transparent',
+          },
         ]}
       >
-        {label}
-      </Animated.Text>
+        <Icon name={icon} size={iconSize} color={focused ? landing.accent : landing.muted} />
+        <Text
+          style={{
+            marginTop: s(3),
+            fontSize: labelSize,
+            lineHeight: fs(12),
+            fontFamily: focused ? SF.semibold : SF.medium,
+            fontWeight: Platform.OS === 'ios' ? (focused ? '600' : '500') : undefined,
+            color: focused ? landing.ink : landing.muted,
+          }}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const c = useAppColors();
-
-  const [containerWidth, setContainerWidth] = useState(0);
-  const tabWidth = containerWidth ? containerWidth / 5 : 0;
-
-  const translateX = useDerivedValue(() => {
-    if (tabWidth === 0) return 0;
-    return withSpring(state.index * tabWidth, { damping: 15, stiffness: 100 });
-  });
-
-  const indicatorOpacity = useDerivedValue(() => {
-    // Hide indicator behind Scanner FAB
-    return withSpring(state.index === 2 ? 0 : 1);
-  });
-
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-    opacity: indicatorOpacity.value,
-  }));
-
-  // Center Scanner button onPress handler
-  const handleScannerPress = () => {
-    const route = state.routes[2];
-    const event = navigation.emit({
-      type: 'tabPress',
-      target: route.key,
-      canPreventDefault: true,
-    });
-    if (state.index !== 2 && !event.defaultPrevented) {
-      navigation.navigate(route.name as never);
-    }
-  };
-
-  const isScannerFocused = state.index === 2;
+  const { s, fsLayout } = useScale();
+  const radius = s(28);
+  const floatGap = s(12);
 
   return (
     <View
       pointerEvents="box-none"
       style={[
-        styles.floatingContainer,
+        styles.floatWrap,
         {
-          bottom: insets.bottom + 12,
+          bottom: insets.bottom + floatGap,
+          left: s(20),
+          right: s(20),
         },
       ]}
     >
-      <View
-        style={[
-          styles.dock,
-          {
-            borderColor: c.lineStrong,
-            backgroundColor: c.surface,
-            shadowColor: c.ink,
-          },
-        ]}
+      <FrostedNavbarGlass
+        borderRadius={radius}
+        contentStyle={{
+          paddingHorizontal: s(6),
+          paddingVertical: s(6),
+          minHeight: fsLayout(56),
+        }}
       >
-        <View
-          onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-          style={styles.contentContainer}
-        >
-          {/* Floating active pill indicator */}
-          {tabWidth > 0 && (
-            <Animated.View
-              style={[
-                {
-                  position: 'absolute',
-                  width: tabWidth,
-                  height: 48,
-                  top: 0,
-                  padding: 4,
-                },
-                indicatorStyle,
-              ]}
-            >
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: `${c.primary}14`,
-                  borderRadius: 7,
-                  borderWidth: 1.5,
-                  borderColor: c.primary,
-                }}
-              />
-            </Animated.View>
-          )}
-
+        <View style={styles.tabsRow}>
           {state.routes.map((route, index) => {
             const meta = TAB_META[route.name];
             if (!meta) return null;
+
             const focused = state.index === index;
 
             const onPress = () => {
@@ -158,113 +108,51 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 canPreventDefault: true,
               });
               if (!focused && !event.defaultPrevented) {
-                navigation.navigate(route.name as never);
+                navigation.navigate(route.name, route.params);
               }
             };
 
-            // Index 2 is the Scanner placeholder slot inside the Bar
-            if (index === 2) {
-              return (
-                <View key={route.key} style={{ width: `${100 / 5}%`, height: 48 }} />
-              );
-            }
+            const onLongPress = () => {
+              navigation.emit({
+                type: 'tabLongPress',
+                target: route.key,
+              });
+            };
 
             return (
-              <View key={route.key} style={{ width: `${100 / 5}%`, alignItems: 'center' }}>
-                <TabButton
-                  focused={focused}
-                  label={meta.label}
-                  icon={meta.icon}
-                  onPress={onPress}
-                />
-              </View>
+              <TabItem
+                key={route.key}
+                label={meta.label}
+                icon={meta.icon}
+                focused={focused}
+                onPress={onPress}
+                onLongPress={onLongPress}
+              />
             );
           })}
         </View>
-      </View>
-
-      <View
-        pointerEvents="box-none"
-        style={styles.scannerFabContainer}
-      >
-        <Pressable
-          onPress={handleScannerPress}
-          style={[
-            styles.scannerFab,
-            {
-              backgroundColor: c.ink,
-              shadowColor: c.ink,
-              borderColor: c.lineStrong,
-            },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Open Barcode Scanner"
-          accessibilityState={isScannerFocused ? { selected: true } : {}}
-        >
-          <Icon name="scanner" size={26} color="#FFFFFF" />
-        </Pressable>
-      </View>
+      </FrostedNavbarGlass>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  floatingContainer: {
+  floatWrap: {
     position: 'absolute',
-    left: 18,
-    right: 18,
     zIndex: 100,
   },
-  dock: {
-    borderRadius: 10,
-    borderWidth: 1.5,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    overflow: 'hidden',
-    shadowOpacity: 0.14,
-    shadowRadius: 0,
-    shadowOffset: { width: 4, height: 4 },
-    elevation: 4,
-  },
-  contentContainer: {
+  tabsRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  tab: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
-  },
-  tabButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    width: '100%',
-  },
-  scannerFabContainer: {
-    position: 'absolute',
-    left: '50%',
-    top: -12,
-    width: 56,
-    height: 56,
-    marginLeft: -28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 200,
-  },
-  scannerFab: {
-    width: 54,
-    height: 54,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 0,
-    elevation: 6,
-  },
-  label: {
-    fontSize: 9,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 2,
   },
 });

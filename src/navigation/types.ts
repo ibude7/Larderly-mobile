@@ -35,6 +35,16 @@ export type OnboardingStackParamList = {
 export type MainStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Settings: undefined;
+  SettingsAccount: undefined;
+  SettingsHousehold: undefined;
+  SettingsNotifications: undefined;
+  SettingsPermissions: undefined;
+  SettingsSecurity: undefined;
+  SettingsData: undefined;
+  SettingsPreferences: undefined;
+  SettingsSupport: undefined;
+  SettingsAbout: undefined;
+  SettingsDiagnostics: undefined;
   Search: undefined;
   Join: { code: string };
   Achievements: undefined;

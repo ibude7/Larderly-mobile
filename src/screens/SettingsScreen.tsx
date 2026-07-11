@@ -1,842 +1,349 @@
-import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
-import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMemo, type ComponentType, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { MainStackNavigationProp } from '../navigation/types';
 import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  where,
-  setDoc,
-  serverTimestamp,
-  writeBatch,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import TextField from '../components/ui/TextField';
-import Button from '../components/ui/Button';
-import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { Icon } from '../components/ui/Icon';
-import { GlassCard } from '../components/ui/Surface';
+  Apple,
+  Bell,
+  CheckCircle2,
+  ChevronLeft,
+  CircleHelp,
+  Database,
+  Home,
+  Info,
+  KeyRound,
+  Mail,
+  Palette,
+  ShieldCheck,
+  Stethoscope,
+  User,
+} from 'lucide-react-native';
+import { SettingsAccountCard } from '../components/settings/SettingsAccountCard';
+import { SettingsRow } from '../components/settings/SettingsRow';
+import { SettingsRowGroup } from '../components/settings/SettingsRowGroup';
+import { SettingsSectionHeader } from '../components/settings/SettingsSectionHeader';
+import { SettingsStatusChip } from '../components/settings/SettingsStatusChip';
+import { GoogleLogo } from '../components/ui/GoogleLogo';
+import { describeProvider } from '../components/settings/settingsHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useProfile } from '../contexts/ProfileContext';
-import { useInventory } from '../contexts/InventoryContext';
-import { useShopping } from '../contexts/ShoppingContext';
-import { useToast } from '../contexts/ToastContext';
+import { usePrefs } from '../contexts/PreferencesContext';
 import { useSync } from '../contexts/SyncContext';
-import { useConfirm } from '../contexts/ConfirmContext';
-import { useReauth, withReauth } from '../components/auth/ReauthDialog';
-import HouseholdSettingsSection from '../components/settings/HouseholdSettingsSection';
-import SecuritySection from '../components/settings/SecuritySection';
-import PreferencesSection from '../components/settings/PreferencesSection';
-import { db } from '../lib/firebase';
-import { getLocationIcon } from '../lib/appIcons';
-import { StorageLocation } from '../types';
-import { useAppColors } from '../hooks/useAppColors';
-import { pickProfilePhoto, uploadUserAvatar } from '../lib/avatar';
-import { exportPantryAsCSV, exportShoppingHistoryAsCSV } from '../lib/export';
+import { useI18n } from '../i18n';
+import { useGoBack } from '../navigation/useGoBack';
+import type { MainStackNavigationProp } from '../navigation/types';
+import { useScale } from '../theme/scale';
+import { useSettingsTheme } from '../theme/settings';
 
-const LOCATION_COLORS = [
-  '#3b82f6',
-  '#06b6d4',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ef4444',
-  '#10b981',
-  '#ec4899',
-  '#64748b',
-] as const;
-
-function describeProvider(providerIds: string[], isAnonymous: boolean): string {
-  if (isAnonymous) return 'Guest';
-  const ids = new Set(providerIds);
-  if (ids.has('google.com')) return 'Google';
-  if (ids.has('apple.com')) return 'Apple';
-  if (ids.has('password')) return 'Email';
-  return 'Signed in';
-}
+type ChipIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 export default function SettingsScreen() {
-  const c = useAppColors();
   const navigation = useNavigation<MainStackNavigationProp>();
-  const {
-    user,
-    signOut,
-    sendVerificationEmail,
-    upgradeAnonymous,
-    upgradeAnonymousWithGoogle,
-    googleAvailable,
-    deleteAccount,
-    revokeAllSessions,
-  } = useAuth();
-  const { householdId, role } = useHousehold();
-  const {
-    profile,
-    userProfile,
-    updateProfile,
-    updateUserProfile,
-  } = useProfile();
-  const { locations, refetch, items } = useInventory();
-  const { shoppingList, lists } = useShopping();
-  const { showToast } = useToast();
-  const { online, syncing, lastSyncedAt } = useSync();
-  const confirm = useConfirm();
-  const reauth = useReauth();
+  const goBack = useGoBack();
+  const insets = useSafeAreaInsets();
+  const { s, fs, fsLayout } = useScale();
+  const c = useSettingsTheme();
+  const { t } = useI18n();
+  const { user, isAnonymous, getEnrolledMfaFactors } = useAuth();
+  const { householdId } = useHousehold();
+  const { userProfile, profile } = useProfile();
+  const { prefs } = usePrefs();
+  const { online, syncing } = useSync();
 
-  const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [newLocName, setNewLocName] = useState('');
-  const [newLocColor, setNewLocColor] = useState('#f59e0b');
-  const [addingLoc, setAddingLoc] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [upgradeEmail, setUpgradeEmail] = useState('');
-  const [upgradePassword, setUpgradePassword] = useState('');
-  const [upgradeShowPw, setUpgradeShowPw] = useState(false);
-  const [upgradeBusy, setUpgradeBusy] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [pendingDeleteLoc, setPendingDeleteLoc] = useState<{ id: string; name: string } | null>(
-    null,
-  );
-  const [deletingLoc, setDeletingLoc] = useState(false);
-  const [loginEvents, setLoginEvents] = useState<{ id: string; device: string; platform: string; at?: number }[]>([]);
-  const [photoUrl, setPhotoUrl] = useState(userProfile?.profilePictureUrl ?? user?.photoURL ?? '');
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoUrl = userProfile?.profilePictureUrl ?? user?.photoURL ?? '';
+  const displayName = isAnonymous
+    ? 'Guest'
+    : profile?.full_name || user?.displayName || 'Your name';
+  const emailLine = isAnonymous ? 'Guest session' : user?.email || 'Signed in';
+  const initials = useMemo(() => {
+    if (isAnonymous) return '';
+    const nameSource = profile?.full_name || user?.displayName || '';
+    const parts = nameSource.trim().split(/\s+/).filter(Boolean);
+    if (parts.length > 0) {
+      const first = parts[0][0] ?? '';
+      const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+      return (first + last).toUpperCase();
+    }
+    if (user?.email) return user.email[0].toUpperCase();
+    return '';
+  }, [profile?.full_name, user?.displayName, user?.email, isAnonymous]);
 
-  useEffect(() => {
-    if (!user) return;
-    const q = query(collection(db, 'users', user.uid, 'loginEvents'), orderBy('at', 'desc'), limit(10));
-    const unsub = onSnapshot(q, (snap) => {
-      setLoginEvents(
-        snap.docs.map((d) => {
-          const data = d.data();
-          let at: number | undefined;
-          const raw = data.at;
-          if (typeof raw === 'object' && raw !== null && 'toMillis' in raw) {
-            at = (raw as { toMillis: () => number }).toMillis();
-          }
-          return { id: d.id, device: (data.device as string) ?? 'Device', platform: (data.platform as string) ?? '', at };
-        }),
-      );
-    });
-    return unsub;
-  }, [user]);
-
-  useEffect(() => {
-    setFullName(profile?.full_name || '');
-  }, [profile?.full_name]);
-
-  useEffect(() => {
-    setPhotoUrl(userProfile?.profilePictureUrl ?? user?.photoURL ?? '');
-  }, [userProfile?.profilePictureUrl, user?.photoURL]);
-
-  const isAnonymous = !!user?.isAnonymous;
   const providerLabel = useMemo(
     () => describeProvider(user?.providerData?.map((p) => p.providerId) ?? [], isAnonymous),
     [user?.providerData, isAnonymous],
   );
-  const needsVerification =
-    !!user && !isAnonymous && !!user.email && !user.emailVerified;
+  const verified = Boolean(user && !isAnonymous && user.emailVerified);
+  const showVerifiedBadge = !isAnonymous && !!user?.email;
+  const mfaOn = (getEnrolledMfaFactors?.() ?? []).length > 0;
+  const notifOnCount = [
+    prefs.notifications.expiration,
+    prefs.notifications.lowStock,
+    prefs.notifications.activity,
+    prefs.notifications.deals,
+    prefs.notifications.recipes,
+    prefs.notifications.budget,
+    prefs.notifications.achievements,
+  ].filter(Boolean).length;
 
-  const handleSaveProfile = async () => {
-    setSavingProfile(true);
-    const { error } = await updateProfile({ full_name: fullName });
-    if (error) showToast('Failed to update profile', 'error');
-    else showToast('Profile updated', 'success');
-    setSavingProfile(false);
-  };
-
-  const handleAddLocation = async () => {
-    if (!newLocName.trim() || !user || !householdId) return;
-    if (role === 'viewer') {
-      showToast('View-only access', 'warning');
-      return;
-    }
-    try {
-      const colRef = collection(db, 'households', householdId, 'storageLocations');
-      const ref = doc(colRef);
-      await setDoc(ref, {
-        userId: user.uid,
-        name: newLocName.trim(),
-        icon: 'package',
-        color: newLocColor,
-        createdAt: serverTimestamp(),
-      });
-      showToast(`${newLocName} location added`, 'success');
-      setNewLocName('');
-      setAddingLoc(false);
-      refetch();
-    } catch {
-      showToast('Failed to add location', 'error');
-    }
-  };
-
-  const handleDeleteLocation = async () => {
-    if (!user || !pendingDeleteLoc || !householdId) return;
-    if (role === 'viewer') {
-      showToast('View-only access', 'warning');
-      return;
-    }
-    const { id, name } = pendingDeleteLoc;
-    setDeletingLoc(true);
-    try {
-      const pantryQ = query(
-        collection(db, 'households', householdId, 'inventory'),
-        where('locationId', '==', id),
-      );
-      const pantrySnap = await getDocs(pantryQ);
-      const batch = writeBatch(db);
-      pantrySnap.docs.forEach((d) =>
-        batch.update(d.ref, { locationId: null, updatedAt: serverTimestamp() }),
-      );
-      batch.delete(doc(db, 'households', householdId, 'storageLocations', id));
-      await batch.commit();
-      showToast(`${name} location removed`, 'success');
-      refetch();
-    } catch {
-      showToast('Failed to delete location', 'error');
-    } finally {
-      setDeletingLoc(false);
-      setPendingDeleteLoc(null);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    setResending(true);
-    const { error } = await sendVerificationEmail();
-    if (error) showToast(error.message || 'Could not send verification email', 'error');
-    else showToast(`Verification email sent to ${user?.email}`, 'success');
-    setResending(false);
-  };
-
-  const handleUpgrade = async () => {
-    if (!upgradeEmail.trim() || upgradePassword.length < 6) {
-      showToast('Enter a valid email and a password with at least 6 characters', 'warning');
-      return;
-    }
-    setUpgradeBusy(true);
-    const { error } = await upgradeAnonymous(upgradeEmail.trim(), upgradePassword, fullName.trim());
-    setUpgradeBusy(false);
-    if (error) {
-      showToast(error.message || 'Could not create your account', 'error');
-      return;
-    }
-    showToast(`Account created. A verification email was sent to ${upgradeEmail}.`, 'success');
-    setUpgradeOpen(false);
-    setUpgradeEmail('');
-    setUpgradePassword('');
-  };
-
-  const handleGoogleUpgrade = async () => {
-    setGoogleBusy(true);
-    const { error } = await upgradeAnonymousWithGoogle();
-    setGoogleBusy(false);
-    if (error) {
-      showToast(error.message || 'Could not link your Google account', 'error');
-      return;
-    }
-    showToast('Google account linked. Your pantry is now saved.', 'success');
-    setUpgradeOpen(false);
-  };
-
-  const handleExport = async () => {
-    if (!user) return;
-    setExporting(true);
-    try {
-      const payload: Record<string, unknown> = {
-        exported_at: new Date().toISOString(),
-        user: {
-          uid: user.uid,
-          email: user.email || null,
-          display_name: profile?.full_name || user.displayName || null,
-          provider: providerLabel,
-        },
-        pantry_items: items,
-        storage_locations: locations,
-        shopping_list: shoppingList,
-      };
-      if (householdId) {
-        const [invSnap, listsSnap] = await Promise.all([
-          getDocs(collection(db, 'households', householdId, 'inventory')),
-          getDocs(collection(db, 'households', householdId, 'shoppingLists')),
-        ]);
-        payload.household_id = householdId;
-        payload.household_inventory = invSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        payload.shopping_lists = listsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      }
-      const stamp = new Date().toISOString().slice(0, 10);
-      const fileName = `larderly-export-${stamp}.json`;
-      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(payload, null, 2));
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri, { mimeType: 'application/json', UTI: 'public.json' });
-      }
-      showToast('Data exported as JSON', 'success');
-    } catch (err) {
-      console.error('[Larderly] Export failed', err);
-      showToast('Export failed — try again in a moment', 'error');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const shareCsv = async (fileName: string, csv: string) => {
-    const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-    await FileSystem.writeAsStringAsync(fileUri, csv);
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri, { mimeType: 'text/csv', UTI: 'public.comma-separated-values-text' });
-    }
-  };
-
-  const handleExportPantryCsv = async () => {
-    try {
-      const stamp = new Date().toISOString().slice(0, 10);
-      await shareCsv(`larderly-pantry-${stamp}.csv`, exportPantryAsCSV(items, locations));
-      showToast('Export complete', 'success');
-    } catch {
-      showToast('Could not export pantry CSV', 'error');
-    }
-  };
-
-  const handleExportShoppingCsv = async () => {
-    try {
-      const archivedLists = lists.filter((list) => Boolean(list.archivedAt));
-      const stamp = new Date().toISOString().slice(0, 10);
-      await shareCsv(`larderly-shopping-history-${stamp}.csv`, exportShoppingHistoryAsCSV(archivedLists));
-      showToast('Export complete', 'success');
-    } catch {
-      showToast('Could not export shopping history CSV', 'error');
-    }
-  };
-
-  const handleRevokeSessions = async () => {
-    const ok = await confirm({
-      title: 'Sign out everywhere?',
-      message: 'This ends all active sessions on other devices.',
-      destructive: true,
-      confirmLabel: 'Revoke all',
-    });
-    if (!ok) return;
-    try {
-      await withReauth(() => revokeAllSessions(), reauth, 'Confirm to revoke all sessions.');
-      showToast('All sessions revoked', 'success');
-    } catch (err) {
-      if ((err as Error).message !== 'Re-authentication cancelled.') {
-        showToast('Could not revoke sessions', 'error');
-      }
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    const ok = await confirm({
-      title: 'Delete account?',
-      message: 'This permanently removes your account and data. This cannot be undone.',
-      destructive: true,
-      confirmLabel: 'Delete account',
-    });
-    if (!ok) return;
-    try {
-      await withReauth(() => deleteAccount(), reauth, 'Confirm to delete your account.');
-      showToast('Account deleted', 'info');
-    } catch (err) {
-      if ((err as Error).message !== 'Re-authentication cancelled.') {
-        showToast('Could not delete account', 'error');
-      }
-    }
-  };
+  const syncLabel = !online
+    ? t('settings.status.offline')
+    : syncing
+      ? t('settings.status.syncing')
+      : t('settings.status.synced');
+  const syncColor = !online ? c.muted : syncing ? c.warning : c.success;
+  const protectedLabel = mfaOn ? t('settings.status.protected') : t('settings.status.unprotected');
+  const protectedColor = mfaOn ? c.success : c.warning;
+  const alertsOn = notifOnCount > 0;
+  const alertsLabel = alertsOn ? t('settings.status.alertsOn') : t('settings.status.alertsOff');
+  const alertsColor = alertsOn ? c.success : c.muted;
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas dark:bg-canvas-dark" edges={['top']}>
-      <View className="flex-row items-center gap-3 border-b border-line dark:border-line-dark px-4 pb-3">
+    <View style={{ flex: 1, backgroundColor: c.canvas }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingTop: insets.top + s(10),
+          paddingBottom: s(6),
+          paddingHorizontal: s(16),
+          minHeight: fsLayout(48),
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: c.line,
+        }}
+      >
         <Pressable
-          onPress={() => navigation.goBack()}
-          hitSlop={8}
-          className="h-10 w-10 items-center justify-center rounded-full border border-line dark:border-line-dark bg-surface dark:bg-surface-dark"
+          onPress={goBack}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={({ pressed }) => ({
+            width: s(34),
+            height: s(34),
+            borderRadius: s(17),
+            borderWidth: 1,
+            borderColor: c.line,
+            backgroundColor: c.surface,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
-          <Icon name="chevron-left" size={20} color={c.ink} />
+          <ChevronLeft size={fs(18)} color={c.ink} strokeWidth={2.2} />
         </Pressable>
-        <Text className="font-display text-xl text-ink dark:text-ink-dark">Settings</Text>
+        <Text
+          style={{
+            flex: 1,
+            marginLeft: s(10),
+            fontSize: fs(17),
+            lineHeight: fs(22),
+            fontWeight: '600',
+            color: c.ink,
+            flexShrink: 0,
+          }}
+        >
+          {t('settings.title')}
+        </Text>
+        <View style={{ width: s(34) }} />
       </View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 16 }}
+        contentContainerStyle={{
+          paddingHorizontal: s(20),
+          paddingTop: s(14),
+          paddingBottom: insets.bottom + s(32),
+          gap: s(18),
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.duration(500).springify()}>
-          <GlassCard padded>
-            <View className="mb-1 flex-row items-center gap-1.5">
-              <Icon name="sparkles" size={14} color={c.primary} />
-              <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
-                WORKSPACE
-              </Text>
-            </View>
-            <Text className="font-display text-3xl text-ink dark:text-ink-dark">Tune your pantry</Text>
-            <View className="mt-3 flex-row flex-wrap gap-2">
-              <Chip label={`${locations.length} locations`} />
-              <Chip label={providerLabel} highlight />
-              {user?.email ? (
-                <Chip
-                  label={user.email}
-                  icon={user.emailVerified ? 'success' : 'mail'}
-                  warn={!user.emailVerified}
+        <SettingsAccountCard
+          displayName={displayName}
+          emailLine={emailLine}
+          photoUrl={photoUrl || undefined}
+          initials={initials || undefined}
+          accessibilityLabel={`${displayName}. ${emailLine}. View account.`}
+          onPress={() => navigation.navigate('SettingsAccount')}
+          badges={
+            <>
+              <ProviderChip label={providerLabel} />
+              {showVerifiedBadge ? (
+                <SettingsStatusChip
+                  label={verified ? 'Verified' : 'Unverified'}
+                  color={verified ? c.success : c.warning}
+                  icon={verified ? CheckCircle2 : undefined}
                 />
               ) : null}
-            </View>
-          </GlassCard>
-        </Animated.View>
+            </>
+          }
+        />
 
-        {isAnonymous ? (
-          <Animated.View entering={FadeInUp.duration(500).delay(80).springify()}>
-            <Section title="Upgrade guest session" icon="sparkles" iconBg="bg-primary" eyebrow="ACCOUNT">
-
-            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
-              Create an account to keep your items, meals, and shopping list backed up.
-            </Text>
-            {googleAvailable ? (
-              <Button
-                label={googleBusy ? 'Linking…' : 'Continue with Google'}
-                icon="google"
-                variant="secondary"
-                onPress={handleGoogleUpgrade}
-                loading={googleBusy}
-                disabled={upgradeBusy}
-                full
-              />
-            ) : null}
-            {!upgradeOpen ? (
-              <View className={googleAvailable ? 'mt-3' : ''}>
-                <Button
-                  label="Create with email"
-                  icon="sparkles"
-                  onPress={() => setUpgradeOpen(true)}
-                  disabled={googleBusy}
-                  full
-                />
-              </View>
-            ) : (
-              <View className="mt-3 gap-3">
-                <TextField
-                  label="Email"
-                  value={upgradeEmail}
-                  onChangeText={setUpgradeEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholder="you@example.com"
-                />
-                <TextField
-                  label="Password"
-                  value={upgradePassword}
-                  onChangeText={setUpgradePassword}
-                  secureTextEntry={!upgradeShowPw}
-                  rightIcon={upgradeShowPw ? 'eye-off' : 'eye'}
-                  onRightIconPress={() => setUpgradeShowPw((v) => !v)}
-                  placeholder="At least 6 characters"
-                />
-                <View className="flex-row gap-2">
-                  <Button
-                    label={upgradeBusy ? 'Creating…' : 'Create account'}
-                    onPress={handleUpgrade}
-                    loading={upgradeBusy}
-                    disabled={googleBusy}
-                    className="flex-1"
-                  />
-                  <Button
-                    label="Cancel"
-                    variant="secondary"
-                    onPress={() => {
-                      setUpgradeOpen(false);
-                      setUpgradePassword('');
-                    }}
-                  />
-                </View>
-              </View>
-            )}
-          </Section>
-          </Animated.View>
-        ) : null}
-
-        {needsVerification ? (
-          <Animated.View entering={FadeInUp.duration(500).delay(120).springify()}>
-            <Section title="Verify your email" icon="mail" iconBg="bg-warning/10" eyebrow="SECURITY">
-            <Text className="mb-3 text-sm text-muted dark:text-muted-dark">
-              We sent a link to <Text className="font-bold text-ink dark:text-ink-dark">{user?.email}</Text>. Tap the
-              link to confirm your address.
-            </Text>
-            <Button
-              label={resending ? 'Sending…' : 'Resend link'}
-              variant="secondary"
-              onPress={handleResendVerification}
-              loading={resending}
-            />
-          </Section>
-          </Animated.View>
-        ) : null}
-
-        <Animated.View entering={FadeInUp.duration(500).delay(160).springify()}>
-          <Section title="Profile" icon="user" iconBg="bg-primary/10" eyebrow="YOU">
-          <View className="mb-4 items-center gap-3">
-            {photoUrl ? (
-              <Image source={{ uri: photoUrl }} className="h-20 w-20 rounded-full border border-line dark:border-line-dark" />
-            ) : (
-              <View className="h-20 w-20 items-center justify-center rounded-full border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark">
-                <Icon name="user" size={28} color={c.muted} />
-              </View>
-            )}
-            <Button
-              label={uploadingPhoto ? 'Uploading…' : 'Change photo'}
-              variant="secondary"
-              size="sm"
-              loading={uploadingPhoto}
-              onPress={async () => {
-                if (!user) return;
-                const uri = await pickProfilePhoto();
-                if (!uri) return;
-                setUploadingPhoto(true);
-                try {
-                  const url = await uploadUserAvatar(user.uid, uri);
-                  const { error } = await updateUserProfile({ profilePictureUrl: url });
-                  if (error) showToast('Could not save photo', 'error');
-                  else {
-                    setPhotoUrl(url);
-                    showToast('Profile photo updated', 'success');
-                  }
-                } catch {
-                  showToast('Upload failed', 'error');
-                } finally {
-                  setUploadingPhoto(false);
-                }
-              }}
-            />
-          </View>
-          <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
-            {isAnonymous ? 'Guest session — no email on file' : user?.email || 'Signed in'}
-          </Text>
-          <TextField
-            label="Display Name"
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Your name"
-            autoComplete="name"
-          />
-          <View className="mt-4">
-            <Button
-              label={savingProfile ? 'Saving…' : 'Save changes'}
-              onPress={handleSaveProfile}
-              disabled={savingProfile || fullName === (profile?.full_name || '')}
-              loading={savingProfile}
-            />
-          </View>
-        </Section>
-        </Animated.View>
-
-        {householdId ? (
-          <Animated.View entering={FadeInUp.duration(500).delay(200).springify()}>
-            <Section title="Household" icon="user" iconBg="bg-info/10" eyebrow="COLLABORATION">
-              <HouseholdSettingsSection />
-            </Section>
-          </Animated.View>
-        ) : null}
-
-        <Animated.View entering={FadeInUp.duration(500).delay(240).springify()}>
-          <Section title="Preferences" icon="sparkles" iconBg="bg-primary/10" eyebrow="SETTINGS">
-            <PreferencesSection />
-          </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(280).springify()}>
-          <Section title="Security & sync" icon="lock" iconBg="bg-warning/10" eyebrow="SECURITY">
-            <SecuritySection />
-            <View className="mt-4 overflow-hidden rounded-2xl bg-canvas/80 dark:bg-canvas-dark/80 p-3">
-              <Text className="text-sm font-semibold text-ink dark:text-ink-dark">Sync status</Text>
-              <Text className="mt-1 text-xs text-muted dark:text-muted-dark">
-                {online ? (syncing ? 'Syncing…' : 'Online') : 'Offline'}
-                {lastSyncedAt ? ` · Last sync ${new Date(lastSyncedAt).toLocaleString()}` : ''}
-              </Text>
-            </View>
-          {loginEvents.length > 0 && (
-            <View className="mt-4">
-              <Text className="mb-2 text-sm font-semibold text-ink dark:text-ink-dark">Recent sign-ins</Text>
-              {loginEvents.map((ev) => (
-                <View key={ev.id} className="mb-1 rounded-lg bg-canvas dark:bg-canvas-dark px-3 py-2">
-                  <Text className="text-xs text-ink dark:text-ink-dark">{ev.device} · {ev.platform}</Text>
-                  {ev.at ? <Text className="text-xs text-muted dark:text-muted-dark">{new Date(ev.at).toLocaleString()}</Text> : null}
-                </View>
-              ))}
-            </View>
-          )}
-          {!isAnonymous && (
-            <View className="mt-3 gap-2">
-              <Button label="Revoke all sessions" variant="secondary" size="sm" onPress={handleRevokeSessions} />
-            </View>
-          )}
-        </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(320).springify()}>
-          <Section title="Storage locations" icon="shelf" iconBg="bg-info/10" eyebrow="ORGANIZE">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-sm text-muted dark:text-muted-dark">Pantry, Fridge, Freezer, etc.</Text>
-            <Button
-              label={addingLoc ? 'Cancel' : 'Add'}
-              icon={addingLoc ? 'close' : 'plus'}
-              variant="secondary"
-              size="sm"
-              onPress={() => setAddingLoc((v) => !v)}
-            />
-          </View>
-          {addingLoc ? (
-            <View className="mb-4 gap-3 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
-              <TextField
-                value={newLocName}
-                onChangeText={setNewLocName}
-                placeholder="Location name…"
-                autoFocus
-              />
-              <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted dark:text-muted-dark">
-                  Color
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {LOCATION_COLORS.map((color) => (
-                    <Pressable
-                      key={color}
-                      onPress={() => setNewLocColor(color)}
-                      className={`h-9 w-9 rounded-full border-2 ${
-                        newLocColor === color ? 'border-ink' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </View>
-              </View>
-              <Button
-                label="Add location"
-                onPress={handleAddLocation}
-                disabled={!newLocName.trim()}
-                size="sm"
-              />
-            </View>
-          ) : null}
-          {locations.length === 0 ? (
-            <Text className="rounded-2xl border border-dashed border-line dark:border-line-dark p-4 text-center text-xs text-muted dark:text-muted-dark">
-              No storage locations yet. Tap Add to create one.
-            </Text>
-          ) : (
-            <View className="gap-2">
-              {locations.map((loc) => (
-                <LocationRow
-                  key={loc.id}
-                  location={loc}
-                  onDelete={() => setPendingDeleteLoc({ id: loc.id, name: loc.name })}
-                />
-              ))}
-            </View>
-          )}
-        </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(360).springify()}>
-          <Section title="More" icon="grid" iconBg="bg-primary/10" eyebrow="FEATURES">
-            <View className="gap-2">
-              <Button label="Notifications" icon="bell" variant="secondary" onPress={() => navigation.navigate('Notifications')} />
-              <Button label="Reminders" icon="clock" variant="secondary" onPress={() => navigation.navigate('Reminders')} />
-              <Button label="Nutrition" icon="nutrition" variant="secondary" onPress={() => navigation.navigate('Nutrition')} />
-              <Button label="Analytics" icon="trending-down" variant="secondary" onPress={() => navigation.navigate('Analytics')} />
-              <Button label="Meal planner" icon="calendar" variant="secondary" onPress={() => navigation.navigate('MealPlanner')} />
-            </View>
-          </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(400).springify()}>
-          <Section title="Progress" icon="star" iconBg="bg-primary/10" eyebrow="GAMIFICATION">
-            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
-              Track streaks, badges, and milestones as you use Larderly.
-            </Text>
-            <Button
-              label="View achievements"
-              icon="star"
-              variant="secondary"
-              onPress={() => navigation.navigate('Achievements')}
-            />
-          </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(440).springify()}>
-          <Section title="Your data" icon="download" iconBg="bg-success/10" eyebrow="EXPORT">
-            <Text className="mb-4 text-sm leading-relaxed text-muted dark:text-muted-dark">
-              Download a copy of your pantry, shopping history, meal plans, and storage locations.
-            </Text>
-            <View className="gap-2">
-              <Button
-                label={exporting ? 'Preparing export…' : 'Export data'}
-                icon="download"
-                variant="secondary"
-                onPress={handleExport}
-                loading={exporting}
-              />
-              <Button
-                label="Export Pantry (CSV)"
-                icon="download"
-                variant="secondary"
-                onPress={handleExportPantryCsv}
-              />
-              <Button
-                label="Export Shopping History (CSV)"
-                icon="download"
-                variant="secondary"
-                onPress={handleExportShoppingCsv}
-              />
-          </View>
-        </Section>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(480).springify()}>
-          <Section title="Account" icon="logout" iconBg="bg-danger/10" eyebrow="SESSION">
-            <Text className="mb-4 text-sm text-muted dark:text-muted-dark">
-              {isAnonymous
-                ? 'Signing out clears this guest session.'
-                : 'Securely end your session on this device.'}
-            </Text>
-            <Button label="Sign out" icon="logout" variant="danger" onPress={signOut} />
-            {!isAnonymous && (
-              <View className="mt-3">
-                <Button label="Delete account" variant="ghost" onPress={handleDeleteAccount} />
-              </View>
-            )}
-          </Section>
-        </Animated.View>
-
-        <View className="items-center pt-4">
-          <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted dark:text-muted-dark">
-            Larderly · v1.0
-          </Text>
+        <View
+          accessible
+          accessibilityLabel={`${syncLabel}. ${protectedLabel}. ${alertsLabel}`}
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: s(8),
+          }}
+        >
+          <SettingsStatusChip label={syncLabel} color={syncColor} />
+          <SettingsStatusChip label={protectedLabel} color={protectedColor} icon={ShieldCheck} />
+          <SettingsStatusChip label={alertsLabel} color={alertsColor} icon={Bell} />
         </View>
-      </ScrollView>
 
-      <ConfirmDialog
-        isOpen={!!pendingDeleteLoc}
-        onClose={() => !deletingLoc && setPendingDeleteLoc(null)}
-        onConfirm={handleDeleteLocation}
-        busy={deletingLoc}
-        title="Delete storage location"
-        description={`Delete ${pendingDeleteLoc?.name}? Items stored there will be unassigned.`}
-        confirmLabel="Delete location"
-        cancelLabel="Keep"
-      />
-    </SafeAreaView>
+        <Module title={t('settings.group.personal')} accent={c.section.account}>
+          <SettingsRow
+            icon={User}
+            iconColor={c.section.account}
+            label={t('settings.row.account')}
+            subtitle={isAnonymous ? 'Upgrade guest session' : 'Profile & email'}
+            onPress={() => navigation.navigate('SettingsAccount')}
+          />
+          <SettingsRow
+            icon={Home}
+            iconColor={c.section.household}
+            label={t('settings.row.household')}
+            subtitle={householdId ? 'Members, invite & roles' : 'Create or join a household'}
+            onPress={() => navigation.navigate('SettingsHousehold')}
+          />
+        </Module>
+
+        <Module title={t('settings.group.experience')} accent={c.section.preferences}>
+          <SettingsRow
+            icon={Palette}
+            iconColor={c.section.preferences}
+            label={t('settings.row.appearance')}
+            subtitle="Theme, language & units"
+            onPress={() => navigation.navigate('SettingsPreferences')}
+          />
+          <SettingsRow
+            icon={Bell}
+            iconColor={c.section.notifications}
+            label={t('settings.row.notifications')}
+            subtitle={`${notifOnCount} alerts on`}
+            onPress={() => navigation.navigate('SettingsNotifications')}
+          />
+          <SettingsRow
+            icon={KeyRound}
+            iconColor={c.section.notifications}
+            label={t('settings.row.permissions')}
+            subtitle="Camera, photos & more"
+            onPress={() => navigation.navigate('SettingsPermissions')}
+          />
+        </Module>
+
+        <Module title={t('settings.group.privacy')} accent={c.section.security}>
+          <SettingsRow
+            icon={ShieldCheck}
+            iconColor={c.section.security}
+            label={t('settings.row.security')}
+            subtitle={
+              isAnonymous ? 'Upgrade required' : mfaOn ? '2FA on · sessions' : '2FA off · sessions'
+            }
+            onPress={() => navigation.navigate('SettingsSecurity')}
+          />
+          <SettingsRow
+            icon={Database}
+            iconColor={c.section.data}
+            label={t('settings.row.data')}
+            subtitle="Export & storage locations"
+            onPress={() => navigation.navigate('SettingsData')}
+          />
+          <SettingsRow
+            icon={Stethoscope}
+            iconColor={c.section.data}
+            label={t('settings.row.diagnostics')}
+            subtitle="Sync log, cache & reset"
+            onPress={() => navigation.navigate('SettingsDiagnostics')}
+          />
+        </Module>
+
+        <Module title={t('settings.group.support')} accent={c.section.support}>
+          <SettingsRow
+            icon={CircleHelp}
+            iconColor={c.section.support}
+            label={t('settings.row.help')}
+            subtitle="FAQ & contact"
+            onPress={() => navigation.navigate('SettingsSupport')}
+          />
+          <SettingsRow
+            icon={Info}
+            iconColor={c.section.support}
+            label={t('settings.row.about')}
+            subtitle="Version & legal"
+            onPress={() => navigation.navigate('SettingsAbout')}
+          />
+        </Module>
+      </ScrollView>
+    </View>
   );
 }
 
-function Section({
+function Module({
   title,
-  icon,
-  iconBg,
-  eyebrow,
+  accent,
   children,
 }: {
   title: string;
-  icon: Parameters<typeof Icon>[0]['name'];
-  iconBg: string;
-  eyebrow?: string;
-  children: React.ReactNode;
+  accent: string;
+  children: ReactNode;
 }) {
-  const c = useAppColors();
-  return (
-    <GlassCard padded>
-      <View className="mb-4 flex-row items-center gap-3">
-        <View
-          className="h-11 w-11 items-center justify-center rounded-2xl"
-          style={{ backgroundColor: `${c.primary}12` }}
-        >
-          <Icon name={icon} size={22} color={c.primary} />
-        </View>
-        <View className="min-w-0 flex-1">
-          {eyebrow ? (
-            <Text className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted dark:text-muted-dark">
-              {eyebrow}
-            </Text>
-          ) : null}
-          <Text className="font-display text-lg text-ink dark:text-ink-dark">{title}</Text>
-        </View>
-      </View>
-      {children}
-    </GlassCard>
-  );
-}
+  const { s } = useScale();
 
-function Chip({
-  label,
-  icon,
-  highlight,
-  warn,
-}: {
-  label: string;
-  icon?: Parameters<typeof Icon>[0]['name'];
-  highlight?: boolean;
-  warn?: boolean;
-}) {
-  const c = useAppColors();
   return (
-    <View
-      className={`flex-row items-center gap-1 rounded-full border px-3 py-1 ${
-        highlight
-          ? 'border-ink bg-ink'
-          : warn
-            ? 'border-warning/40 bg-warning/10'
-            : 'border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark'
-      }`}
-    >
-      {icon ? (
-        <Icon name={icon} size={12} color={highlight ? '#FFFFFF' : warn ? c.warning : c.muted} />
-      ) : null}
-      <Text
-        numberOfLines={1}
-        className={`max-w-[180px] text-xs font-bold ${
-          highlight ? 'text-white' : warn ? 'text-warning' : 'text-muted dark:text-muted-dark'
-        }`}
-      >
-        {label}
-      </Text>
+    <View style={{ gap: s(0) }}>
+      <View style={{ paddingHorizontal: s(4) }}>
+        <SettingsSectionHeader title={title} />
+      </View>
+      <SettingsRowGroup accent={accent}>{children}</SettingsRowGroup>
     </View>
   );
 }
 
-function LocationRow({
-  location,
-  onDelete,
-}: {
-  location: StorageLocation;
-  onDelete: () => void;
-}) {
-  const c = useAppColors();
-  return (
-    <View className="flex-row items-center gap-3 rounded-2xl border border-line dark:border-line-dark bg-canvas dark:bg-canvas-dark p-3">
+function ProviderChip({ label }: { label: string }) {
+  const { s, fs } = useScale();
+  const c = useSettingsTheme();
+  const Icon = providerLucideIcon(label);
+
+  if (label === 'Google') {
+    return (
       <View
-        className="h-11 w-11 items-center justify-center rounded-2xl border"
+        accessible
+        accessibilityLabel={label}
         style={{
-          backgroundColor: location.color + '18',
-          borderColor: location.color + '40',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: s(5),
+          paddingHorizontal: s(9),
+          paddingVertical: s(4),
+          borderRadius: s(999),
+          borderWidth: 1,
+          borderColor: c.tint(c.inkSoft, 0.36),
+          backgroundColor: c.tint(c.inkSoft, 0.12),
         }}
       >
-        <Icon name={getLocationIcon(location.name)} size={18} color={location.color} />
+        <GoogleLogo size={fs(12)} />
+        <Text
+          style={{
+            fontSize: fs(11.5),
+            lineHeight: fs(15),
+            fontWeight: '600',
+            color: c.inkSoft,
+            flexShrink: 0,
+          }}
+        >
+          {label}
+        </Text>
       </View>
-      <Text className="flex-1 text-sm font-bold text-ink dark:text-ink-dark">{location.name}</Text>
-      <View
-        className="h-3.5 w-3.5 rounded-full"
-        style={{ backgroundColor: location.color }}
-      />
-      <Pressable onPress={onDelete} hitSlop={8} className="h-9 w-9 items-center justify-center">
-        <Icon name="trash" size={16} color={c.muted} />
-      </Pressable>
-    </View>
-  );
+    );
+  }
+
+  return <SettingsStatusChip label={label} color={c.inkSoft} icon={Icon} />;
+}
+
+function providerLucideIcon(label: string): ChipIcon | undefined {
+  if (label === 'Apple') return Apple;
+  if (label === 'Email') return Mail;
+  if (label === 'Guest') return User;
+  return User;
 }

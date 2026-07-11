@@ -40,7 +40,7 @@ export function SocialSignInButtons({ onSuccess, onError }: SocialSignInButtonsP
 
   return (
     <View style={{ gap: s(8), width: '100%', flexShrink: 0 }}>
-      <GlassButton variant="light" onPress={onGoogle} style={{ minHeight: btnH }}>
+      <GlassButton variant="light" frosted onPress={onGoogle} style={{ minHeight: btnH }}>
         <GoogleLogo size={s(18)} />
         <Text
           style={{
