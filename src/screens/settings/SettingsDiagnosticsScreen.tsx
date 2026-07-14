@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import {
-  Clipboard,
-  Platform,
-  Share,
-  Text,
-  View,
-} from 'react-native';
+import { Clipboard, Platform, Share } from 'react-native';
 import {
   AlertCircle,
   Box,
@@ -23,19 +17,20 @@ import {
   Trash2,
   Wifi,
   WifiOff,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { Text, YStack } from 'tamagui';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
 import { SettingsStatusChip } from '../../components/settings/SettingsStatusChip';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
+import { settingsFonts } from '../../components/settings/settingsFonts';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { usePrefs } from '../../contexts/PreferencesContext';
 import { useSync, type SyncEvent, type SyncStatus } from '../../contexts/SyncContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useGoBack } from '../../navigation/useGoBack';
-import { landingFonts as SF } from '../../theme/landing';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
@@ -200,7 +195,7 @@ export default function SettingsDiagnosticsScreen() {
         <Text
           style={{
             color: c.inkSoft,
-            fontFamily: SF.regular,
+            fontFamily: settingsFonts.regular,
             fontSize: fs(12.5),
             lineHeight: fs(18),
             flexShrink: 0,
@@ -211,9 +206,9 @@ export default function SettingsDiagnosticsScreen() {
         </Text>
       </SettingsSurface>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.security}>Connection & sync</SettingsFieldLabel>
-        <SettingsRowGroup accent={c.section.security}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Connection & sync</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={online ? Wifi : WifiOff}
             iconColor={online ? c.success : c.muted}
@@ -238,35 +233,33 @@ export default function SettingsDiagnosticsScreen() {
             }
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.data}>Device & build</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Device & build</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
             icon={Box}
-            iconColor={c.section.data}
             label={`Larderly ${Constants.expoConfig?.version ?? 'Development'}`}
             subtitle={`Build ${buildNumber()} · Runtime ${runtimeVersion()}`}
           />
           <SettingsRow
             icon={Smartphone}
-            iconColor={c.section.data}
             label={Constants.deviceName ?? 'Unknown device'}
             subtitle={`${Platform.OS} ${String(Platform.Version)} · ${Constants.executionEnvironment}`}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.notifications}>Recent sync events</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Recent sync events</SettingsFieldLabel>
         <SettingsRowGroup>
           {syncLog.length > 0 ? (
             syncLog.slice(0, 10).map((event, index) => (
               <SettingsRow
                 key={`${event.at}-${event.type}-${index}`}
                 icon={event.type === 'error' ? AlertCircle : History}
-                iconColor={event.type === 'error' ? c.danger : c.section.notifications}
+                iconColor={event.type === 'error' ? c.danger : undefined}
                 label={eventLabel(event)}
                 subtitle={`${new Date(event.at).toLocaleString()}${event.detail ? ` · ${event.detail}` : ''}`}
               />
@@ -280,27 +273,25 @@ export default function SettingsDiagnosticsScreen() {
             />
           )}
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.support}>Export diagnostics</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Export diagnostics</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
             icon={ClipboardCopy}
-            iconColor={c.section.support}
             label="Copy diagnostics"
             onPress={copyDiagnostics}
           />
           <SettingsRow
             icon={Share2}
-            iconColor={c.section.support}
             label="Share diagnostics"
             onPress={() => void shareDiagnostics()}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
+      <YStack style={{ gap: s(8) }}>
         <SettingsFieldLabel color={c.danger}>Maintenance</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
@@ -320,7 +311,7 @@ export default function SettingsDiagnosticsScreen() {
             onPress={() => void resetPreferences()}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
     </SettingsPageShell>
   );
 }

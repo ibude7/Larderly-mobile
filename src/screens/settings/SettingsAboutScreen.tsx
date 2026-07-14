@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { Linking, Platform, Text, View } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import {
   Activity,
   BadgeInfo,
@@ -9,12 +9,14 @@ import {
   Scale,
   ScrollText,
   TriangleAlert,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { Text, View, YStack } from 'tamagui';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
+import { settingsFonts } from '../../components/settings/settingsFonts';
 import { useToast } from '../../contexts/ToastContext';
 import type { MainStackNavigationProp } from '../../navigation/types';
 import { useGoBack } from '../../navigation/useGoBack';
@@ -22,7 +24,6 @@ import {
   SETTINGS_SUPPORT_PLACEHOLDER_NOTICE,
   SUPPORT_URLS,
 } from '../../lib/settingsSupport';
-import { landingFonts as SF } from '../../theme/landing';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
@@ -78,57 +79,66 @@ export default function SettingsAboutScreen() {
 
   return (
     <SettingsPageShell title="About Larderly" onBack={goBack}>
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.accent}>Build information</SettingsFieldLabel>
-        <SettingsRowGroup accent={c.accent}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Build information</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={BadgeInfo}
-            iconColor={c.accent}
             label="App version"
             trailing={
-              <Text style={{ color: c.inkSoft, fontSize: fs(13), lineHeight: fs(18) }}>
+              <Text
+                style={{
+                  color: c.inkSoft,
+                  fontFamily: settingsFonts.regular,
+                  fontSize: fs(13),
+                  lineHeight: fs(18),
+                }}
+              >
                 {version}
               </Text>
             }
           />
           <SettingsRow
             icon={Fingerprint}
-            iconColor={c.accent}
             label="Build"
             trailing={
-              <Text style={{ color: c.inkSoft, fontSize: fs(13), lineHeight: fs(18) }}>
+              <Text
+                style={{
+                  color: c.inkSoft,
+                  fontFamily: settingsFonts.regular,
+                  fontSize: fs(13),
+                  lineHeight: fs(18),
+                }}
+              >
                 {build}
               </Text>
             }
           />
           <SettingsRow
             icon={Activity}
-            iconColor={c.accent}
             label="Runtime"
             subtitle={runtime}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.support}>Legal</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Legal</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
             icon={FileText}
-            iconColor={c.section.support}
             label="Privacy policy"
             subtitle="Placeholder link"
             onPress={() => void openLegalUrl(SUPPORT_URLS.privacy)}
           />
           <SettingsRow
             icon={Scale}
-            iconColor={c.section.support}
             label="Terms of service"
             subtitle="Placeholder link"
             onPress={() => void openLegalUrl(SUPPORT_URLS.terms)}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
       <SettingsSurface
         radius={s(18)}
@@ -146,7 +156,7 @@ export default function SettingsAboutScreen() {
             flex: 1,
             minWidth: 0,
             color: c.inkSoft,
-            fontFamily: SF.regular,
+            fontFamily: settingsFonts.regular,
             fontSize: fs(12.5),
             lineHeight: fs(18),
             flexShrink: 0,
@@ -159,7 +169,6 @@ export default function SettingsAboutScreen() {
       <SettingsRowGroup>
         <SettingsRow
           icon={ScrollText}
-          iconColor={c.section.data}
           label="Diagnostics"
           subtitle="Connection, sync, device, and cache tools."
           onPress={openDiagnostics}

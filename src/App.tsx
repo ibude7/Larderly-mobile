@@ -134,7 +134,7 @@ function ThemedRoot() {
     THEME_COLOR_TOKENS[prefs.themeColor]?.primary ?? THEME_COLOR_TOKENS.orange.primary;
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={isDark ? 'dark' : 'light'}>
+    <TamaguiProvider config={tamaguiConfig} defaultTheme={isDark ? 'settings_dark' : 'settings_light'}>
       <AccentProvider color={accentColor}>
         <View className={isDark ? 'dark flex-1' : 'flex-1'}>
           <ThemedStatusBar />

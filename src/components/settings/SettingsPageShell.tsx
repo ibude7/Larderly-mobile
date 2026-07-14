@@ -1,108 +1,189 @@
-import { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Search } from '../ui/Glyph';
+import { Text, View, XStack, YStack } from 'tamagui';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
+import { SettingsChromeButton, SettingsChromeSpacer } from './SettingsChromeButton';
+import { SettingsThemeScope } from './SettingsThemeScope';
+import { settingsType } from './settingsFonts';
 
 interface SettingsPageShellProps {
   title: string;
   subtitle?: string;
   onBack: () => void;
+  onSearch?: () => void;
   rightSlot?: ReactNode;
+  /** Hub: title centered between chrome buttons. Detail: compact nav title. */
+  variant?: 'hub' | 'detail';
   children: ReactNode;
 }
 
-/** Utility sub-page shell for settings detail screens — theme-aware, no editorial chrome. */
-export function SettingsPageShell({ title, subtitle, onBack, rightSlot, children }: SettingsPageShellProps) {
+/**
+ * Settings shell — hub layout matches reference:
+ * [back]   Settings   [search]
+ *       subtitle
+ * then scroll content (no large title below chrome).
+ */
+export function SettingsPageShell({
+  title,
+  subtitle,
+  onBack,
+  onSearch,
+  rightSlot,
+  variant = 'detail',
+  children,
+}: SettingsPageShellProps) {
   const insets = useSafeAreaInsets();
   const { s, fs, fsLayout } = useScale();
   const c = useSettingsTheme();
+  const isHub = variant === 'hub';
+
+  const chromeRight =
+    rightSlot ??
+    (onSearch ? (
+      <SettingsChromeButton
+        icon={Search}
+        onPress={onSearch}
+        accessibilityLabel="Search settings"
+      />
+    ) : (
+      <SettingsChromeSpacer />
+    ));
 
   return (
-    <View style={[styles.root, { backgroundColor: c.canvas }]}>
-      <View
-        style={[
-          styles.topBar,
-          {
-            paddingTop: insets.top + s(10),
-            paddingBottom: s(6),
-            paddingHorizontal: s(16),
-            minHeight: fsLayout(48),
-            borderBottomColor: c.line,
-          },
-        ]}
-      >
-        <Pressable
-          onPress={onBack}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={({ pressed }) => [
-            styles.backBtn,
-            {
-              width: s(34),
-              height: s(34),
-              borderRadius: s(17),
-              borderColor: c.line,
-              backgroundColor: c.surface,
-              opacity: pressed ? 0.6 : 1,
-            },
-          ]}
-        >
-          <ChevronLeft size={fs(18)} color={c.ink} strokeWidth={2.2} />
-        </Pressable>
-        <View style={{ flex: 1, marginLeft: s(10) }}>
-          <Text
+    <SettingsThemeScope>
+      <YStack flex={1} style={{ backgroundColor: c.canvas }}>
+        {isHub ? (
+          <YStack
             style={{
-              fontSize: fs(17),
-              lineHeight: fs(22),
-              fontWeight: '600',
-              color: c.ink,
-              flexShrink: 0,
+              paddingTop: insets.top + s(6),
+              paddingBottom: s(10),
+              paddingHorizontal: s(16),
+              gap: s(2),
             }}
           >
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text
-              style={{ fontSize: fs(12), lineHeight: fs(16), color: c.muted, flexShrink: 0 }}
+            <XStack
+              style={{
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: fsLayout(44),
+              }}
             >
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        {rightSlot ?? <View style={{ width: s(34) }} />}
-      </View>
+              <SettingsChromeButton
+                icon={ChevronLeft}
+                onPress={onBack}
+                accessibilityLabel="Go back"
+              />
+              <Text
+                accessibilityRole="header"
+                numberOfLines={1}
+                style={{
+                  ...settingsType('bold'),
+                  fontSize: fs(20),
+                  lineHeight: fs(26),
+                  color: c.ink,
+                  flexShrink: 1,
+                  textAlign: 'center',
+                  letterSpacing: -0.3,
+                }}
+              >
+                {title}
+              </Text>
+              {chromeRight}
+            </XStack>
+            {subtitle ? (
+              <Text
+                numberOfLines={2}
+                style={{
+                  ...settingsType('regular'),
+                  fontSize: fs(14),
+                  lineHeight: fs(19),
+                  color: c.muted,
+                  textAlign: 'center',
+                  flexShrink: 0,
+                  paddingHorizontal: s(48),
+                }}
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+          </YStack>
+        ) : (
+          <XStack
+            style={{
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingTop: insets.top + s(6),
+              paddingBottom: s(8),
+              paddingHorizontal: s(16),
+              minHeight: fsLayout(52),
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: c.line,
+              gap: s(10),
+            }}
+          >
+            <SettingsChromeButton
+              icon={ChevronLeft}
+              onPress={onBack}
+              accessibilityLabel="Go back"
+            />
+            <YStack flex={1} style={{ minWidth: 0, gap: s(1) }}>
+              <Text
+                numberOfLines={1}
+                style={{
+                  ...settingsType('semibold'),
+                  fontSize: fs(17),
+                  lineHeight: fs(22),
+                  color: c.ink,
+                  flexShrink: 0,
+                }}
+              >
+                {title}
+              </Text>
+              {subtitle ? (
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    ...settingsType('regular'),
+                    fontSize: fs(12),
+                    lineHeight: fs(16),
+                    color: c.muted,
+                    flexShrink: 0,
+                  }}
+                >
+                  {subtitle}
+                </Text>
+              ) : null}
+            </YStack>
+            {chromeRight}
+          </XStack>
+        )}
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={{
-            paddingHorizontal: s(20),
-            paddingTop: s(14),
-            paddingBottom: insets.bottom + s(32),
-            gap: s(20),
-          }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: s(16),
+              paddingTop: isHub ? s(4) : s(16),
+              paddingBottom: insets.bottom + s(36),
+              gap: isHub ? s(12) : s(16),
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </YStack>
+    </SettingsThemeScope>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-});

@@ -1,16 +1,9 @@
 /**
- * Recipe generation — client proxy.
- *
- * Delegates to dedicated Firebase Cloud Functions instead of calling the
- * Vertex AI Gemini API directly. All exported function signatures are
- * unchanged for when those screens are rebuilt.
+ * Recipe generation — client proxy for Cloud Functions.
  */
 
-import { httpsCallable } from '@react-native-firebase/functions';
-import { functions } from './firebase';
+import { callFunction, callable } from './callable';
 import type { Recipe, Cuisine, MealType, Difficulty } from './recipes';
-
-// ─── Raw type (matches server response shape) ─────────────────────────────────
 
 interface RawRecipe {
   title: string;
@@ -26,24 +19,17 @@ interface RawRecipe {
   caloriesPerServing?: number;
 }
 
-// ─── Callable references ──────────────────────────────────────────────────────
-
-const _generatePantryRecipes = httpsCallable<
+const _generatePantryRecipes = callable<
   { pantryNames: string[]; dietaryPrefs: string[]; allergies: string; count?: number },
   { recipes: RawRecipe[] }
->(functions, 'ai_generatePantryRecipes');
+>('ai_generatePantryRecipes');
 
-const _generatePersonalizedRecipes = httpsCallable<
+const _generatePersonalizedRecipes = callable<
   { recentActivity: string; dietaryPrefs: string[]; allergies: string; count?: number },
   { recipes: RawRecipe[] }
->(functions, 'ai_generatePersonalizedRecipes');
+>('ai_generatePersonalizedRecipes');
 
-const _generateDashboardTip = httpsCallable<
-  { summary: string },
-  { tip: string }
->(functions, 'ai_generateDashboardTip');
-
-// ─── Mapper (unchanged from original) ────────────────────────────────────────
+const _generateDashboardTip = callable<{ summary: string }, { tip: string }>('ai_generateDashboardTip');
 
 function mapRaw(r: RawRecipe, idx: number): Recipe {
   return {
@@ -66,16 +52,19 @@ function mapRaw(r: RawRecipe, idx: number): Recipe {
   };
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
 export async function generatePantryRecipes(
   pantryNames: string[],
   dietaryPrefs: string[],
   allergies: string,
   count = 3,
 ): Promise<Recipe[]> {
-  const result = await _generatePantryRecipes({ pantryNames, dietaryPrefs, allergies, count });
-  return (result.data.recipes ?? []).map(mapRaw);
+  const data = await callFunction(_generatePantryRecipes, {
+    pantryNames,
+    dietaryPrefs,
+    allergies,
+    count,
+  });
+  return (data.recipes ?? []).map(mapRaw);
 }
 
 export async function generatePersonalizedRecipes(
@@ -84,11 +73,16 @@ export async function generatePersonalizedRecipes(
   allergies: string,
   count = 2,
 ): Promise<Recipe[]> {
-  const result = await _generatePersonalizedRecipes({ recentActivity, dietaryPrefs, allergies, count });
-  return (result.data.recipes ?? []).map(mapRaw);
+  const data = await callFunction(_generatePersonalizedRecipes, {
+    recentActivity,
+    dietaryPrefs,
+    allergies,
+    count,
+  });
+  return (data.recipes ?? []).map(mapRaw);
 }
 
 export async function generateDashboardTip(summary: string): Promise<string> {
-  const result = await _generateDashboardTip({ summary });
-  return result.data.tip ?? '';
+  const data = await callFunction(_generateDashboardTip, { summary });
+  return data.tip ?? '';
 }

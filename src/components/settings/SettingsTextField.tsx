@@ -1,15 +1,11 @@
 import { useState } from 'react';
-import {
-  Pressable,
-  Text,
-  TextInput,
-  View,
-  type TextInputProps,
-} from 'react-native';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { TextInput, type TextInputProps } from 'react-native';
+import { Eye, EyeOff } from '../ui/Glyph';
+import { Button, Text, XStack, YStack } from 'tamagui';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 import { SettingsFieldLabel } from './SettingsFieldLabel';
+import { settingsFonts } from './settingsFonts';
 
 interface SettingsTextFieldProps extends TextInputProps {
   label: string;
@@ -33,16 +29,15 @@ export function SettingsTextField({
   const isSecure = Boolean(secureTextEntry && !revealed);
 
   return (
-    <View style={{ gap: s(7), opacity: editable ? 1 : 0.72 }}>
+    <YStack style={{ gap: s(7), opacity: editable ? 1 : 0.72 }}>
       <SettingsFieldLabel>{label}</SettingsFieldLabel>
-      <View
+      <XStack
         style={{
-          minHeight: fsLayout(multiline ? 76 : 48),
-          flexDirection: 'row',
+          minHeight: fsLayout(multiline ? 76 : 50),
           alignItems: multiline ? 'flex-start' : 'center',
-          borderRadius: s(14),
+          borderRadius: s(16),
           borderWidth: focused ? 1.5 : 1,
-          borderColor: focused ? c.accent : c.line,
+          borderColor: focused ? c.accent : c.lineStrong,
           backgroundColor: editable ? c.surfaceMuted : c.surface,
           paddingHorizontal: s(12),
         }}
@@ -65,16 +60,18 @@ export function SettingsTextField({
           style={{
             flex: 1,
             minWidth: 0,
-            paddingVertical: s(11),
+            paddingVertical: s(12),
             fontSize: fs(15),
             lineHeight: fs(20),
             color: c.ink,
+            fontFamily: settingsFonts.regular,
             textAlignVertical: multiline ? 'top' : 'center',
           }}
           accessibilityLabel={inputProps.accessibilityLabel ?? label}
         />
         {allowPasswordReveal ? (
-          <Pressable
+          <Button
+            unstyled
             onPress={() => setRevealed((value) => !value)}
             accessibilityRole="button"
             accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
@@ -87,18 +84,26 @@ export function SettingsTextField({
             }}
           >
             {revealed ? (
-              <EyeOff size={fs(18)} color={c.muted} strokeWidth={2} />
+              <EyeOff size={fs(18)} color={c.ink} strokeWidth={2} />
             ) : (
-              <Eye size={fs(18)} color={c.muted} strokeWidth={2} />
+              <Eye size={fs(18)} color={c.ink} strokeWidth={2} />
             )}
-          </Pressable>
+          </Button>
         ) : null}
-      </View>
+      </XStack>
       {hint ? (
-        <Text style={{ fontSize: fs(12), lineHeight: fs(17), color: c.muted, flexShrink: 0 }}>
+        <Text
+          style={{
+            fontFamily: settingsFonts.regular,
+            fontSize: fs(12),
+            lineHeight: fs(17),
+            color: c.muted,
+            flexShrink: 0,
+          }}
+        >
           {hint}
         </Text>
       ) : null}
-    </View>
+    </YStack>
   );
 }

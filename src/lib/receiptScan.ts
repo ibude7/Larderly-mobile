@@ -1,13 +1,8 @@
 /**
- * Receipt scanning — client proxy.
- *
- * Delegates to the `ai_parseReceipt` Cloud Function instead of calling the
- * Vertex AI Gemini API directly. The exported `ReceiptItem` type and
- * `parseReceiptImage` signature are unchanged.
+ * Receipt scanning — client proxy for `ai_parseReceipt`.
  */
 
-import { httpsCallable } from '@react-native-firebase/functions';
-import { functions } from './firebase';
+import { callFunction, callable } from './callable';
 import { sanitizeAIProduct, sanitizeNumber } from './sanitize';
 
 export interface ReceiptItem {
@@ -16,14 +11,13 @@ export interface ReceiptItem {
   price: number;
 }
 
-const _parseReceipt = httpsCallable<
-  { base64: string; mimeType: string },
-  { items: ReceiptItem[] }
->(functions, 'ai_parseReceipt');
+const _parseReceipt = callable<{ base64: string; mimeType: string }, { items: ReceiptItem[] }>(
+  'ai_parseReceipt',
+);
 
 export async function parseReceiptImage(base64: string, mimeType: string): Promise<ReceiptItem[]> {
-  const result = await _parseReceipt({ base64, mimeType });
-  return (result.data.items ?? []).map((item) => {
+  const data = await callFunction(_parseReceipt, { base64, mimeType });
+  return (data.items ?? []).map((item) => {
     const sanitized = sanitizeAIProduct(item);
     return {
       name: sanitized.name,

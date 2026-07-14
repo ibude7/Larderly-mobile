@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, Platform, Text, View } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import {
   Bell,
   Camera,
@@ -10,13 +10,15 @@ import {
   Mic2,
   ShieldX,
   SlidersHorizontal,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { Text, View, YStack } from 'tamagui';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
 import { SettingsStatusChip } from '../../components/settings/SettingsStatusChip';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
+import { settingsFonts } from '../../components/settings/settingsFonts';
 import { useToast } from '../../contexts/ToastContext';
 import { useGoBack } from '../../navigation/useGoBack';
 import {
@@ -28,7 +30,6 @@ import {
   type SettingsPermissionSnapshot,
   type SettingsPermissionState,
 } from '../../lib/settingsPermissions';
-import { landingFonts as SF } from '../../theme/landing';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
@@ -146,7 +147,7 @@ export default function SettingsPermissionsScreen() {
           <Text
             style={{
               color: c.inkSoft,
-              fontFamily: SF.regular,
+              fontFamily: settingsFonts.regular,
               fontSize: fs(13),
               lineHeight: fs(19),
               flexShrink: 0,
@@ -158,9 +159,9 @@ export default function SettingsPermissionsScreen() {
         </View>
       </SettingsSurface>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.security}>System access</SettingsFieldLabel>
-        <SettingsRowGroup accent={c.section.security}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>System access</SettingsFieldLabel>
+        <SettingsRowGroup>
           {PERMISSIONS.map(({ kind, label, subtitle, icon }) => {
             const permission = permissions[kind];
             const isUnavailable = permission?.state === 'unavailable';
@@ -168,7 +169,6 @@ export default function SettingsPermissionsScreen() {
               <SettingsRow
                 key={kind}
                 icon={icon}
-                iconColor={c.section.security}
                 label={label}
                 subtitle={
                   isUnavailable && Platform.OS !== 'ios' && Platform.OS !== 'android'
@@ -182,7 +182,7 @@ export default function SettingsPermissionsScreen() {
             );
           })}
         </SettingsRowGroup>
-      </View>
+      </YStack>
     </SettingsPageShell>
   );
 }

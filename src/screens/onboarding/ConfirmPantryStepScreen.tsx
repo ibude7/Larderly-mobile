@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { collection, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import { Package } from 'lucide-react-native';
+import { Package } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { DepthCard, GhostLink } from '../../components/onboarding/OnboardingPrimitives';
 import TextField from '../../components/ui/TextField';
@@ -14,13 +14,15 @@ import { useToast } from '../../contexts/ToastContext';
 import { STORAGE_LOCATIONS } from '../../lib/categories';
 import { db } from '../../lib/firebase';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { ONBOARDING_STEP_ACCENT_COLORS } from '../../navigation/onboardingSteps';
 import type { OnboardingStackNavigationProp } from '../../navigation/types';
 
 export default function ConfirmPantryStepScreen() {
   const navigation = useNavigation<OnboardingStackNavigationProp>();
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { user } = useAuth();
   const { householdId } = useHousehold();
   const { scannedItem, setAddedToSync } = useOnboardingSession();
@@ -90,7 +92,7 @@ export default function ConfirmPantryStepScreen() {
             style={{
               fontSize: fs(18),
               fontFamily: SF.serif,
-              color: landing.ink,
+              color: lc.ink,
               textAlign: 'center',
             }}
             numberOfLines={2}
@@ -101,7 +103,7 @@ export default function ConfirmPantryStepScreen() {
             style={{
               fontSize: fs(11),
               fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-              color: landing.muted,
+              color: lc.muted,
               letterSpacing: fs(0.5),
             }}
           >

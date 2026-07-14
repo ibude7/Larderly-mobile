@@ -206,6 +206,14 @@ module.exports = () => ({
         },
       ],
       ITSAppUsesNonExemptEncryption: false,
+      NSCameraUsageDescription:
+        'Larderly uses the camera to scan barcodes on your groceries.',
+      NSPhotoLibraryUsageDescription:
+        'Larderly uses your photo library to set profile pictures and scan receipts.',
+      NSMicrophoneUsageDescription:
+        'Larderly uses the microphone for voice commands when adding items.',
+      NSSpeechRecognitionUsageDescription:
+        'Larderly uses speech recognition to turn voice into shopping commands.',
     },
   },
   android: {

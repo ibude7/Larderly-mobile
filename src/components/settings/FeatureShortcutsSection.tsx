@@ -1,18 +1,13 @@
-import { View } from 'react-native';
+import { View } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
-import { Bell, Calendar, Clock, Star, TrendingDown, UtensilsCrossed } from 'lucide-react-native';
+import { Bell, Calendar, Clock, Star, TrendingDown, UtensilsCrossed } from '../ui/Glyph';
 import type { MainStackNavigationProp } from '../../navigation/types';
 import { useScale } from '../../theme/scale';
-import { useSettingsTheme } from '../../theme/settings';
 import { SettingsRow } from './SettingsRow';
 import { SettingsRowGroup } from './SettingsRowGroup';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.preferences;
 
 export function FeatureShortcutsSection() {
   const { s } = useScale();
-  const c = useSettingsTheme();
   const navigation = useNavigation<MainStackNavigationProp>();
 
   const links = [
@@ -26,12 +21,11 @@ export function FeatureShortcutsSection() {
 
   return (
     <View style={{ gap: s(8) }}>
-      <SettingsRowGroup accent={ACCENT}>
+      <SettingsRowGroup>
         {links.map((link) => (
           <SettingsRow
             key={link.route}
             icon={link.Icon}
-            iconColor={c.section.preferences}
             label={link.title}
             subtitle={link.subtitle}
             onPress={() => navigation.navigate(link.route)}

@@ -1,9 +1,12 @@
 import { ReactNode } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ChevronLeft } from '../ui/Glyph';
 import { LandingLogoMark } from '../landing/LandingLogoMark';
+import { SettingsChromeButton } from '../settings/SettingsChromeButton';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import { useAccent } from '../../theme/accent';
 
 interface AuthTopBarProps {
@@ -23,6 +26,7 @@ export function AuthTopBar({
   const insets = useSafeAreaInsets();
   const { s, fs } = useScale();
   const accent = useAccent();
+  const lc = useLandingColors();
 
   return (
     <View
@@ -32,19 +36,27 @@ export function AuthTopBar({
         {
           top: floating ? insets.top + s(12) : undefined,
           paddingTop: floating ? 0 : insets.top + s(12),
-          paddingHorizontal: s(24),
+          paddingHorizontal: s(20),
         },
       ]}
     >
       {onBack ? (
-        <Pressable onPress={onBack} hitSlop={12} style={[{ width: s(64) }, styles.backBtn]}>
-          <Text style={[styles.backText, { fontSize: fs(14) }]}>{backLabel}</Text>
-        </Pressable>
+        backLabel === 'Back' || backLabel === '' ? (
+          <SettingsChromeButton
+            icon={ChevronLeft}
+            onPress={onBack}
+            accessibilityLabel={backLabel || 'Back'}
+          />
+        ) : (
+          <Pressable onPress={onBack} hitSlop={12} style={[{ width: s(72) }, styles.backBtn]}>
+            <Text style={[styles.backText, { fontSize: fs(14), color: lc.muted }]}>{backLabel}</Text>
+          </Pressable>
+        )
       ) : (
-        <View style={{ width: s(64) }} />
+        <View style={{ width: s(42) }} />
       )}
       <LandingLogoMark size="lg" color={accent} />
-      {rightSlot ?? <View style={{ width: s(64) }} />}
+      {rightSlot ?? <View style={{ width: s(42) }} />}
     </View>
   );
 }
@@ -67,6 +79,5 @@ const styles = StyleSheet.create({
   backText: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.muted,
   },
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { Milk, Wheat } from 'lucide-react-native';
+import { Milk, Wheat } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { GhostLink, OptionChip } from '../../components/onboarding/OnboardingPrimitives';
 import { BarcodeCameraView } from '../../components/scanner/BarcodeCameraView';
@@ -11,7 +11,8 @@ import { useToast } from '../../contexts/ToastContext';
 import { categoryFromName } from '../../lib/categories';
 import { searchProductByBarcode } from '../../lib/productDb';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { useAccent } from '../../theme/accent';
+import { landingFonts as SF } from '../../theme/landing';
 import { ONBOARDING_STEP_ACCENT_COLORS } from '../../navigation/onboardingSteps';
 import type { OnboardingStackNavigationProp } from '../../navigation/types';
 
@@ -31,6 +32,7 @@ function ViewfinderCorner({
   flipY?: boolean;
 }) {
   const { s } = useScale();
+  const accent = useAccent();
   const len = s(22);
   const thick = s(3);
   const radius = s(4);
@@ -45,7 +47,7 @@ function ViewfinderCorner({
         bottom,
         width: len,
         height: len,
-        borderColor: landing.accent,
+        borderColor: accent,
         borderTopWidth: flipY ? 0 : thick,
         borderBottomWidth: flipY ? thick : 0,
         borderLeftWidth: flipX ? 0 : thick,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState } from 'react-native';
 import {
   Bell,
   CalendarClock,
@@ -12,7 +12,8 @@ import {
   Volume2,
   Vibrate,
   Wallet,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { XStack, YStack } from 'tamagui';
 import { useGoBack } from '../../navigation/useGoBack';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
@@ -24,7 +25,6 @@ import { SettingsPickerRow } from '../../components/settings/SettingsPickerRow';
 import { SettingsStatusChip } from '../../components/settings/SettingsStatusChip';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
 import { SettingsBodyText } from '../../components/settings/SettingsBodyText';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
 import { usePrefs, type NotifFrequency } from '../../contexts/PreferencesContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
@@ -36,8 +36,6 @@ import {
 } from '../../lib/settingsPermissions';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
-
-const ACCENT = SETTINGS_SECTION_COLORS.notifications;
 
 const TOGGLES = [
   { key: 'expiration', label: 'Expiration alerts', icon: CalendarClock } as const,
@@ -135,11 +133,11 @@ export default function SettingsNotificationsScreen() {
 
   return (
     <SettingsPageShell title="Notifications" subtitle="Alerts and delivery" onBack={goBack}>
-      <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(14), gap: s(12) }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
+      <SettingsSurface contentStyle={{ padding: s(14), gap: s(12) }}>
+        <XStack style={{ alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
           <SettingsBodyText accent>System permission</SettingsBodyText>
           <SettingsStatusChip label={permission ? permissionLabel : 'Checking'} color={permissionColor} />
-        </View>
+        </XStack>
         <SettingsBodyText>
           Larderly needs notification access to deliver expiration, low-stock, and household alerts.
         </SettingsBodyText>
@@ -160,14 +158,13 @@ export default function SettingsNotificationsScreen() {
         ) : null}
       </SettingsSurface>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Alert types</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Alert types</SettingsFieldLabel>
+        <SettingsRowGroup>
           {TOGGLES.map(({ key, label, icon }) => (
             <SettingsRow
               key={key}
               icon={icon}
-              iconColor={ACCENT}
               label={label}
               trailing={
                 <SettingsSwitch
@@ -179,14 +176,13 @@ export default function SettingsNotificationsScreen() {
             />
           ))}
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Marketing</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Marketing</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={Bell}
-            iconColor={ACCENT}
             label="Deals & promotions"
             trailing={
               <SettingsSwitch
@@ -197,14 +193,13 @@ export default function SettingsNotificationsScreen() {
             }
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Delivery</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Delivery</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsPickerRow
             icon={Moon}
-            iconColor={ACCENT}
             label="Quiet hours start"
             value={String(prefs.notifications.quietHoursStart)}
             valueLabel={formatHour(prefs.notifications.quietHoursStart)}
@@ -213,7 +208,6 @@ export default function SettingsNotificationsScreen() {
           />
           <SettingsPickerRow
             icon={Clock3}
-            iconColor={ACCENT}
             label="Quiet hours end"
             value={String(prefs.notifications.quietHoursEnd)}
             valueLabel={formatHour(prefs.notifications.quietHoursEnd)}
@@ -222,7 +216,6 @@ export default function SettingsNotificationsScreen() {
           />
           <SettingsPickerRow
             icon={Bell}
-            iconColor={ACCENT}
             label="Frequency"
             value={prefs.notifications.frequency}
             valueLabel={
@@ -234,7 +227,6 @@ export default function SettingsNotificationsScreen() {
           />
           <SettingsRow
             icon={Volume2}
-            iconColor={ACCENT}
             label="Sound"
             trailing={
               <SettingsSwitch
@@ -246,7 +238,6 @@ export default function SettingsNotificationsScreen() {
           />
           <SettingsRow
             icon={Vibrate}
-            iconColor={ACCENT}
             label="Vibrate"
             trailing={
               <SettingsSwitch
@@ -257,7 +248,7 @@ export default function SettingsNotificationsScreen() {
             }
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
     </SettingsPageShell>
   );
 }

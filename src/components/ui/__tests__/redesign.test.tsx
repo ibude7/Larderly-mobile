@@ -27,7 +27,7 @@ describe('Orchard OS redesigned UI components', () => {
     expect(getByText('In stock')).toBeTruthy();
   });
 
-  it('renders lucide-backed icons for every semantic name group', async () => {
+  it('renders Hugeicons-backed icons for every semantic name group', async () => {
     const names: IconName[] = [
       'dashboard', 'pantry', 'scanner', 'shopping', 'meals', 'sparkles', 'warning',
       'vegetables', 'dairy', 'seafood', 'fridge', 'freezer', 'shelf', 'sun', 'egg',

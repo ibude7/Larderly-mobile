@@ -9,21 +9,41 @@ import Button from './Button';
 import TextField from './TextField';
 import Modal from './Modal';
 import { Icon } from './Icon';
+import { Mic2 } from './Glyph';
+import { SettingsChromeButton } from '../settings/SettingsChromeButton';
 import { useAppColors } from '../../hooks/useAppColors';
 
 interface VoiceInputButtonProps {
   label?: string;
   onTranscript: (text: string) => void | Promise<void>;
   disabled?: boolean;
+  /** `bar` = full-width CTA; `chrome` = circular glass; `none` = modal only. */
+  variant?: 'bar' | 'chrome' | 'none';
+  accessibilityLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function VoiceInputButton({
   label = 'Voice',
   onTranscript,
   disabled,
+  variant = 'bar',
+  accessibilityLabel,
+  open: openProp,
+  onOpenChange,
 }: VoiceInputButtonProps) {
   const c = useAppColors();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : internalOpen;
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!controlled) setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlled, onOpenChange],
+  );
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
@@ -59,7 +79,7 @@ export default function VoiceInputButton({
   const close = useCallback(() => {
     stopListening();
     setOpen(false);
-  }, [stopListening]);
+  }, [setOpen, stopListening]);
 
   const submit = async () => {
     const t = text.trim();
@@ -75,16 +95,26 @@ export default function VoiceInputButton({
     }
   };
 
+  const a11y = accessibilityLabel ?? label;
+
   return (
     <>
-      <Pressable
-        onPress={() => setOpen(true)}
-        disabled={disabled}
-        className="flex-row items-center justify-center gap-2 rounded-2xl border border-info/30 bg-info/10 px-4 py-3"
-      >
-        <Icon name="mic" size={18} color={c.info} />
-        <Text className="text-sm font-bold text-info">{label}</Text>
-      </Pressable>
+      {variant === 'chrome' ? (
+        <SettingsChromeButton
+          icon={Mic2}
+          onPress={disabled ? undefined : () => setOpen(true)}
+          accessibilityLabel={a11y}
+        />
+      ) : variant === 'bar' ? (
+        <Pressable
+          onPress={() => setOpen(true)}
+          disabled={disabled}
+          className="flex-row items-center justify-center gap-2 rounded-2xl border border-info/30 bg-info/10 px-4 py-3"
+        >
+          <Icon name="mic" size={18} color={c.info} />
+          <Text className="text-sm font-bold text-info">{label}</Text>
+        </Pressable>
+      ) : null}
 
       <Modal isOpen={open} onClose={close} title="Voice command" scroll={false}>
         <View className="p-6">

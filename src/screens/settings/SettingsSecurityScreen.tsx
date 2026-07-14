@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
 import { collection, limit, onSnapshot, orderBy, query } from '@react-native-firebase/firestore';
-import { Laptop, RefreshCw, Smartphone } from 'lucide-react-native';
+import { Laptop, RefreshCw, Smartphone } from '../../components/ui/Glyph';
+import { YStack } from 'tamagui';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
@@ -13,12 +13,9 @@ import { useSync } from '../../contexts/SyncContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useReauth, withReauth } from '../../components/auth/ReauthDialog';
 import { useGoBack } from '../../navigation/useGoBack';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
 import { db } from '../../lib/firebase';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
-
-const ACCENT = SETTINGS_SECTION_COLORS.security;
 
 interface LoginEvent {
   id: string;
@@ -84,14 +81,14 @@ export default function SettingsSecurityScreen() {
 
   return (
     <SettingsPageShell title="Security" subtitle="MFA, sessions, and sync" onBack={goBack}>
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Two-factor authentication</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Two-factor authentication</SettingsFieldLabel>
         <SecuritySection />
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Sync</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Sync</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={RefreshCw}
             iconColor={online ? c.success : c.muted}
@@ -99,12 +96,12 @@ export default function SettingsSecurityScreen() {
             subtitle={lastSyncedAt ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}` : undefined}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
       {loginEvents.length > 0 ? (
-        <View style={{ gap: s(8) }}>
-          <SettingsFieldLabel color={ACCENT}>Recent sign-ins</SettingsFieldLabel>
-          <SettingsRowGroup accent={ACCENT}>
+        <YStack style={{ gap: s(8) }}>
+          <SettingsFieldLabel>Recent sign-ins</SettingsFieldLabel>
+          <SettingsRowGroup>
             {loginEvents.map((ev) => (
               <SettingsRow
                 key={ev.id}
@@ -113,13 +110,12 @@ export default function SettingsSecurityScreen() {
                     ? Smartphone
                     : Laptop
                 }
-                iconColor={ACCENT}
                 label={ev.device}
                 subtitle={ev.at ? new Date(ev.at).toLocaleString() : ev.platform}
               />
             ))}
           </SettingsRowGroup>
-        </View>
+        </YStack>
       ) : null}
 
       {!isAnonymous ? (

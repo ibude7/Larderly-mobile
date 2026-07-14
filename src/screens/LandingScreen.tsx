@@ -24,11 +24,15 @@ import * as Haptics from 'expo-haptics';
 import { LandingLogoMark } from '../components/landing/LandingLogoMark';
 import { LandingScrollProgress } from '../components/landing/LandingProgress';
 import { GlassButton } from '../components/landing/GlassButton';
-import { landing, landingFonts as SF } from '../theme/landing';
+import { landingFonts as SF } from '../theme/landing';
 import { fitHeroSize } from '../theme/heroFit';
 import { useHeroFloat } from '../hooks/useHeroFloat';
+import { useLandingColors } from '../hooks/useLandingColors';
+import { ForcedColorScheme } from '../theme/ForcedColorScheme';
 import { useScale } from '../theme/scale';
 import type { AuthStackNavigationProp } from '../navigation/types';
+import { StatusBar } from 'expo-status-bar';
+import { Theme } from 'tamagui';
 
 const SLIDES = [
   {
@@ -99,6 +103,7 @@ function Slide({
 }) {
   const insets = useSafeAreaInsets();
   const { s, fs, fsLayout } = useScale();
+  const lc = useLandingColors();
   const [heroBox, setHeroBox] = useState({ width: 0, height: 0 });
   const inputRange = [(index - 1) * screenW, index * screenW, (index + 1) * screenW];
   const heroFirst = 'heroFirst' in item && item.heroFirst;
@@ -160,12 +165,13 @@ function Slide({
             fontSize: fs(33),
             lineHeight: fs(40),
             marginBottom: s(14),
+            color: lc.ink,
           },
         ]}
       >
         {item.titleBase}
         {item.titleAccent ? (
-          <Text style={styles.headlineAccent}>{item.titleAccent}</Text>
+          <Text style={[styles.headlineAccent, { color: lc.accent }]}>{item.titleAccent}</Text>
         ) : null}
       </Text>
       <Text
@@ -175,6 +181,7 @@ function Slide({
             fontSize: fs(15),
             lineHeight: fs(23),
             maxWidth: s(300),
+            color: lc.body,
           },
         ]}
       >
@@ -239,9 +246,21 @@ function Slide({
 }
 
 export default function LandingScreen() {
+  return (
+    <ForcedColorScheme scheme="light">
+      <Theme name="settings_light">
+        <StatusBar style="dark" />
+        <LandingScreenContent />
+      </Theme>
+    </ForcedColorScheme>
+  );
+}
+
+function LandingScreenContent() {
   const navigation = useNavigation<AuthStackNavigationProp>();
   const insets = useSafeAreaInsets();
   const { width: screenW, s, fs, fsLayout } = useScale();
+  const lc = useLandingColors();
   const floatY = useHeroFloat();
   const scrollX = useSharedValue(0);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
@@ -275,7 +294,7 @@ export default function LandingScreen() {
   const isLast = currentIndex === SLIDES.length - 1;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: lc.canvas }]}>
       <Animated.View
         entering={FadeInDown.duration(600).springify().damping(18)}
         style={[
@@ -290,7 +309,7 @@ export default function LandingScreen() {
           <Text
             style={[
               styles.counterText,
-              { fontSize: fs(13), letterSpacing: fs(1) },
+              { fontSize: fs(13), letterSpacing: fs(1), color: lc.muted },
             ]}
           >
             {currentIndex + 1} / {SLIDES.length}
@@ -304,7 +323,7 @@ export default function LandingScreen() {
           style={[{ width: s(64) }, styles.skipBtn]}
           hitSlop={10}
         >
-          <Text style={[styles.skipText, { fontSize: fs(14) }]}>Skip</Text>
+          <Text style={[styles.skipText, { fontSize: fs(14), color: lc.muted }]}>Skip</Text>
         </Pressable>
       </Animated.View>
 
@@ -363,9 +382,9 @@ export default function LandingScreen() {
                 style={[styles.signIn, { marginTop: s(16) }]}
                 hitSlop={10}
               >
-                <Text style={[styles.signInText, { fontSize: fs(14) }]}>
+                <Text style={[styles.signInText, { fontSize: fs(14), color: lc.muted }]}>
                   Already have an account?{' '}
-                  <Text style={styles.signInLink}>Sign in</Text>
+                  <Text style={[styles.signInLink, { color: lc.accent }]}>Sign in</Text>
                 </Text>
               </Pressable>
             </Animated.View>
@@ -383,7 +402,6 @@ export default function LandingScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: landing.canvas,
   },
   topBar: {
     position: 'absolute',
@@ -397,7 +415,6 @@ const styles = StyleSheet.create({
   counterText: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.muted,
   },
   skipBtn: {
     alignItems: 'flex-end',
@@ -405,7 +422,6 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.muted,
   },
   scrollView: {
     flex: 1,
@@ -424,18 +440,15 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontFamily: SF.serif,
-    color: landing.ink,
     textAlign: 'center',
     flexShrink: 0,
   },
   headlineAccent: {
     fontFamily: SF.serif,
-    color: landing.accent,
   },
   subhead: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.body,
     textAlign: 'center',
     flexShrink: 0,
   },
@@ -475,11 +488,9 @@ const styles = StyleSheet.create({
   signInText: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.muted,
   },
   signInLink: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.accent,
   },
 });

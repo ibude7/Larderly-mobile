@@ -1,6 +1,4 @@
-import { View } from 'react-native';
 import {
-  Coins,
   Eye,
   Globe2,
   Palette,
@@ -8,8 +6,10 @@ import {
   Ruler,
   Sparkles,
   Type,
+  Wallet,
   ZapOff,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { YStack } from 'tamagui';
 import { useGoBack } from '../../navigation/useGoBack';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
@@ -19,7 +19,6 @@ import { SettingsSwitch } from '../../components/settings/SettingsSwitch';
 import { SettingsPickerRow } from '../../components/settings/SettingsPickerRow';
 import { ThemeToggleRow } from '../../components/settings/ThemeToggleRow';
 import { FeatureShortcutsSection } from '../../components/settings/FeatureShortcutsSection';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import {
   usePrefs,
@@ -32,8 +31,6 @@ import type { Currency } from '../../lib/format';
 import { usePreferenceFormatters } from '../../hooks/usePreferenceFormatters';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
-
-const ACCENT = SETTINGS_SECTION_COLORS.preferences;
 
 const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR'];
 const LANGUAGES: { id: Language; name: string }[] = [
@@ -81,13 +78,12 @@ export default function SettingsPreferencesScreen() {
 
   return (
     <SettingsPageShell title="Preferences" subtitle="Appearance, region, and privacy" onBack={goBack}>
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Appearance</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Appearance</SettingsFieldLabel>
         <ThemeToggleRow value={prefs.theme} onChange={(theme) => setPrefs({ theme })} />
-        <SettingsRowGroup accent={ACCENT}>
+        <SettingsRowGroup>
           <SettingsPickerRow
             icon={Palette}
-            iconColor={ACCENT}
             label="Accent color"
             value={prefs.themeColor}
             valueLabel={THEME_COLORS.find((color) => color.id === prefs.themeColor)?.label ?? 'Orange'}
@@ -96,7 +92,6 @@ export default function SettingsPreferencesScreen() {
           />
           <SettingsPickerRow
             icon={Type}
-            iconColor={ACCENT}
             label="Text size"
             value={prefs.fontScale}
             valueLabel={FONT_SCALES.find((f) => f.id === prefs.fontScale)?.label ?? 'Medium'}
@@ -104,14 +99,13 @@ export default function SettingsPreferencesScreen() {
             onChange={(fontScale) => setPrefs({ fontScale })}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Region</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Region</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={Ruler}
-            iconColor={ACCENT}
             label="Imperial units"
             subtitle={
               prefs.units === 'imperial'
@@ -127,8 +121,7 @@ export default function SettingsPreferencesScreen() {
             }
           />
           <SettingsPickerRow
-            icon={Coins}
-            iconColor={ACCENT}
+            icon={Wallet}
             label="Currency"
             value={prefs.currency}
             valueLabel={`${prefs.currency} · ${formatters.currencyValue(12.5)}`}
@@ -137,7 +130,6 @@ export default function SettingsPreferencesScreen() {
           />
           <SettingsPickerRow
             icon={Globe2}
-            iconColor={ACCENT}
             label="Language"
             value={prefs.language}
             valueLabel={LANGUAGES.find((l) => l.id === prefs.language)?.name ?? 'English'}
@@ -145,14 +137,13 @@ export default function SettingsPreferencesScreen() {
             onChange={(language) => setPrefs({ language })}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Accessibility</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Accessibility</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={ZapOff}
-            iconColor={ACCENT}
             label="Reduce motion"
             subtitle="Minimize animations and spring effects."
             trailing={
@@ -171,14 +162,13 @@ export default function SettingsPreferencesScreen() {
             disabled
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Privacy</SettingsFieldLabel>
-        <SettingsRowGroup accent={ACCENT}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Privacy</SettingsFieldLabel>
+        <SettingsRowGroup>
           <SettingsRow
             icon={Globe2}
-            iconColor={ACCENT}
             label="Usage analytics"
             subtitle="Anonymous product usage events."
             trailing={
@@ -199,9 +189,9 @@ export default function SettingsPreferencesScreen() {
             disabled
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
+      <YStack style={{ gap: s(8) }}>
         <SettingsFieldLabel color={c.danger}>Defaults</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
@@ -212,12 +202,12 @@ export default function SettingsPreferencesScreen() {
             onPress={() => void resetPreferences()}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Explore</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Explore</SettingsFieldLabel>
         <FeatureShortcutsSection />
-      </View>
+      </YStack>
     </SettingsPageShell>
   );
 }

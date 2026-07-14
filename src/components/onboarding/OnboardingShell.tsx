@@ -16,10 +16,12 @@ import { LandingStepProgress } from '../landing/LandingProgress';
 import { LandingLogoMark } from '../landing/LandingLogoMark';
 import { GlassButton } from '../landing/GlassButton';
 import { EditorialHeader } from '../landing/EditorialHeader';
+import { SettingsGlass } from '../settings/SettingsGlass';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import { AccentProvider } from '../../theme/accent';
 import {
   getOnboardingStepIndex,
@@ -47,7 +49,7 @@ interface OnboardingShellProps {
 }
 
 /**
- * Centered onboarding layout — matches AuthShell: top bar, editorial header, plain form, fixed footer.
+ * Centered onboarding layout — Settings-style canvas + frosted glass content.
  */
 export function OnboardingShell({
   children,
@@ -65,6 +67,7 @@ export function OnboardingShell({
   const navigation = useNavigation<OnboardingStackNavigationProp>();
   const insets = useSafeAreaInsets();
   const { s, fs, fsLayout } = useScale();
+  const lc = useLandingColors();
   const { updateUserPreferences } = useProfile();
   const { showToast } = useToast();
 
@@ -100,29 +103,27 @@ export function OnboardingShell({
 
   return (
     <AccentProvider color={stepColor}>
-      <View style={[styles.root, { backgroundColor: landing.canvas }]}>
+      <View style={[styles.root, { backgroundColor: lc.canvas }]}>
         <View
           style={[
             styles.topBar,
             {
               top: insets.top + s(12),
-              paddingHorizontal: s(24),
+              paddingHorizontal: s(20),
             },
           ]}
         >
-          <View style={{ width: s(64) }}>
-            <Text style={[styles.counterText, { fontSize: fs(12) }]}>
+          <View style={{ width: s(64), justifyContent: 'center' }}>
+            <Text style={[styles.counterText, { fontSize: fs(12), color: lc.muted }]}>
               {step + 1}/{TOTAL_ONBOARDING_STEPS}
             </Text>
           </View>
           <LandingLogoMark size="lg" color={stepColor} />
-          <Pressable
-            onPress={handleSkip}
-            style={[{ width: s(64) }, styles.skipBtn]}
-            hitSlop={10}
-          >
-            <Text style={[styles.skipText, { fontSize: fs(13) }]}>Skip</Text>
-          </Pressable>
+          <View style={{ width: s(64), alignItems: 'flex-end' }}>
+            <Pressable onPress={handleSkip} hitSlop={10}>
+              <Text style={[styles.skipText, { fontSize: fs(13), color: lc.muted }]}>Skip</Text>
+            </Pressable>
+          </View>
         </View>
 
         <KeyboardAvoidingView
@@ -134,14 +135,14 @@ export function OnboardingShell({
               flexGrow: 1,
               justifyContent: 'center',
               alignItems: 'center',
-              paddingHorizontal: s(28),
+              paddingHorizontal: s(20),
               paddingTop: insets.top + topChrome,
               paddingBottom: insets.bottom + footerChrome,
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ width: '100%', maxWidth: contentWidth, gap: s(24) }}>
+            <View style={{ width: '100%', maxWidth: contentWidth, gap: s(16) }}>
               {!hideHeadline ? (
                 <View style={styles.copyBlock}>
                   <EditorialHeader
@@ -154,7 +155,18 @@ export function OnboardingShell({
                 </View>
               ) : null}
 
-              <View style={{ gap: s(16) }}>{children}</View>
+              <SettingsGlass
+                elevated
+                interactive={false}
+                radius={s(26)}
+                contentStyle={{
+                  paddingHorizontal: s(18),
+                  paddingVertical: s(18),
+                  gap: s(16),
+                }}
+              >
+                {children}
+              </SettingsGlass>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -181,8 +193,17 @@ export function OnboardingShell({
             {showFooterCta ? (
               <View style={{ gap: s(8) }}>
                 {saving ? (
-                  <View style={[styles.loadingBtn, { height: s(56), borderRadius: s(999) }]}>
-                    <ActivityIndicator color={landing.white} />
+                  <View
+                    style={[
+                      styles.loadingBtn,
+                      {
+                        height: s(56),
+                        borderRadius: s(999),
+                        backgroundColor: lc.isDark ? lc.ink : '#101010',
+                      },
+                    ]}
+                  >
+                    <ActivityIndicator color={lc.isDark ? '#101010' : '#FFFFFF'} />
                   </View>
                 ) : (
                   <GlassButton label={continueLabel} variant="dark" onPress={handleContinue} />
@@ -192,7 +213,9 @@ export function OnboardingShell({
                     onPress={handleBack}
                     style={{ alignItems: 'center', paddingVertical: s(4) }}
                   >
-                    <Text style={[styles.backLink, { fontSize: fs(13) }]}>Back</Text>
+                    <Text style={[styles.backLink, { fontSize: fs(13), color: lc.muted }]}>
+                      Back
+                    </Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -219,13 +242,10 @@ const styles = StyleSheet.create({
   counterText: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.muted,
   },
-  skipBtn: { alignItems: 'flex-end' },
   skipText: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.muted,
   },
   copyBlock: {
     alignItems: 'center',
@@ -244,11 +264,9 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000000',
   },
   backLink: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.muted,
   },
 });

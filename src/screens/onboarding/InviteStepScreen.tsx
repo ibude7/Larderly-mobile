@@ -6,7 +6,8 @@ import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { DepthCard, SecondaryButton } from '../../components/onboarding/OnboardingPrimitives';
 import { useHousehold } from '../../contexts/HouseholdContext';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { ONBOARDING_STEP_ACCENT_COLORS } from '../../navigation/onboardingSteps';
 import { db } from '../../lib/firebase';
 import type { OnboardingStackNavigationProp } from '../../navigation/types';
@@ -14,6 +15,7 @@ import type { OnboardingStackNavigationProp } from '../../navigation/types';
 export default function InviteStepScreen() {
   const navigation = useNavigation<OnboardingStackNavigationProp>();
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { householdId } = useHousehold();
   const [inviteCode, setInviteCode] = useState('');
   const accent = ONBOARDING_STEP_ACCENT_COLORS.Invite;
@@ -37,7 +39,7 @@ export default function InviteStepScreen() {
               fontWeight: Platform.OS === 'ios' ? '700' : undefined,
               letterSpacing: fs(1),
               textTransform: 'uppercase',
-              color: landing.muted,
+              color: lc.muted,
             }}
           >
             Invite code
@@ -70,7 +72,7 @@ export default function InviteStepScreen() {
             lineHeight: fs(17),
             fontFamily: SF.regular,
             fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-            color: landing.muted,
+            color: lc.muted,
           }}
         >
           Share now or invite later from Settings.

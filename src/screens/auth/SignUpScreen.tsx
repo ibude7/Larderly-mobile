@@ -11,8 +11,9 @@ import { useAuthFlow } from '../../contexts/AuthFlowContext';
 import { useToast } from '../../contexts/ToastContext';
 import { friendlyAuthError } from '../../lib/authErrors';
 import { AUTH_ENTRY_COPY } from '../../navigation/authContent';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import type { AuthStackNavigationProp } from '../../navigation/types';
 
 const copy = AUTH_ENTRY_COPY.signup;
@@ -20,6 +21,7 @@ const copy = AUTH_ENTRY_COPY.signup;
 export default function SignUpScreen() {
   const navigation = useNavigation<AuthStackNavigationProp>();
   const { fs } = useScale();
+  const lc = useLandingColors();
   const { signUp } = useAuth();
   const { email, setEmail, fullName, setFullName } = useAuthFlow();
   const { showToast } = useToast();
@@ -62,9 +64,12 @@ export default function SignUpScreen() {
       onPrimary={submit}
       primaryLoading={loading}
       footerLinks={
-        <Text style={[styles.footerPrompt, { fontSize: fs(14) }]}>
+        <Text style={[styles.footerPrompt, { fontSize: fs(14), color: lc.body }]}>
           Already have an account?{' '}
-          <Text style={styles.footerLink} onPress={() => navigation.navigate('SignIn')}>
+          <Text
+            style={[styles.footerLink, { color: lc.accent }]}
+            onPress={() => navigation.navigate('SignIn')}
+          >
             Sign in
           </Text>
         </Text>
@@ -123,12 +128,10 @@ const styles = StyleSheet.create({
   footerPrompt: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.body,
     textAlign: 'center',
   },
   footerLink: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.accent,
   },
 });

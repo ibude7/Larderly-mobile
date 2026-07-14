@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import type { ComponentType } from 'react';
-import { Text, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '../ui/Glyph';
+import { Text, View, XStack } from 'tamagui';
 import { SettingsChoiceChip } from './SettingsChoiceChip';
 import { SettingsRow } from './SettingsRow';
 import { SettingsSheet } from './SettingsSheet';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
+import { settingsFonts } from './settingsFonts';
 
 type RowIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
@@ -56,7 +57,7 @@ export function SettingsPickerRow<T extends string>({
         disabled={disabled}
         onPress={disabled ? undefined : () => setOpen(true)}
         trailing={
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: s(6) }}>
+          <XStack style={{ alignItems: 'center', gap: s(6) }}>
             {currentColor ? (
               <View
                 style={{
@@ -68,23 +69,23 @@ export function SettingsPickerRow<T extends string>({
               />
             ) : null}
             <Text
+              numberOfLines={1}
               style={{
+                fontFamily: settingsFonts.medium,
                 fontSize: fs(13.5),
                 lineHeight: fs(18),
-                fontWeight: '500',
                 color: c.muted,
                 flexShrink: 0,
               }}
-              numberOfLines={1}
             >
               {valueLabel}
             </Text>
-            {!disabled ? <ChevronRight size={fs(16)} color={c.muted} strokeWidth={2} /> : null}
-          </View>
+            {!disabled ? <ChevronRight size={fs(16)} color={c.ink} strokeWidth={2} /> : null}
+          </XStack>
         }
       />
       <SettingsSheet isOpen={open} onClose={() => setOpen(false)} title={label}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s(8) }}>
+        <XStack style={{ flexWrap: 'wrap', gap: s(8) }}>
           {options.map((opt) => (
             <SettingsChoiceChip
               key={opt.id}
@@ -97,7 +98,7 @@ export function SettingsPickerRow<T extends string>({
               }}
             />
           ))}
-        </View>
+        </XStack>
       </SettingsSheet>
     </>
   );

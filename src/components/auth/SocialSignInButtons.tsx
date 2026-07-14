@@ -4,8 +4,9 @@ import * as Haptics from 'expo-haptics';
 import { GoogleLogo } from '../ui/GoogleLogo';
 import { GlassButton } from '../landing/GlassButton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 
 interface SocialSignInButtonsProps {
   onSuccess?: () => void;
@@ -14,6 +15,7 @@ interface SocialSignInButtonsProps {
 
 export function SocialSignInButtons({ onSuccess, onError }: SocialSignInButtonsProps) {
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { signInWithGoogle, signInWithApple, appleAvailable } = useAuth();
   const btnH = s(40);
 
@@ -48,7 +50,7 @@ export function SocialSignInButtons({ onSuccess, onError }: SocialSignInButtonsP
             fontWeight: Platform.OS === 'ios' ? '600' : undefined,
             fontSize: fs(15),
             lineHeight: fs(20),
-            color: landing.ink,
+            color: lc.ink,
             includeFontPadding: false,
           }}
         >
@@ -59,7 +61,11 @@ export function SocialSignInButtons({ onSuccess, onError }: SocialSignInButtonsP
       {appleAvailable ? (
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          buttonStyle={
+            lc.isDark
+              ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+              : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+          }
           cornerRadius={btnH / 2}
           style={{ height: btnH, width: '100%' }}
           onPress={onApple}
@@ -67,9 +73,11 @@ export function SocialSignInButtons({ onSuccess, onError }: SocialSignInButtonsP
       ) : null}
 
       <View style={[styles.divider, { marginVertical: s(2) }]}>
-        <View style={styles.dividerLine} />
-        <Text style={[styles.dividerText, { fontSize: fs(12) }]}>or with email</Text>
-        <View style={styles.dividerLine} />
+        <View style={[styles.dividerLine, { backgroundColor: lc.line }]} />
+        <Text style={[styles.dividerText, { fontSize: fs(12), color: lc.muted }]}>
+          or with email
+        </Text>
+        <View style={[styles.dividerLine, { backgroundColor: lc.line }]} />
       </View>
     </View>
   );
@@ -84,11 +92,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: landing.line,
   },
   dividerText: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.muted,
   },
 });

@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthTopBar } from '../auth/AuthTopBar';
 import { EditorialHeader } from '../landing/EditorialHeader';
 import { GlassButton } from '../landing/GlassButton';
+import { useAppColors } from '../../hooks/useAppColors';
 import { useScale } from '../../theme/scale';
-import { landing } from '../../theme/landing';
 import { AccentProvider } from '../../theme/accent';
 
 export interface PlaceholderAction {
@@ -38,13 +38,14 @@ export function FeaturePlaceholderShell({
 }: FeaturePlaceholderShellProps) {
   const insets = useSafeAreaInsets();
   const { s, fsLayout } = useScale();
+  const c = useAppColors();
   const contentWidth = s(340);
   const isTab = variant === 'tab';
   const bottomPad = insets.bottom + (isTab ? fsLayout(100) : fsLayout(32));
 
   return (
-    <AccentProvider color={landing.accent}>
-      <View style={[styles.root, { backgroundColor: landing.canvas }]}>
+    <AccentProvider color={c.primary}>
+      <View style={[styles.root, { backgroundColor: c.canvas }]}>
         {!isTab ? <AuthTopBar onBack={onBack} floating /> : null}
 
         <ScrollView

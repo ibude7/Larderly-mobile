@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { Camera } from 'lucide-react-native';
+import { Camera } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import TextField from '../../components/ui/TextField';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,13 +10,15 @@ import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
 import { pickProfilePhoto, uploadUserAvatar } from '../../lib/avatar';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { ONBOARDING_STEP_ACCENT_COLORS } from '../../navigation/onboardingSteps';
 import type { OnboardingStackNavigationProp } from '../../navigation/types';
 
 export default function ProfileStepScreen() {
   const navigation = useNavigation<OnboardingStackNavigationProp>();
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { user } = useAuth();
   const { userProfile, updateUserProfile } = useProfile();
   const { showToast } = useToast();
@@ -83,7 +85,7 @@ export default function ProfileStepScreen() {
                   height: photoSize,
                   borderRadius: photoSize / 2,
                   borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: landing.line,
+                  borderColor: lc.line,
                 }}
               />
             ) : (
@@ -96,10 +98,10 @@ export default function ProfileStepScreen() {
                   justifyContent: 'center',
                   backgroundColor: 'rgba(46,43,38,0.06)',
                   borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: landing.line,
+                  borderColor: lc.line,
                 }}
               >
-                <Text style={{ fontSize: fs(22), fontFamily: SF.medium, color: landing.muted }}>
+                <Text style={{ fontSize: fs(22), fontFamily: SF.medium, color: lc.muted }}>
                   ?
                 </Text>
               </View>
@@ -116,10 +118,10 @@ export default function ProfileStepScreen() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 2,
-                borderColor: landing.canvas,
+                borderColor: lc.canvas,
               }}
             >
-              <Camera size={fs(12)} color={landing.white} strokeWidth={2.2} />
+              <Camera size={fs(12)} color={'#FFFFFF'} strokeWidth={2.2} />
             </View>
           </Pressable>
           <Text
@@ -127,7 +129,7 @@ export default function ProfileStepScreen() {
               fontSize: fs(12),
               fontFamily: SF.regular,
               fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-              color: landing.muted,
+              color: lc.muted,
               textAlign: 'center',
             }}
           >

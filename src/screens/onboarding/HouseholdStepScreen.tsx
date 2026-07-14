@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Home, UserPlus } from 'lucide-react-native';
+import { Home, UserPlus } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { ChoiceCard, SecondaryButton } from '../../components/onboarding/OnboardingPrimitives';
 import TextField from '../../components/ui/TextField';

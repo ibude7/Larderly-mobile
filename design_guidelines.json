@@ -77,7 +77,7 @@
     "page_transitions": "Fade in and slide up slightly (translateY 20 to 0) using Reanimated."
   },
   "icons": {
-    "library": "lucide-react-native",
+    "library": "@hugeicons/react-native",
     "style": "Bold or 2.5 stroke width. Thick, legible lines to match the geometric Outfit font."
   },
   "screens": {

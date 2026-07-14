@@ -9,8 +9,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing } from '../../theme/landing';
 
 interface StepProgressProps {
   index: number;
@@ -20,13 +20,14 @@ interface StepProgressProps {
 
 /**
  * Segmented progress — equal ticks that fill as you advance.
- * Distinct from carousel dots and continuous bars.
  */
 export function LandingStepProgress({ index, total, color }: StepProgressProps) {
   const { s } = useScale();
+  const lc = useLandingColors();
   const segH = s(3);
   const gap = s(4);
   const width = s(Math.min(200, 28 + total * 14));
+  const activeColor = color ?? lc.accent;
 
   return (
     <View style={[styles.row, { width, gap }]}>
@@ -35,7 +36,8 @@ export function LandingStepProgress({ index, total, color }: StepProgressProps) 
           key={i}
           state={i < index ? 'done' : i === index ? 'active' : 'todo'}
           height={segH}
-          color={color}
+          color={activeColor}
+          todoColor={lc.ink}
         />
       ))}
     </View>
@@ -50,6 +52,7 @@ interface ScrollProgressProps {
 
 export function LandingScrollProgress({ scrollX, screenW, total }: ScrollProgressProps) {
   const { s } = useScale();
+  const lc = useLandingColors();
   const segH = s(3);
   const gap = s(4);
   const width = s(Math.min(200, 28 + total * 14));
@@ -63,6 +66,8 @@ export function LandingScrollProgress({ scrollX, screenW, total }: ScrollProgres
           scrollX={scrollX}
           screenW={screenW}
           height={segH}
+          accent={lc.accent}
+          ink={lc.ink}
         />
       ))}
     </View>
@@ -72,11 +77,13 @@ export function LandingScrollProgress({ scrollX, screenW, total }: ScrollProgres
 function Segment({
   state,
   height,
-  color = landing.accent,
+  color,
+  todoColor,
 }: {
   state: 'done' | 'active' | 'todo';
   height: number;
-  color?: string;
+  color: string;
+  todoColor: string;
 }) {
   const opacity = useSharedValue(state === 'todo' ? 0.2 : 1);
   const scaleY = useSharedValue(state === 'active' ? 1.35 : 1);
@@ -101,7 +108,7 @@ function Segment({
         {
           height,
           borderRadius: height / 2,
-          backgroundColor: state === 'todo' ? landing.ink : color,
+          backgroundColor: state === 'todo' ? todoColor : color,
         },
         style,
       ]}
@@ -114,11 +121,15 @@ function ScrollSegment({
   scrollX,
   screenW,
   height,
+  accent,
+  ink,
 }: {
   index: number;
   scrollX: SharedValue<number>;
   screenW: number;
   height: number;
+  accent: string;
+  ink: string;
 }) {
   const style = useAnimatedStyle(() => {
     const center = index * screenW;
@@ -133,7 +144,7 @@ function ScrollSegment({
     return {
       opacity: isPast || isCurrent ? 1 : 0.2,
       transform: [{ scaleY: 1 + active * 0.35 }],
-      backgroundColor: isPast || isCurrent ? landing.accent : landing.ink,
+      backgroundColor: isPast || isCurrent ? accent : ink,
     };
   });
 
@@ -144,7 +155,7 @@ function ScrollSegment({
         {
           height,
           borderRadius: height / 2,
-          backgroundColor: landing.ink,
+          backgroundColor: ink,
         },
         style,
       ]}

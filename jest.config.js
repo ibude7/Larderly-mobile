@@ -5,6 +5,6 @@ module.exports = {
     '**/src/components/**/__tests__/**/*.test.tsx',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-css-interop|nativewind|expo|expo-.*|@expo(nent)?/.*|@expo/.*|@react-navigation/.*|react-native-svg|lucide-react-native|tamagui|@tamagui/.*)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-css-interop|nativewind|expo|expo-.*|@expo(nent)?/.*|@expo/.*|@react-navigation/.*|react-native-svg|@hugeicons/.*|tamagui|@tamagui/.*)/)',
   ],
 };

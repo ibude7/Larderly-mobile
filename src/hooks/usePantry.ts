@@ -215,6 +215,8 @@ export function usePantry(shopping?: ShoppingBridge) {
       };
       if (updates.location_id !== undefined) {
         patch.storageLocation = locs.find((l) => l.id === updates.location_id)?.name ?? 'Pantry';
+        if (updates.location_id) patch.locationId = updates.location_id;
+        else delete patch.locationId;
       }
       const existing = items.find((i) => i.id === id);
       if (updates.purchase_price !== undefined) {
@@ -226,6 +228,10 @@ export function usePantry(shopping?: ShoppingBridge) {
             { price: nextPrice, recordedAt: new Date().toISOString() },
           ].slice(-12);
         }
+      }
+
+      for (const key of Object.keys(patch)) {
+        if (patch[key] === undefined) delete patch[key];
       }
 
       await updateDoc(doc(db, 'households', householdId, 'inventory', id), patch);

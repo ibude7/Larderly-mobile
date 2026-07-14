@@ -53,7 +53,23 @@ firebase login
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## 5. Run the app
+## 5. Cloud Functions (AI + notifications)
+
+AI features (recipes, voice, receipts, food ID) and the daily expiry alert run as Firebase Cloud Functions in `functions/`.
+
+```bash
+cd functions && npm install && npm run build
+cd ..
+firebase deploy --only functions
+```
+
+Notes:
+
+- Functions read/write the named Firestore database **`larderly`** (same as the app).
+- Push tokens from the app are **Expo** tokens — the expiry scheduler delivers via Expo Push (and FCM only for native tokens).
+- Notification prefs live on `users/{uid}.notificationPrefs` (`expiration`, quiet hours, etc.).
+
+## 6. Run the app
 
 ```bash
 npm start          # Expo dev server
@@ -71,7 +87,7 @@ npx expo run:ios
 npx expo run:android
 ```
 
-## 6. Shared code (`src/shared/`)
+## 7. Shared code (`src/shared/`)
 
 Mappers and constants are **vendored** from the web monorepo package `@larderly/shared` (previously linked as `file:../Larderly/packages/shared`). When the web package changes, sync these files manually:
 
@@ -102,3 +118,5 @@ Legacy user-scoped paths (`users/{uid}/storage_locations`, `pantry_items`) are k
 - **Permission denied on Firestore** — deploy latest `firestore.rules`; confirm user is a household member.
 - **Google Sign-In fails** — verify `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and iOS URL scheme.
 - **Index required** — deploy `firestore.indexes.json` and wait for index build in Firebase Console.
+- **AI callable fails** — deploy functions (`firebase deploy --only functions`) and confirm the user is signed in.
+- **Expiry pushes never arrive** — confirm `notificationPrefs.expiration` is not `false`, Expo token exists under `users/{uid}/fcmTokens`, and the scheduler is deployed.

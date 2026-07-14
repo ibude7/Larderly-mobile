@@ -1,3 +1,5 @@
+import { settingsDark, settingsLight, type SettingsPalette } from './theme/palette';
+
 export interface ColorTokens {
   readonly primary: string;
   readonly primaryDark: string;
@@ -11,6 +13,9 @@ export interface ColorTokens {
   readonly inkSoft: string;
   readonly line: string;
   readonly glassLine: string;
+  readonly glassFill: string;
+  readonly glassBorder: string;
+  readonly glassUnderlay: string;
   readonly muted: string;
   readonly success: string;
   readonly warning: string;
@@ -30,70 +35,80 @@ export interface ColorTokens {
   readonly subtle: string;
 }
 
-// "MarketOps" palette: crisp paper, ink rails, and categorical utility accents.
-export const lightColors: ColorTokens = {
-  primary: '#145CFF',
-  primaryDark: '#0B2A6F',
-  canvas: '#F4F1E8',
-  canvasRaised: '#FBF8EF',
-  surface: '#FFFDF6',
-  surfaceMuted: '#E7E0D1',
-  surfaceGlass: 'rgba(255, 253, 246, 0.94)',
-  surfaceElevated: '#FFFFFF',
-  ink: '#101010',
-  inkSoft: '#38342D',
-  line: '#1B1B1B',
-  glassLine: 'rgba(16, 16, 16, 0.16)',
-  muted: '#6D665B',
-  success: '#0E8F58',
-  warning: '#D88A00',
-  danger: '#E13636',
-  info: '#145CFF',
-  teal: '#00A991',
-  amber: '#F0B429',
-  primaryGlow: 'rgba(20, 92, 255, 0.12)',
-  tealGlow: 'rgba(0, 169, 145, 0.1)',
-  dangerGlow: 'rgba(225, 54, 54, 0.12)',
-  violetGlow: 'rgba(240, 180, 41, 0.12)',
-  shadow: 'rgba(16, 16, 16, 0.18)',
-  scrim: 'rgba(16, 16, 16, 0.62)',
-  blurIntensity: 30,
-  blurTint: 'light',
-  lineStrong: '#101010',
-  subtle: '#8C8375',
-};
+/** Global app palette — settings light/dark (warm editorial + glass). */
+function fromSettings(
+  base: SettingsPalette | typeof settingsDark,
+  extras: {
+    primary: string;
+    primaryDark: string;
+    primaryGlow: string;
+    amber: string;
+    tealGlow: string;
+    dangerGlow: string;
+    violetGlow: string;
+    scrim: string;
+    subtle: string;
+  },
+): ColorTokens {
+  return {
+    primary: extras.primary,
+    primaryDark: extras.primaryDark,
+    canvas: base.canvas,
+    canvasRaised: base.canvasSoft,
+    surface: base.surface,
+    surfaceMuted: base.surfaceMuted,
+    surfaceGlass: base.surfaceGlass,
+    surfaceElevated: base.surfaceElevated,
+    ink: base.ink,
+    inkSoft: base.inkSoft,
+    line: base.line,
+    glassLine: base.glassLine,
+    glassFill: base.glassFill,
+    glassBorder: base.glassBorder,
+    glassUnderlay: base.glassUnderlay,
+    muted: base.muted,
+    success: base.success,
+    warning: base.warning,
+    danger: base.danger,
+    info: base.info,
+    teal: base.teal,
+    amber: extras.amber,
+    primaryGlow: extras.primaryGlow,
+    tealGlow: extras.tealGlow,
+    dangerGlow: extras.dangerGlow,
+    violetGlow: extras.violetGlow,
+    shadow: base.shadow,
+    scrim: extras.scrim,
+    blurIntensity: base.blurIntensity,
+    blurTint: base.blurTint,
+    lineStrong: base.lineStrong,
+    subtle: extras.subtle,
+  };
+}
 
-export const darkColors: ColorTokens = {
-  primary: '#6EA1FF',
-  primaryDark: '#145CFF',
-  canvas: '#101010',
-  canvasRaised: '#171713',
-  surface: '#1E1D19',
-  surfaceMuted: '#2A2822',
-  surfaceGlass: 'rgba(30, 29, 25, 0.94)',
-  surfaceElevated: '#26241F',
-  ink: '#FFFDF6',
-  inkSoft: '#E6DFD0',
-  line: '#3B382F',
-  glassLine: 'rgba(255, 253, 246, 0.14)',
-  muted: '#B6AC9A',
-  success: '#45D18F',
-  warning: '#FFC247',
-  danger: '#FF6E6E',
-  info: '#6EA1FF',
-  teal: '#4DDBC7',
-  amber: '#FFD15C',
-  primaryGlow: 'rgba(110, 161, 255, 0.18)',
-  tealGlow: 'rgba(77, 219, 199, 0.14)',
-  dangerGlow: 'rgba(255, 110, 110, 0.16)',
-  violetGlow: 'rgba(255, 209, 92, 0.12)',
-  shadow: 'rgba(0, 0, 0, 0.54)',
+export const lightColors: ColorTokens = fromSettings(settingsLight, {
+  primary: '#C2662D',
+  primaryDark: '#9A4E20',
+  primaryGlow: 'rgba(194, 102, 45, 0.14)',
+  amber: '#C79A3D',
+  tealGlow: 'rgba(79, 139, 133, 0.12)',
+  dangerGlow: 'rgba(181, 74, 58, 0.12)',
+  violetGlow: 'rgba(139, 107, 158, 0.12)',
+  scrim: 'rgba(16, 16, 16, 0.62)',
+  subtle: '#8C8375',
+});
+
+export const darkColors: ColorTokens = fromSettings(settingsDark, {
+  primary: '#E08A5A',
+  primaryDark: '#C2662D',
+  primaryGlow: 'rgba(224, 138, 90, 0.18)',
+  amber: '#E0B85C',
+  tealGlow: 'rgba(107, 168, 161, 0.14)',
+  dangerGlow: 'rgba(224, 122, 106, 0.16)',
+  violetGlow: 'rgba(184, 150, 201, 0.14)',
   scrim: 'rgba(0, 0, 0, 0.72)',
-  blurIntensity: 28,
-  blurTint: 'dark',
-  lineStrong: '#FFFDF6',
   subtle: '#918778',
-};
+});
 
 export const colors = lightColors;
 export type AppColor = keyof ColorTokens;

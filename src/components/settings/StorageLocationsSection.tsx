@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable } from 'react-native';
 import {
   collection,
   doc,
@@ -10,14 +10,15 @@ import {
   serverTimestamp,
   writeBatch,
 } from '@react-native-firebase/firestore';
-import { Trash2 } from 'lucide-react-native';
+import { Trash2 } from '../ui/Glyph';
+import { View, XStack, YStack } from 'tamagui';
 import { Icon } from '../ui/Icon';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHousehold } from '../../contexts/HouseholdContext';
 import { useInventory } from '../../contexts/InventoryContext';
 import { useToast } from '../../contexts/ToastContext';
 import { db } from '../../lib/firebase';
-import { getLocationIcon } from '../../lib/appIcons';
+import { resolveStorageLocationIcon } from '../../lib/appIcons';
 import { StorageLocation } from '../../types';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
@@ -26,9 +27,7 @@ import { SettingsBodyText } from './SettingsBodyText';
 import { SettingsFieldLabel } from './SettingsFieldLabel';
 import { SettingsSurface } from './SettingsSurface';
 import { SettingsTextField } from './SettingsTextField';
-import { LOCATION_COLORS, SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.data;
+import { LOCATION_COLORS } from './settingsHelpers';
 
 interface StorageLocationsSectionProps {
   onRequestDelete: (location: { id: string; name: string }) => void;
@@ -71,8 +70,8 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
   };
 
   return (
-    <View style={{ gap: s(12) }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
+    <YStack style={{ gap: s(12) }}>
+      <XStack style={{ alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
         <SettingsBodyText style={{ flex: 1 }}>Pantry, fridge, freezer, and more.</SettingsBodyText>
         {canEdit ? (
           <SettingsActionButton
@@ -81,14 +80,14 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
             style={{ paddingHorizontal: s(12), paddingVertical: s(6), minHeight: undefined }}
           />
         ) : null}
-      </View>
+      </XStack>
 
       {!canEdit ? (
         <SettingsBodyText>View-only members cannot add or delete storage locations.</SettingsBodyText>
       ) : null}
 
       {addingLoc && canEdit ? (
-        <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(12), gap: s(12) }}>
+        <SettingsSurface contentStyle={{ padding: s(12), gap: s(12) }}>
           <SettingsTextField
             label="Location name"
             value={newLocName}
@@ -96,7 +95,7 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
             placeholder="Location name…"
           />
           <SettingsFieldLabel>Color</SettingsFieldLabel>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s(8) }}>
+          <XStack style={{ flexWrap: 'wrap', gap: s(8) }}>
             {LOCATION_COLORS.map((color) => (
               <Pressable
                 key={color}
@@ -114,7 +113,7 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
                 }}
               />
             ))}
-          </View>
+          </XStack>
           <SettingsActionButton
             label="Add location"
             tone="primary"
@@ -130,7 +129,7 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
           {canEdit ? '. Tap Add to create one.' : '.'}
         </SettingsBodyText>
       ) : (
-        <View style={{ gap: s(8) }}>
+        <YStack style={{ gap: s(8) }}>
           {locations.map((loc) => (
             <LocationRow
               key={loc.id}
@@ -139,9 +138,9 @@ export function StorageLocationsSection({ onRequestDelete }: StorageLocationsSec
               onDelete={() => onRequestDelete({ id: loc.id, name: loc.name })}
             />
           ))}
-        </View>
+        </YStack>
       )}
-    </View>
+    </YStack>
   );
 }
 
@@ -177,7 +176,7 @@ function LocationRow({
           borderColor: `${location.color}40`,
         }}
       >
-        <Icon name={getLocationIcon(location.name)} size={fs(18)} color={location.color} />
+        <Icon name={resolveStorageLocationIcon(location)} size={fs(18)} color={location.color} />
       </View>
       <SettingsBodyText accent style={{ flex: 1 }}>
         {location.name}
@@ -198,7 +197,7 @@ function LocationRow({
           accessibilityLabel={`Delete ${location.name}`}
           style={{ padding: s(4) }}
         >
-          <Trash2 size={fs(16)} color={c.muted} strokeWidth={2} />
+          <Trash2 size={fs(16)} color={c.ink} strokeWidth={2} />
         </Pressable>
       ) : null}
     </SettingsSurface>

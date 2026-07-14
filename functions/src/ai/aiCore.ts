@@ -2,12 +2,14 @@
  * Callable Cloud Functions: general-purpose AI core.
  *
  * These are low-level callables that back the rewritten `src/lib/aiCore.ts`.
- * They exist so that `mealAI.ts` and `productNoteAI.ts` — which call
- * `aiCore.generateText` / `aiCore.generateStructuredJson` — continue to work
- * without any changes to those files.
+ * They exist so that `productNoteAI.ts` — which calls
+ * `aiCore.generateText` / `aiCore.generateStructuredJson` — continues to work
+ * without changes to those files.
  *
  * Feature-specific callables (recipeGen, foodIdentify, etc.) call the
  * server-side gemini helpers directly and do NOT route through these.
+ * Note: `mealAI.ts` still uses client-side Firebase AI Logic for streaming
+ * meal planning; it is not backed by these callables yet.
  *
  * Exported callables:
  *   ai_generateText          → { text: string }

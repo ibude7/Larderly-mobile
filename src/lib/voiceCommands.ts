@@ -1,13 +1,8 @@
 /**
- * Voice command parsing — client proxy.
- *
- * Delegates to the `ai_parseShoppingVoice` and `ai_parsePantryVoice` Cloud
- * Functions instead of calling the Vertex AI Gemini API directly. All exported
- * types and function signatures are unchanged.
+ * Voice command parsing — client proxy for shopping + pantry Cloud Functions.
  */
 
-import { httpsCallable } from '@react-native-firebase/functions';
-import { functions } from './firebase';
+import { callFunction, callable } from './callable';
 import { sanitizeAIProduct, sanitizeString } from './sanitize';
 
 export interface ParsedVoiceCommand {
@@ -23,19 +18,12 @@ export interface ParsedPantryVoice {
   category: string;
 }
 
-const _parseShoppingVoice = httpsCallable<
-  { transcript: string },
-  ParsedVoiceCommand
->(functions, 'ai_parseShoppingVoice');
-
-const _parsePantryVoice = httpsCallable<
-  { transcript: string },
-  ParsedPantryVoice
->(functions, 'ai_parsePantryVoice');
+const _parseShoppingVoice = callable<{ transcript: string }, ParsedVoiceCommand>('ai_parseShoppingVoice');
+const _parsePantryVoice = callable<{ transcript: string }, ParsedPantryVoice>('ai_parsePantryVoice');
 
 export async function parseShoppingVoiceCommand(transcript: string): Promise<ParsedVoiceCommand> {
-  const result = await _parseShoppingVoice({ transcript });
-  const sanitized = sanitizeAIProduct(result.data);
+  const data = await callFunction(_parseShoppingVoice, { transcript });
+  const sanitized = sanitizeAIProduct(data);
   return {
     productName: sanitized.name,
     quantity: sanitized.quantity || 1,
@@ -43,11 +31,11 @@ export async function parseShoppingVoiceCommand(transcript: string): Promise<Par
 }
 
 export async function parsePantryVoiceCommand(transcript: string): Promise<ParsedPantryVoice> {
-  const result = await _parsePantryVoice({ transcript });
-  const sanitized = sanitizeAIProduct(result.data);
+  const data = await callFunction(_parsePantryVoice, { transcript });
+  const sanitized = sanitizeAIProduct(data);
   return {
     ...sanitized,
     quantity: sanitized.quantity || 1,
-    storageLocation: sanitizeString((result.data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
+    storageLocation: sanitizeString((data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
   };
 }

@@ -9,17 +9,16 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { LiquidGlassView } from '@callstack/liquid-glass';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '../ui/Glyph';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { canUseLiquidGlass } from '../../lib/liquidGlass';
+import { SettingsGlass } from '../settings/SettingsGlass';
 import { FrostedNavbarGlass } from './FrostedNavbarGlass';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing } from '../../theme/landing';
 
 type GlassButtonVariant = 'dark' | 'amber' | 'light' | 'navbar';
 
@@ -28,7 +27,7 @@ interface GlassButtonProps {
   children?: ReactNode;
   onPress: () => void;
   variant?: GlassButtonVariant;
-  /** Light variant only — flat canvas fill matching the page background. */
+  /** Light variant only — Settings frosted glass fill. */
   frosted?: boolean;
   showArrow?: boolean;
   loading?: boolean;
@@ -53,180 +52,153 @@ export function GlassButton({
   accessibilityLabel,
 }: GlassButtonProps) {
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const scale = useSharedValue(1);
   const inactive = disabled || loading;
   const isLight = variant === 'light';
   const isFrostedLight = isLight && frosted;
   const isNavbar = variant === 'navbar';
   const isAmber = variant === 'amber';
-  const useNativeGlass = canUseLiquidGlass();
-  const labelColor = isLight || isNavbar ? landing.ink : '#FFFFFF';
-  const spinnerColor = isLight || isNavbar ? landing.ink : '#FFFFFF';
+  const isSolid = !isLight && !isNavbar;
+  // Dark fill is near-black in light theme; in dark theme it inverts to cream ink.
+  // Label must flip with the fill — white-on-cream was unreadable.
+  const labelColor = isSolid
+    ? isAmber || !lc.isDark
+      ? '#FFFFFF'
+      : '#101010'
+    : lc.ink;
+  const spinnerColor = labelColor;
+  const pillRadius = s(28);
 
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: inactive ? 0.55 : 1,
   }));
 
-  const frostedGlassStyle = {
-    backgroundColor: landing.canvas,
-    borderWidth: StyleSheet.hairlineWidth * 2,
-    borderColor: landing.ink,
-  };
-
-  const shellStyle = isFrostedLight
-    ? { shadowOpacity: 0, elevation: 0 }
-    : {
-        shadowColor: '#000000',
-        shadowRadius: isLight ? s(12) : s(22),
-        shadowOffset: { width: 0, height: isLight ? s(4) : s(8) },
-        shadowOpacity: 0.1,
-      };
-
-  const glassContent = (
-    <>
-      {!isFrostedLight ? (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.specularLine,
-            {
-              left: s(20),
-              right: s(20),
-              backgroundColor: isLight
-                ? 'rgba(0, 0, 0, 0.12)'
-                : 'rgba(255,255,255,0.18)',
-            },
-          ]}
-        />
-      ) : null}
-      <View style={[styles.content, { gap: s(children ? 8 : 4) }]}>
-        {loading ? (
-          <ActivityIndicator size="small" color={spinnerColor} />
-        ) : children ? (
-          children
-        ) : (
-          <>
-            <Text
-              style={[
-                styles.label,
-                {
-                  fontSize: fs(14),
-                  letterSpacing: fs(-0.15),
-                  color: labelColor,
-                },
-              ]}
-            >
-              {label}
-            </Text>
-            {showArrow ? (
-              <ChevronRight size={fs(16)} color={labelColor} strokeWidth={2.4} />
-            ) : null}
-          </>
-        )}
-      </View>
-    </>
-  );
-
   const sizeStyle = {
     paddingVertical: s(10),
     paddingHorizontal: s(20),
     minHeight: s(40),
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    width: '100%' as const,
   };
 
-  const variantStyle = isLight
-    ? styles.nativeGlassLight
-    : isAmber
-      ? styles.nativeGlassAmber
-      : styles.nativeGlassDark;
+  const content = (
+    <View style={[styles.content, { gap: s(children ? 8 : 4) }]}>
+      {loading ? (
+        <ActivityIndicator size="small" color={spinnerColor} />
+      ) : children ? (
+        children
+      ) : (
+        <>
+          <Text
+            style={[
+              styles.label,
+              {
+                fontSize: fs(14),
+                letterSpacing: fs(-0.15),
+                color: labelColor,
+              },
+            ]}
+          >
+            {label}
+          </Text>
+          {showArrow ? (
+            <ChevronRight size={fs(16)} color={labelColor} strokeWidth={2.4} />
+          ) : null}
+        </>
+      )}
+    </View>
+  );
+
+  const pressable = (face: ReactNode) => (
+    <Pressable
+      onPress={onPress}
+      disabled={inactive}
+      onPressIn={() => {
+        scale.value = withSpring(0.978, SPRING);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, SPRING);
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled: inactive, busy: loading }}
+      style={{ width: '100%', borderRadius: pillRadius, overflow: 'hidden' }}
+    >
+      {face}
+    </Pressable>
+  );
 
   if (isNavbar) {
-    const pillRadius = s(28);
     return (
-      <Animated.View style={[styles.shell, { shadowOpacity: 0, elevation: 0 }, pressStyle, style]}>
-        <Pressable
-          onPress={onPress}
-          disabled={inactive}
-          onPressIn={() => {
-            scale.value = withSpring(0.978, SPRING);
-          }}
-          onPressOut={() => {
-            scale.value = withSpring(1, SPRING);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={accessibilityLabel ?? label}
-          accessibilityState={{ disabled: inactive, busy: loading }}
-          style={{ width: '100%', borderRadius: pillRadius, overflow: 'hidden' }}
-        >
-          <FrostedNavbarGlass
-            borderRadius={pillRadius}
-            contentStyle={[sizeStyle, { alignItems: 'center', justifyContent: 'center', width: '100%' }]}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={spinnerColor} />
-            ) : children ? (
-              <View style={[styles.content, { gap: s(8) }]}>{children}</View>
-            ) : (
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    fontSize: fs(14),
-                    letterSpacing: fs(-0.15),
-                    color: labelColor,
-                  },
-                ]}
-              >
-                {label}
-              </Text>
-            )}
-          </FrostedNavbarGlass>
-        </Pressable>
+      <Animated.View style={[styles.shell, pressStyle, style]}>
+        {pressable(
+          <FrostedNavbarGlass borderRadius={pillRadius} contentStyle={sizeStyle}>
+            {content}
+          </FrostedNavbarGlass>,
+        )}
       </Animated.View>
     );
   }
 
-  return (
-    <Animated.View style={[styles.shell, shellStyle, pressStyle, style]}>
-      <Pressable
-        onPress={onPress}
-        disabled={inactive}
-        onPressIn={() => {
-          scale.value = withSpring(0.978, SPRING);
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, SPRING);
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? label}
-        accessibilityState={{ disabled: inactive, busy: loading }}
-        style={styles.pressable}
-      >
-        {isFrostedLight ? (
-          <View style={[styles.glass, sizeStyle, frostedGlassStyle]}>{glassContent}</View>
-        ) : (
-          <LiquidGlassView
-            effect={isLight ? 'clear' : 'regular'}
-            colorScheme={isLight ? 'light' : 'dark'}
-            tintColor={
-              isLight
-                ? undefined
-                : isAmber
-                  ? 'rgba(194, 102, 45, 0.42)'
-                  : 'rgba(0, 0, 0, 0.92)'
-            }
-            interactive
-            style={[
-              styles.glass,
-              sizeStyle,
-              variantStyle,
-              !useNativeGlass && (isLight ? styles.fallbackGlassLight : isAmber ? styles.fallbackGlassAmber : styles.fallbackGlassDark),
-            ]}
+  if (isLight) {
+    return (
+      <Animated.View style={[styles.shell, pressStyle, style]}>
+        {pressable(
+          <SettingsGlass
+            interactive={!inactive}
+            elevated={!isFrostedLight}
+            radius={pillRadius}
+            contentStyle={sizeStyle}
           >
-            {glassContent}
-          </LiquidGlassView>
+            {content}
+          </SettingsGlass>,
         )}
-      </Pressable>
+      </Animated.View>
+    );
+  }
+
+  const solidBg = isAmber ? lc.accent : lc.isDark ? lc.ink : '#101010';
+  const solidBorder = isAmber
+    ? lc.isDark
+      ? 'rgba(0,0,0,0.45)'
+      : 'rgba(255,255,255,0.28)'
+    : lc.isDark
+      ? 'rgba(16,16,16,0.2)'
+      : 'rgba(255,255,255,0.28)';
+
+  return (
+    <Animated.View
+      style={[
+        styles.shell,
+        {
+          shadowColor: '#000',
+          shadowOpacity: 0.12,
+          shadowRadius: s(16),
+          shadowOffset: { width: 0, height: s(6) },
+          elevation: 6,
+        },
+        pressStyle,
+        style,
+      ]}
+    >
+      {pressable(
+        <View
+          style={[
+            sizeStyle,
+            {
+              backgroundColor: solidBg,
+              borderRadius: pillRadius,
+              borderWidth: StyleSheet.hairlineWidth * 1.5,
+              borderColor: solidBorder,
+            },
+          ]}
+        >
+          {content}
+        </View>,
+      )}
     </Animated.View>
   );
 }
@@ -235,54 +207,11 @@ const styles = StyleSheet.create({
   shell: {
     width: '100%',
     borderRadius: 999,
-    elevation: 6,
-  },
-  pressable: {
-    width: '100%',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  glass: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 999,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  fallbackGlassDark: {
-    backgroundColor: '#000000',
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  fallbackGlassAmber: {
-    backgroundColor: '#C2662D',
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  fallbackGlassLight: {
-    backgroundColor: 'transparent',
-    borderColor: 'rgba(0, 0, 0, 0.14)',
-  },
-  nativeGlassDark: {
-    backgroundColor: '#000000',
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  nativeGlassAmber: {
-    backgroundColor: 'transparent',
-    borderColor: 'rgba(255,255,255,0.24)',
-  },
-  nativeGlassLight: {
-    backgroundColor: 'transparent',
-    borderColor: 'rgba(0, 0, 0, 0.14)',
-  },
-  specularLine: {
-    position: 'absolute',
-    top: 1,
-    height: 1,
-    borderRadius: 1,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 1,
   },
   label: {
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Outfit_600SemiBold',

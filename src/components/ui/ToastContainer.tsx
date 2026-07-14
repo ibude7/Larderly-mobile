@@ -2,14 +2,13 @@ import { Pressable, StyleSheet } from "react-native";
 import { Text, View } from "tamagui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { LiquidGlassView } from "@callstack/liquid-glass";
 import { useToast, ToastType } from "../../contexts/ToastContext";
 import { Icon, IconName } from "./Icon";
 import { toastColors } from "../../theme";
 import { useAppColors } from "../../hooks/useAppColors";
 import { useTheme } from "../../hooks/useTheme";
 import { useScale } from "../../theme/scale";
-import { canUseLiquidGlass } from "../../lib/liquidGlass";
+import { GlassView, canUseLiquidGlass } from "../../lib/liquidGlass";
 
 const ICON: Record<ToastType, IconName> = {
   success: "success",
@@ -47,9 +46,9 @@ export default function ToastContainer() {
             key={toast.id}
             entering={FadeInDown.springify().damping(18)}
           >
-            <LiquidGlassView
-              effect="regular"
-              colorScheme={theme}
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={theme === "dark" ? "dark" : "light"}
               tintColor={theme === "dark" ? "rgba(22, 22, 24, 0.66)" : "rgba(255, 255, 255, 0.66)"}
               style={{
                 borderRadius: s(22),
@@ -107,7 +106,7 @@ export default function ToastContainer() {
               >
                 <Icon name="close" size={s(16)} color={c.muted} />
               </Pressable>
-            </LiquidGlassView>
+            </GlassView>
           </Animated.View>
         );
       })}

@@ -1,20 +1,24 @@
 import { Platform } from 'react-native';
+import { settingsLight } from './palette';
 
-/** Warm editorial palette shared by Landing, Auth, and Onboarding. */
+/**
+ * Warm editorial palette for Landing (static light) — also a non-React fallback.
+ * Landing stays light via `ForcedColorScheme`; auth/onboarding use `useLandingColors()`.
+ */
 export const landing = {
-  canvas: '#F4F1E8',
-  ink: '#2E2B26',
-  accent: '#C2662D',
+  canvas: settingsLight.canvas,
+  ink: settingsLight.inkSoft,
+  accent: settingsLight.terracotta,
   muted: '#8C8375',
-  body: '#6D665B',
-  surface: '#FFFDF6',
-  line: 'rgba(46, 43, 38, 0.14)',
+  body: settingsLight.muted,
+  surface: settingsLight.surface,
+  line: settingsLight.glassLine,
   white: '#FFFFFF',
-  success: '#3D7A4A',
-  danger: '#B54A3A',
+  success: settingsLight.success,
+  danger: settingsLight.danger,
 } as const;
 
-/** Editorial accent palette — distinct hues for auth/onboarding steps, layered over the warm cream base. */
+/** Editorial accent palette — distinct hues for auth/onboarding steps. */
 export const accentPalette = {
   terracotta: '#C2662D',
   sage: '#6E8B5A',

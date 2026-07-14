@@ -8,46 +8,22 @@
  *  • No Vertex AI credentials are bundled in the app binary.
  *  • Quota, rate-limiting, and model selection are controlled server-side.
  *  • The public API surface (`generateText`, `generateStructuredJson`) is
- *    unchanged — callers such as `productNoteAI.ts` and `mealAI.ts` continue
- *    to work without modification.
- *
- * Internal callers in this repo (recipeGen, foodIdentify, voiceCommands,
- * receiptScan) have been refactored to call their dedicated callables
- * directly, so they no longer depend on this module at all.
+ *    unchanged — callers such as `productNoteAI.ts` continue to work.
  */
 
-import { httpsCallable } from '@react-native-firebase/functions';
-import { functions } from './firebase';
+import { callFunction, callable } from './callable';
 
-// ─── Internal callable wrappers ───────────────────────────────────────────────
-
-/**
- * Callable: ai_generateText
- *
- * Dispatches to the server-side `generateText` handler.
- * Used by `productNoteAI.ts` (and potentially others) to generate short
- * plain-text strings without coupling them to a specific Cloud Function.
- */
-const _generateText = httpsCallable<
+const _generateText = callable<
   { prompt: string; options?: { temperature?: number; maxOutputTokens?: number } },
   { text: string }
->(functions, 'ai_generateText');
+>('ai_generateText');
 
-/**
- * Callable: ai_generateStructuredJson
- *
- * General-purpose structured-JSON callable — used by `mealAI.ts` and any
- * other code that still calls `aiCore` directly rather than a feature-specific
- * callable.
- */
-const _generateStructuredJson = httpsCallable<
+const _generateStructuredJson = callable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   { prompt: string; responseSchema: Record<string, any>; image?: { base64: string; mimeType: string } },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any
->(functions, 'ai_generateStructuredJson');
-
-// ─── Public API (unchanged signatures) ───────────────────────────────────────
+>('ai_generateStructuredJson');
 
 export interface ImagePart {
   base64: string;
@@ -59,17 +35,15 @@ export async function generateText(
   prompt: string,
   options?: { temperature?: number; maxOutputTokens?: number },
 ): Promise<string> {
-  const result = await _generateText({ prompt, options });
-  return result.data.text ?? '';
+  const data = await callFunction(_generateText, { prompt, options });
+  return data.text ?? '';
 }
 
 /**
  * Generate JSON matching a Gemini response schema from text and/or image.
  *
- * NOTE: `responseSchema` here accepts a plain JSON Schema object rather than
- * the Firebase AI SDK's `Schema.*` builder objects — the server uses the
- * Vertex AI Node SDK which takes plain schemas directly. For new callables
- * added after this refactor, prefer the dedicated feature callables instead.
+ * NOTE: `responseSchema` accepts a plain JSON Schema object — the server uses
+ * the Vertex AI Node SDK which takes plain schemas directly.
  */
 export async function generateStructuredJson<T>(
   prompt: string,
@@ -77,16 +51,12 @@ export async function generateStructuredJson<T>(
   responseSchema: Record<string, any>,
   image?: ImagePart,
 ): Promise<T> {
-  const result = await _generateStructuredJson({ prompt, responseSchema, image });
-  return result.data as T;
+  return callFunction(_generateStructuredJson, { prompt, responseSchema, image }) as Promise<T>;
 }
 
 /**
- * Re-export a Schema-like namespace for backward compatibility with callers
- * that still do `import { Schema } from './aiCore'`.
- *
- * These are plain-object builders that produce JSON Schema fragments
- * compatible with the server-side Vertex AI SDK.
+ * Plain-object Schema builders compatible with the server-side Vertex AI SDK.
+ * Kept for callers that still `import { Schema } from './aiCore'`.
  */
 export const Schema = {
   object: (opts: { properties: Record<string, unknown>; required?: string[]; description?: string }) => ({

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View } from 'react-native';
-import { Home } from 'lucide-react-native';
+import { Home } from '../../components/ui/Glyph';
+import { YStack } from 'tamagui';
 import { useGoBack } from '../../navigation/useGoBack';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsEmptyState } from '../../components/settings/SettingsEmptyState';
@@ -9,12 +9,9 @@ import { SettingsActionButton } from '../../components/settings/SettingsActionBu
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
 import { SettingsTextField } from '../../components/settings/SettingsTextField';
 import { HouseholdSection } from '../../components/settings/HouseholdSection';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
 import { useHouseholdSettings } from '../../hooks/useHouseholdSettings';
 import { useToast } from '../../contexts/ToastContext';
 import { useScale } from '../../theme/scale';
-
-const ACCENT = SETTINGS_SECTION_COLORS.household;
 
 export default function SettingsHouseholdScreen() {
   const goBack = useGoBack();
@@ -53,16 +50,15 @@ export default function SettingsHouseholdScreen() {
       {householdId ? (
         <HouseholdSection settings={settings} />
       ) : (
-        <View style={{ gap: s(16) }}>
+        <YStack style={{ gap: s(16) }}>
           <SettingsEmptyState
             title="No household yet"
             body="Create one for your kitchen or join with an 8-character invite code."
             icon={Home}
-            accent={ACCENT}
           />
 
-          <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
-            <SettingsFieldLabel color={ACCENT}>Create</SettingsFieldLabel>
+          <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
+            <SettingsFieldLabel>Create</SettingsFieldLabel>
             <SettingsTextField
               label="Household name"
               value={createName}
@@ -79,8 +75,8 @@ export default function SettingsHouseholdScreen() {
             />
           </SettingsSurface>
 
-          <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
-            <SettingsFieldLabel color={ACCENT}>Join</SettingsFieldLabel>
+          <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
+            <SettingsFieldLabel>Join</SettingsFieldLabel>
             <SettingsTextField
               label="Invite code"
               value={joinCode}
@@ -96,7 +92,7 @@ export default function SettingsHouseholdScreen() {
               onPress={() => void handleJoin()}
             />
           </SettingsSurface>
-        </View>
+        </YStack>
       )}
     </SettingsPageShell>
   );

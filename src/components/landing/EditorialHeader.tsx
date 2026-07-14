@@ -1,6 +1,7 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import { useAccent } from '../../theme/accent';
 
 interface EditorialHeaderProps {
@@ -21,6 +22,7 @@ export function EditorialHeader({
 }: EditorialHeaderProps) {
   const { s, fs } = useScale();
   const accent = useAccent();
+  const lc = useLandingColors();
   const isAuth = size === 'auth';
 
   return (
@@ -50,13 +52,14 @@ export function EditorialHeader({
             fontSize: fs(isAuth ? 28 : 24),
             lineHeight: fs(isAuth ? 34 : 30),
             letterSpacing: fs(isAuth ? -0.4 : -0.3),
+            color: lc.ink,
           },
         ]}
         numberOfLines={3}
       >
         {title}
         {titleAccent ? (
-          <Text style={[styles.headline, { color: accent }]}>{titleAccent}</Text>
+          <Text style={{ fontFamily: SF.serif, color: accent }}>{titleAccent}</Text>
         ) : null}
       </Text>
 
@@ -68,6 +71,7 @@ export function EditorialHeader({
               fontSize: fs(isAuth ? 14 : 13),
               lineHeight: fs(isAuth ? 20 : 18),
               maxWidth: s(isAuth ? 300 : 280),
+              color: lc.body,
             },
           ]}
           numberOfLines={3}
@@ -87,17 +91,12 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontFamily: SF.serif,
-    color: landing.ink,
     textAlign: 'center',
     flexShrink: 0,
-  },
-  headlineAccent: {
-    fontFamily: SF.serif,
   },
   subcopy: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.body,
     textAlign: 'center',
     flexShrink: 0,
   },

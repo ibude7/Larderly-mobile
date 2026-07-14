@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
-import { KeyRound } from 'lucide-react-native';
+import { KeyRound } from '../../components/ui/Glyph';
+import { Text, YStack } from 'tamagui';
 import { useGoBack } from '../../navigation/useGoBack';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { ProfileSection } from '../../components/settings/ProfileSection';
@@ -11,14 +11,13 @@ import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
+import { settingsFonts } from '../../components/settings/settingsFonts';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
-const ACCENT = SETTINGS_SECTION_COLORS.account;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function SettingsAccountScreen() {
@@ -84,19 +83,27 @@ export default function SettingsAccountScreen() {
   return (
     <SettingsPageShell title="Account" subtitle="Profile and session" onBack={goBack}>
       {needsVerification ? (
-        <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(14), gap: s(8) }}>
+        <SettingsSurface contentStyle={{ padding: s(14), gap: s(8) }}>
           <Text
             style={{
+              fontFamily: settingsFonts.semibold,
               fontSize: fs(14),
               lineHeight: fs(19),
-              fontWeight: '600',
               color: c.ink,
               flexShrink: 0,
             }}
           >
             Verify your email
           </Text>
-          <Text style={{ fontSize: fs(13), lineHeight: fs(18), color: c.inkSoft, flexShrink: 0 }}>
+          <Text
+            style={{
+              fontFamily: settingsFonts.regular,
+              fontSize: fs(13),
+              lineHeight: fs(18),
+              color: c.inkSoft,
+              flexShrink: 0,
+            }}
+          >
             We sent a link to {user?.email}. Tap it to confirm your address.
           </Text>
           <SettingsActionButton
@@ -113,19 +120,18 @@ export default function SettingsAccountScreen() {
       {isAnonymous ? <GuestUpgradeSection fullName={profile?.full_name || ''} /> : null}
 
       {!isAnonymous && hasPasswordProvider ? (
-        <View style={{ gap: s(8) }}>
-          <SettingsFieldLabel color={ACCENT}>Password</SettingsFieldLabel>
-          <SettingsRowGroup accent={ACCENT}>
+        <YStack style={{ gap: s(8) }}>
+          <SettingsFieldLabel>Password</SettingsFieldLabel>
+          <SettingsRowGroup>
             <SettingsRow
               icon={KeyRound}
-              iconColor={ACCENT}
               label="Reset password"
               subtitle="Email a secure link to choose a new password."
               disabled={resettingPassword}
               onPress={() => void handlePasswordReset()}
             />
           </SettingsRowGroup>
-        </View>
+        </YStack>
       ) : null}
 
       <AccountActionsSection />

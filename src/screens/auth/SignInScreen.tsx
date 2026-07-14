@@ -11,8 +11,9 @@ import { useAuthFlow } from '../../contexts/AuthFlowContext';
 import { useToast } from '../../contexts/ToastContext';
 import { friendlyAuthError } from '../../lib/authErrors';
 import { AUTH_ENTRY_COPY } from '../../navigation/authContent';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import type { AuthStackNavigationProp } from '../../navigation/types';
 
 const copy = AUTH_ENTRY_COPY.signin;
@@ -20,6 +21,7 @@ const copy = AUTH_ENTRY_COPY.signin;
 export default function SignInScreen() {
   const navigation = useNavigation<AuthStackNavigationProp>();
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { signIn, continueAsGuest } = useAuth();
   const { email, setEmail } = useAuthFlow();
   const { showToast } = useToast();
@@ -80,9 +82,12 @@ export default function SignInScreen() {
             loading={guestLoading}
             disabled={loading}
           />
-          <Text style={[styles.footerPrompt, { fontSize: fs(13) }]}>
+          <Text style={[styles.footerPrompt, { fontSize: fs(13), color: lc.body }]}>
             New here?{' '}
-            <Text style={styles.footerLink} onPress={() => navigation.navigate('SignUp')}>
+            <Text
+              style={[styles.footerLink, { color: lc.accent }]}
+              onPress={() => navigation.navigate('SignUp')}
+            >
               Create an account
             </Text>
           </Text>
@@ -104,11 +109,11 @@ export default function SignInScreen() {
       />
       <View>
         <View style={[styles.passwordHeader, { marginBottom: s(8) }]}>
-          <Text style={[styles.fieldLabel, { fontSize: fs(11), letterSpacing: fs(1.2) }]}>
+          <Text style={[styles.fieldLabel, { fontSize: fs(11), letterSpacing: fs(1.2), color: lc.muted }]}>
             Password
           </Text>
           <Pressable onPress={() => navigation.navigate('ForgotPassword')} hitSlop={8}>
-            <Text style={[styles.link, { fontSize: fs(13) }]}>Forgot?</Text>
+            <Text style={[styles.link, { fontSize: fs(13), color: lc.accent }]}>Forgot?</Text>
           </Pressable>
         </View>
         <TextField
@@ -128,7 +133,7 @@ export default function SignInScreen() {
         onPress={() => navigation.navigate('PhoneSignIn')}
         style={{ alignItems: 'center', paddingVertical: s(2) }}
       >
-        <Text style={[styles.mutedLink, { fontSize: fs(13) }]}>Sign in with phone</Text>
+        <Text style={[styles.mutedLink, { fontSize: fs(13), color: lc.muted }]}>Sign in with phone</Text>
       </Pressable>
     </AuthShell>
   );
@@ -144,28 +149,23 @@ const styles = StyleSheet.create({
     fontFamily: SF.bold,
     fontWeight: Platform.OS === 'ios' ? '700' : undefined,
     textTransform: 'uppercase',
-    color: landing.muted,
   },
   link: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.accent,
   },
   footerPrompt: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.body,
     textAlign: 'center',
   },
   footerLink: {
     fontFamily: SF.semibold,
     fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-    color: landing.accent,
   },
   mutedLink: {
     fontFamily: SF.regular,
     fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-    color: landing.muted,
     textAlign: 'center',
   },
 });

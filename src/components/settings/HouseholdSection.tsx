@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Share, Text, View } from 'react-native';
+import { ActivityIndicator, Share } from 'react-native';
+import { Text, View, XStack, YStack } from 'tamagui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -18,10 +19,9 @@ import { SettingsChoiceChip } from './SettingsChoiceChip';
 import { SettingsFieldLabel } from './SettingsFieldLabel';
 import { SettingsSurface } from './SettingsSurface';
 import { SettingsTextField } from './SettingsTextField';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
+import { settingsFonts } from './settingsFonts';
 
 const DIET_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Keto', 'Paleo', 'Pescatarian', 'Halal', 'Kosher'];
-const ACCENT = SETTINGS_SECTION_COLORS.household;
 
 type HouseholdSettingsController = ReturnType<typeof useHouseholdSettings>;
 
@@ -65,9 +65,9 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
 
   if (loading) {
     return (
-      <View style={{ alignItems: 'center', paddingVertical: s(24) }}>
-        <ActivityIndicator color={ACCENT} />
-      </View>
+      <YStack style={{ alignItems: 'center', paddingVertical: s(24) }}>
+        <ActivityIndicator color={c.ink} />
+      </YStack>
     );
   }
 
@@ -154,29 +154,29 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
   const canLeave = Boolean(user && canLeaveHousehold(user.uid, household.ownerId));
 
   return (
-    <View style={{ gap: s(16) }}>
-      <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
+    <YStack style={{ gap: s(16) }}>
+      <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
         <SettingsTextField label="Household name" value={household.name} editable={false} />
 
         {household.inviteCode ? (
-          <View style={{ gap: s(8) }}>
-            <SettingsFieldLabel color={ACCENT}>Invite code</SettingsFieldLabel>
+          <YStack style={{ gap: s(8) }}>
+            <SettingsFieldLabel>Invite code</SettingsFieldLabel>
             <View
               style={{
                 borderRadius: s(14),
                 borderWidth: 1,
-                borderColor: c.tint(ACCENT, 0.36),
-                backgroundColor: c.tint(ACCENT, 0.1),
+                borderColor: c.tint(c.accent, 0.36),
+                backgroundColor: c.tint(c.accent, 0.1),
                 paddingHorizontal: s(14),
                 paddingVertical: s(12),
               }}
             >
               <Text
                 style={{
+                  fontFamily: settingsFonts.semibold,
                   fontSize: fs(20),
                   letterSpacing: fs(4),
-                  fontWeight: '600',
-                  color: ACCENT,
+                  color: c.accent,
                   flexShrink: 0,
                 }}
               >
@@ -184,7 +184,7 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
               </Text>
             </View>
             <SettingsActionButton label="Share invite" onPress={() => void shareInvite()} />
-          </View>
+          </YStack>
         ) : null}
 
         <SettingsBodyText>
@@ -194,8 +194,8 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
         </SettingsBodyText>
       </SettingsSurface>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Members</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Members</SettingsFieldLabel>
         {members.map((m) => {
           const canChangeRole =
             !!user &&
@@ -219,13 +219,13 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
 
           return (
             <SettingsSurface key={m.uid} contentStyle={{ padding: s(12), gap: s(10) }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
-                <View style={{ flex: 1, minWidth: 0 }}>
+              <XStack style={{ alignItems: 'center', justifyContent: 'space-between', gap: s(8) }}>
+                <YStack style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     style={{
+                      fontFamily: settingsFonts.semibold,
                       fontSize: fs(14),
                       lineHeight: fs(19),
-                      fontWeight: '600',
                       color: c.ink,
                       flexShrink: 0,
                     }}
@@ -234,6 +234,7 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
                   </Text>
                   <Text
                     style={{
+                      fontFamily: settingsFonts.regular,
                       fontSize: fs(12),
                       lineHeight: fs(16),
                       color: c.muted,
@@ -243,10 +244,10 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
                   >
                     {m.memberRole}
                   </Text>
-                </View>
-              </View>
+                </YStack>
+              </XStack>
               {canManageMembers && (canChangeRole || canRemove) ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s(6), opacity: roleBusy ? 0.5 : 1 }}>
+                <XStack style={{ flexWrap: 'wrap', gap: s(6), opacity: roleBusy ? 0.5 : 1 }}>
                   {(['editor', 'viewer'] as Role[]).map((r) => (
                     <SettingsChoiceChip
                       key={r}
@@ -265,19 +266,19 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
                       style={{ paddingHorizontal: s(10), paddingVertical: s(6), minHeight: undefined }}
                     />
                   ) : null}
-                </View>
+                </XStack>
               ) : null}
             </SettingsSurface>
           );
         })}
-      </View>
+      </YStack>
 
-      <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
-        <SettingsFieldLabel color={ACCENT}>Household dietary prefs</SettingsFieldLabel>
+      <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
+        <SettingsFieldLabel>Household dietary prefs</SettingsFieldLabel>
         {!canEdit ? (
           <SettingsBodyText>View-only members cannot edit household preferences.</SettingsBodyText>
         ) : null}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: s(8) }}>
+        <XStack style={{ flexWrap: 'wrap', gap: s(8) }}>
           {DIET_OPTIONS.map((d) => (
             <SettingsChoiceChip
               key={d}
@@ -289,7 +290,7 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
               }
             />
           ))}
-        </View>
+        </XStack>
 
         <SettingsTextField
           label="Household allergies"
@@ -324,6 +325,6 @@ export function HouseholdSection({ settings }: HouseholdSectionProps) {
           available.
         </SettingsBodyText>
       ) : null}
-    </View>
+    </YStack>
   );
 }

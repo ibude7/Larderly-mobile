@@ -1,21 +1,93 @@
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import {
-  LayoutDashboard, Archive, ScanBarcode, ShoppingBag, UtensilsCrossed, Settings, Plus, X,
-  Check, CheckCheck, Trash2, Pencil, Search, Camera, ChevronRight, ChevronDown, ChevronLeft,
-  ChevronUp, TriangleAlert, Info, CircleCheck, CircleX, Minus, Sparkles, RefreshCw, LogOut,
-  User, Mail, Lock, Eye, EyeOff, Snowflake, Thermometer, LayoutGrid, Warehouse, Bell, Star,
-  Zap, Clock, Tag, Ellipsis, Flame, Leaf, Calendar, ShoppingCart, Box, ChefHat, CircleAlert,
-  TrendingDown, Send, Image, Download, Share2, Mic, Apple, FlaskConical, Frown, CupSoda,
-  Croissant, Wheat, Package, Droplet, Milk, Beef, Cherry, House, Fish, Popcorn, Heart,
-  Carrot, Candy, Salad, Wine, Refrigerator, Layers, MapPin, Sun, Moon, Smartphone, Egg,
-  type LucideIcon,
-} from 'lucide-react-native';
+  AlertTriangle,
+  Apple,
+  Archive,
+  BeefIcon,
+  Bell,
+  BottleWineIcon,
+  Box,
+  Calendar,
+  Camera,
+  Candy,
+  Carrot,
+  Check,
+  CheckCheck,
+  ChefHat,
+  Cherry,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  Croissant,
+  CupSoda,
+  Download,
+  Droplet,
+  Egg,
+  Ellipsis,
+  Eye,
+  EyeOff,
+  Fish,
+  Flame,
+  FlaskConical,
+  Frown,
+  GoogleIcon,
+  Heart,
+  House,
+  Image,
+  Information,
+  Layers,
+  LayoutDashboard,
+  LayoutGrid,
+  Leaf,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  Mic,
+  Milk,
+  Minus,
+  Moon,
+  Package,
+  Pencil,
+  Plus,
+  Popcorn,
+  Refrigerator,
+  Refresh,
+  Salad,
+  ScanBarcode,
+  Search,
+  Send,
+  Settings,
+  Share2,
+  ShoppingBag,
+  ShoppingCart,
+  Smartphone,
+  Snowflake,
+  Sparkles,
+  Star,
+  Sun,
+  Tag,
+  Thermometer,
+  Trash2,
+  TrendingDown,
+  User,
+  UtensilsCrossed,
+  Warehouse,
+  WheatIcon,
+  X,
+  Zap,
+} from '@hugeicons/core-free-icons';
 import { useAppColors } from '../../hooks/useAppColors';
 
 /**
- * Semantic icon names used across Larderly, mapped to lucide glyphs
- * (bold 2.5 stroke — Orchard OS design system). Brand logos stay on Ionicons.
+ * Semantic icon names used across Larderly, mapped to Hugeicons glyphs
+ * (bold 2.5 stroke — Orchard OS design system).
  */
 export type IconName =
   | 'dashboard'
@@ -111,7 +183,7 @@ export type IconName =
   | 'phone'
   | 'egg';
 
-const MAP: Record<Exclude<IconName, 'google' | 'apple'>, LucideIcon> = {
+const MAP: Record<IconName, IconSvgElement> = {
   dashboard: LayoutDashboard,
   pantry: Archive,
   scanner: ScanBarcode,
@@ -130,14 +202,14 @@ const MAP: Record<Exclude<IconName, 'google' | 'apple'>, LucideIcon> = {
   'chevron-down': ChevronDown,
   'chevron-left': ChevronLeft,
   'chevron-up': ChevronUp,
-  warning: TriangleAlert,
-  info: Info,
+  warning: AlertTriangle,
+  info: Information,
   success: CircleCheck,
   error: CircleX,
   minus: Minus,
   plus: Plus,
   sparkles: Sparkles,
-  refresh: RefreshCw,
+  refresh: Refresh,
   logout: LogOut,
   user: User,
   mail: Mail,
@@ -160,6 +232,8 @@ const MAP: Record<Exclude<IconName, 'google' | 'apple'>, LucideIcon> = {
   cart: ShoppingCart,
   box: Box,
   chef: ChefHat,
+  google: GoogleIcon,
+  apple: Apple,
   alert: CircleAlert,
   'trending-down': TrendingDown,
   send: Send,
@@ -173,14 +247,14 @@ const MAP: Record<Exclude<IconName, 'google' | 'apple'>, LucideIcon> = {
   // Category glyphs
   beverages: CupSoda,
   bakery: Croissant,
-  cereal: Wheat,
+  cereal: WheatIcon,
   canned: Package,
   condiments: Droplet,
   dairy: Milk,
-  deli: Beef,
+  deli: BeefIcon,
   frozen: Snowflake,
   fruits: Cherry,
-  grains: Wheat,
+  grains: WheatIcon,
   household: House,
   seafood: Fish,
   snacks: Popcorn,
@@ -189,8 +263,8 @@ const MAP: Record<Exclude<IconName, 'google' | 'apple'>, LucideIcon> = {
   spices: Flame,
   sweets: Candy,
   vegetables: Salad,
-  winery: Wine,
-  wine: Wine,
+  winery: BottleWineIcon,
+  wine: BottleWineIcon,
   // Location glyphs
   fridge: Refrigerator,
   freezer: Snowflake,
@@ -213,10 +287,7 @@ interface IconProps {
 export function Icon({ name, size = 22, color }: IconProps) {
   const c = useAppColors();
   const resolved = color ?? c.ink;
+  const glyph = MAP[name] ?? Box;
 
-  if (name === 'google') return <Ionicons name="logo-google" size={size} color={resolved} />;
-  if (name === 'apple') return <Ionicons name="logo-apple" size={size} color={resolved} />;
-
-  const LucideGlyph = MAP[name] ?? Box;
-  return <LucideGlyph size={size} color={resolved} strokeWidth={2.5} />;
+  return <HugeiconsIcon icon={glyph} size={size} color={resolved} strokeWidth={2.5} />;
 }

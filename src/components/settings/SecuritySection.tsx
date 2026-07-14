@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { YStack } from 'tamagui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
@@ -12,9 +12,6 @@ import { SettingsFieldLabel } from './SettingsFieldLabel';
 import { SettingsSurface } from './SettingsSurface';
 import { SettingsTextField } from './SettingsTextField';
 import { SettingsSheet } from './SettingsSheet';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.security;
 
 type EnrollStep = 'enter-phone' | 'enter-code';
 
@@ -53,7 +50,7 @@ export function SecuritySection() {
 
   if (isAnonymous) {
     return (
-      <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(14), gap: s(8) }}>
+      <SettingsSurface contentStyle={{ padding: s(14), gap: s(8) }}>
         <SettingsBodyText accent>Two-factor authentication</SettingsBodyText>
         <SettingsBodyText>
           Two-factor authentication requires a full account. Create an account from Account settings
@@ -118,11 +115,11 @@ export function SecuritySection() {
   };
 
   return (
-    <View style={{ gap: s(12) }}>
+    <YStack style={{ gap: s(12) }}>
       <SettingsBodyText>
         Add your phone as a second factor. You&apos;ll receive an SMS code on new sign-ins.
       </SettingsBodyText>
-      <SettingsFieldLabel color={ACCENT}>{factors.length > 0 ? '2FA on' : '2FA off'}</SettingsFieldLabel>
+      <SettingsFieldLabel>{factors.length > 0 ? '2FA on' : '2FA off'}</SettingsFieldLabel>
 
       {factors.length === 0 ? (
         <SettingsBodyText>No second factor enrolled.</SettingsBodyText>
@@ -139,10 +136,10 @@ export function SecuritySection() {
               gap: s(8),
             }}
           >
-            <View style={{ flex: 1, minWidth: 0 }}>
+            <YStack style={{ flex: 1, minWidth: 0 }}>
               <SettingsBodyText accent>{f.displayName ?? 'Phone'}</SettingsBodyText>
               <SettingsBodyText>{f.phoneNumber ?? 'SMS factor'}</SettingsBodyText>
-            </View>
+            </YStack>
             <SettingsActionButton
               label="Remove"
               tone="danger"
@@ -157,7 +154,7 @@ export function SecuritySection() {
 
       <SettingsSheet isOpen={open} onClose={() => setOpen(false)} title="Add SMS two-factor">
         {step === 'enter-phone' ? (
-          <View style={{ gap: s(12) }}>
+          <YStack style={{ gap: s(12) }}>
             <SettingsTextField
               label="Phone number"
               value={phoneNumber}
@@ -180,9 +177,9 @@ export function SecuritySection() {
               loading={submitting}
               onPress={() => void sendCode()}
             />
-          </View>
+          </YStack>
         ) : (
-          <View style={{ gap: s(12) }}>
+          <YStack style={{ gap: s(12) }}>
             <SettingsBodyText>Enter the 6-digit code sent to {toE164(phoneNumber)}.</SettingsBodyText>
             <SettingsTextField
               label="Verification code"
@@ -198,9 +195,9 @@ export function SecuritySection() {
               onPress={() => void verifyCode()}
             />
             <SettingsActionButton label="Use a different number" onPress={() => setStep('enter-phone')} />
-          </View>
+          </YStack>
         )}
       </SettingsSheet>
-    </View>
+    </YStack>
   );
 }

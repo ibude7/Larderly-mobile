@@ -1,6 +1,7 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 
 interface AuthNoticeProps {
   title: string;
@@ -10,7 +11,8 @@ interface AuthNoticeProps {
 
 export function AuthNotice({ title, body, tone = 'success' }: AuthNoticeProps) {
   const { s, fs } = useScale();
-  const color = tone === 'success' ? landing.success : landing.body;
+  const lc = useLandingColors();
+  const color = tone === 'success' ? lc.success : lc.body;
 
   return (
     <View
@@ -28,7 +30,7 @@ export function AuthNotice({ title, body, tone = 'success' }: AuthNoticeProps) {
           fontSize: fs(13),
           fontFamily: SF.semibold,
           fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-          color: landing.ink,
+          color: lc.ink,
         }}
       >
         {title}
@@ -39,7 +41,7 @@ export function AuthNotice({ title, body, tone = 'success' }: AuthNoticeProps) {
           lineHeight: fs(17),
           fontFamily: SF.regular,
           fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-          color: landing.body,
+          color: lc.body,
         }}
       >
         {body}

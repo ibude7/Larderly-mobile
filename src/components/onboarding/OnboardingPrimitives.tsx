@@ -1,15 +1,17 @@
 import type { ComponentType, ReactNode } from 'react';
 import { Pressable, Text, StyleSheet, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { GlassButton } from '../landing/GlassButton';
+import { SettingsGlass } from '../settings/SettingsGlass';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Check, ChevronRight } from 'lucide-react-native';
+import { Check, ChevronRight } from '../ui/Glyph';
 import * as Haptics from 'expo-haptics';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import { useAccent } from '../../theme/accent';
 
 const SPRING = { damping: 18, stiffness: 280 };
@@ -29,6 +31,7 @@ export function OptionChip({
 }) {
   const { s, fs } = useScale();
   const accent = useAccent();
+  const lc = useLandingColors();
   const color = selectedColor ?? accent;
   const scale = useSharedValue(1);
 
@@ -56,25 +59,26 @@ export function OptionChip({
             paddingVertical: s(7),
             borderRadius: s(999),
             gap: s(5),
-            backgroundColor: selected ? color : landing.surface,
-            borderColor: selected ? color : landing.line,
+            backgroundColor: selected ? color : lc.surface,
+            borderColor: selected ? color : lc.line,
+            borderWidth: StyleSheet.hairlineWidth,
           },
         ]}
       >
         {Icon ? (
-          <Icon size={fs(13)} color={selected ? landing.white : color} strokeWidth={2.2} />
+          <Icon size={fs(13)} color={selected ? '#FFFFFF' : color} strokeWidth={2.2} />
         ) : null}
         <Text
           style={{
             fontSize: fs(12),
             fontFamily: selected ? SF.semibold : SF.regular,
             fontWeight: Platform.OS === 'ios' ? (selected ? '600' : '400') : undefined,
-            color: selected ? landing.white : landing.ink,
+            color: selected ? '#FFFFFF' : lc.ink,
           }}
         >
           {label}
         </Text>
-        {selected ? <Check size={fs(11)} color={landing.white} strokeWidth={3} /> : null}
+        {selected ? <Check size={fs(11)} color="#FFFFFF" strokeWidth={3} /> : null}
       </Pressable>
     </Animated.View>
   );
@@ -100,6 +104,7 @@ export function ChoiceCard({
 }) {
   const { s, fs } = useScale();
   const accent = useAccent();
+  const lc = useLandingColors();
   const color = accentColor ?? accent;
   const scale = useSharedValue(1);
 
@@ -120,54 +125,57 @@ export function ChoiceCard({
         onPressOut={() => {
           scale.value = withSpring(1, SPRING);
         }}
-        style={[
-          styles.choiceCard,
-          {
-            gap: s(10),
-            borderRadius: s(14),
-            padding: s(12),
-            borderColor: highlighted ? `${color}55` : landing.line,
-            backgroundColor: highlighted ? `${color}0F` : landing.surface,
-          },
-        ]}
       >
-        <View
-          style={{
-            width: s(40),
-            height: s(40),
-            borderRadius: s(10),
+        <SettingsGlass
+          elevated
+          interactive={false}
+          accent={highlighted ? color : undefined}
+          radius={s(16)}
+          contentStyle={{
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: highlighted ? color : `${color}18`,
+            gap: s(10),
+            padding: s(12),
           }}
         >
-          <Icon size={fs(18)} color={highlighted ? landing.white : color} strokeWidth={2.1} />
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text
+          <View
             style={{
-              fontSize: fs(14),
-              fontFamily: SF.semibold,
-              fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-              color: landing.ink,
+              width: s(40),
+              height: s(40),
+              borderRadius: s(10),
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: highlighted ? color : `${color}18`,
             }}
-            numberOfLines={1}
           >
-            {title}
-          </Text>
-          <Text
-            style={{
-              fontSize: fs(12),
-              lineHeight: fs(16),
-              color: landing.muted,
-              marginTop: s(2),
-            }}
-            numberOfLines={1}
-          >
-            {subtitle}
-          </Text>
-        </View>
-        <ChevronRight size={fs(16)} color={landing.muted} strokeWidth={2} />
+            <Icon size={fs(18)} color={highlighted ? '#FFFFFF' : color} strokeWidth={2.1} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={{
+                fontSize: fs(14),
+                fontFamily: SF.semibold,
+                fontWeight: Platform.OS === 'ios' ? '600' : undefined,
+                color: lc.ink,
+              }}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <Text
+              style={{
+                fontSize: fs(12),
+                lineHeight: fs(16),
+                color: lc.muted,
+                marginTop: s(2),
+              }}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+          </View>
+          <ChevronRight size={fs(16)} color={lc.muted} strokeWidth={2} />
+        </SettingsGlass>
       </Pressable>
     </Animated.View>
   );
@@ -183,6 +191,7 @@ export function GhostLink({
   accent?: boolean;
 }) {
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   return (
     <Pressable
       onPress={onPress}
@@ -194,7 +203,7 @@ export function GhostLink({
           fontSize: fs(13),
           fontFamily: accent ? SF.semibold : SF.regular,
           fontWeight: Platform.OS === 'ios' ? (accent ? '600' : '400') : undefined,
-          color: accent ? landing.accent : landing.muted,
+          color: accent ? lc.accent : lc.muted,
         }}
       >
         {label}
@@ -228,6 +237,7 @@ export function SecondaryButton({
       label={label}
       onPress={onPress}
       variant="light"
+      frosted
       loading={loading}
       style={shellStyle}
     />
@@ -248,20 +258,15 @@ export function DepthCard({
   const color = accentColor ?? accent;
 
   return (
-    <View
-      style={[
-        styles.depthCard,
-        {
-          borderRadius: s(14),
-          padding: s(14),
-          borderColor: `${color}35`,
-          backgroundColor: landing.surface,
-        },
-        style,
-      ]}
+    <SettingsGlass
+      elevated
+      interactive={false}
+      accent={color}
+      radius={s(16)}
+      contentStyle={[{ padding: s(14), alignItems: 'center' }, style as ViewStyle]}
     >
       {children}
-    </View>
+    </SettingsGlass>
   );
 }
 
@@ -278,18 +283,21 @@ export function BenefitRow({
 }) {
   const { s, fs } = useScale();
   const accent = useAccent();
+  const lc = useLandingColors();
   const color = accentColor ?? accent;
 
   return (
-    <View
-      style={[
-        styles.benefitRow,
-        {
-          gap: s(10),
-          borderRadius: s(12),
-          padding: s(10),
-        },
-      ]}
+    <SettingsGlass
+      elevated={false}
+      interactive={false}
+      accent={color}
+      radius={s(14)}
+      contentStyle={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: s(10),
+        padding: s(10),
+      }}
     >
       <View
         style={{
@@ -309,7 +317,7 @@ export function BenefitRow({
             fontSize: fs(13),
             fontFamily: SF.semibold,
             fontWeight: Platform.OS === 'ios' ? '600' : undefined,
-            color: landing.ink,
+            color: lc.ink,
           }}
           numberOfLines={1}
         >
@@ -319,7 +327,7 @@ export function BenefitRow({
           style={{
             fontSize: fs(12),
             lineHeight: fs(16),
-            color: landing.body,
+            color: lc.body,
             marginTop: s(1),
           }}
           numberOfLines={2}
@@ -327,7 +335,7 @@ export function BenefitRow({
           {body}
         </Text>
       </View>
-    </View>
+    </SettingsGlass>
   );
 }
 
@@ -335,23 +343,5 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  choiceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  depthCard: {
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    width: '100%',
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: landing.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: landing.line,
   },
 });

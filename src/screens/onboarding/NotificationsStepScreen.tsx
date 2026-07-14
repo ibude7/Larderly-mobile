@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { CalendarClock, ShoppingBasket, Users } from 'lucide-react-native';
+import { CalendarClock, ShoppingBasket, Users } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { BenefitRow, GhostLink } from '../../components/onboarding/OnboardingPrimitives';
 import { useToast } from '../../contexts/ToastContext';

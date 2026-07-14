@@ -56,6 +56,39 @@ function parseUnit(qty: string): string {
 }
 
 export async function searchProductByBarcode(barcode: string): Promise<ProductData> {
+  // Demo barcodes resolve immediately without waiting on network.
+  const MOCKS: Record<string, ProductData> = {
+    '5901234123457': {
+      name: 'Organic Whole Milk',
+      brand: 'Farm Fresh',
+      category: 'dairy',
+      imageUrl: null,
+      pricePerUnit: 1.49,
+      unit: 'L',
+      calories: 61,
+      protein: 3.2,
+      fat: 3.5,
+      carbs: 4.8,
+      ingredients: 'Whole milk',
+      barcode,
+    },
+    '1234567890128': {
+      name: 'Choco Crunch Cereal',
+      brand: 'Morning Starts',
+      category: 'breakfast',
+      imageUrl: null,
+      pricePerUnit: 4.99,
+      unit: 'g',
+      calories: 385,
+      protein: 7.5,
+      fat: 4.2,
+      carbs: 76,
+      ingredients: 'Whole grain wheat, sugar, cocoa powder, salt',
+      barcode,
+    },
+  };
+  if (MOCKS[barcode]) return MOCKS[barcode];
+
   try {
     const productSnap = await getDoc(doc(db, 'products', barcode));
     if (productSnap.exists()) {
@@ -184,38 +217,6 @@ export async function searchProductByBarcode(barcode: string): Promise<ProductDa
   } catch {
     // ignore
   }
-
-  const MOCKS: Record<string, ProductData> = {
-    '5901234123457': {
-      name: 'Organic Whole Milk',
-      brand: 'Farm Fresh',
-      category: 'dairy',
-      imageUrl: null,
-      pricePerUnit: 1.49,
-      unit: 'L',
-      calories: 61,
-      protein: 3.2,
-      fat: 3.5,
-      carbs: 4.8,
-      ingredients: 'Whole milk',
-      barcode,
-    },
-    '1234567890128': {
-      name: 'Choco Crunch Cereal',
-      brand: 'Morning Starts',
-      category: 'breakfast',
-      imageUrl: null,
-      pricePerUnit: 4.99,
-      unit: 'g',
-      calories: 385,
-      protein: 7.5,
-      fat: 4.2,
-      carbs: 76,
-      ingredients: 'Whole grain wheat, sugar, cocoa powder, salt',
-      barcode,
-    },
-  };
-  if (MOCKS[barcode]) return MOCKS[barcode];
 
   return {
     name: 'Unknown Product',

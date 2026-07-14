@@ -6,8 +6,9 @@ import TextField from '../../components/ui/TextField';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { AUTH_FLOW_COPY } from '../../navigation/authContent';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 import type { AuthStackNavigationProp } from '../../navigation/types';
 
 const copy = AUTH_FLOW_COPY.mfaVerify;
@@ -15,6 +16,7 @@ const copy = AUTH_FLOW_COPY.mfaVerify;
 export default function MfaVerifyScreen() {
   const navigation = useNavigation<AuthStackNavigationProp>();
   const { fs } = useScale();
+  const lc = useLandingColors();
   const {
     mfaResolver,
     startMfaChallenge,
@@ -101,7 +103,7 @@ export default function MfaVerifyScreen() {
               fontSize: fs(13),
               fontFamily: SF.regular,
               fontWeight: Platform.OS === 'ios' ? '400' : undefined,
-              color: landing.muted,
+              color: lc.muted,
             }}
           >
             Cancel

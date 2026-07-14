@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { LiquidGlassView } from '@callstack/liquid-glass';
 import { LinearGradient } from 'expo-linear-gradient';
-import { canUseLiquidGlass } from '../../lib/liquidGlass';
+import { GlassView, canUseLiquidGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
 import { landing } from '../../theme/landing';
 
@@ -16,7 +15,7 @@ interface LiquidGlassContainerProps {
 
 /**
  * 3D liquid-glass panel sized to its children.
- * Glass fills via absoluteFill so LiquidGlassView cannot collapse layout.
+ * Glass fills via absoluteFill so GlassView cannot collapse layout.
  */
 export function LiquidGlassContainer({
   children,
@@ -40,8 +39,8 @@ export function LiquidGlassContainer({
         style,
       ]}
     >
-      <LiquidGlassView
-        effect="regular"
+      <GlassView
+        glassEffectStyle="regular"
         colorScheme="light"
         tintColor={`${tintColor}18`}
         style={[

@@ -6,7 +6,8 @@ import {
   ShoppingCart,
   Wheat,
   Wine,
-} from 'lucide-react-native';
+} from '../components/ui/Glyph';
+import type { GlyphIcon } from '../components/ui/Glyph';
 import { accentPalette } from '../theme/landing';
 
 export const ONBOARDING_STEPS = [
@@ -86,7 +87,7 @@ export const ONBOARDING_STEP_ACCENT_COLORS: Record<OnboardingStepName, string> =
   Finish: accentPalette.terracotta,
 };
 
-export const DIET_OPTION_ICONS: Record<string, typeof Leaf> = {
+export const DIET_OPTION_ICONS: Record<string, GlyphIcon> = {
   Vegetarian: Leaf,
   Vegan: Leaf,
   'Gluten-Free': Wheat,
@@ -97,7 +98,7 @@ export const DIET_OPTION_ICONS: Record<string, typeof Leaf> = {
   Kosher: Wine,
 };
 
-export const STORE_OPTION_ICONS: Record<string, typeof ShoppingCart> = {
+export const STORE_OPTION_ICONS: Record<string, GlyphIcon> = {
   'Whole Foods': Leaf,
   "Trader Joe's": ShoppingBasket,
   Costco: ShoppingCart,

@@ -1,6 +1,8 @@
-import { Text, type StyleProp, type TextStyle } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
+import { Text } from 'tamagui';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
+import { settingsFonts } from './settingsFonts';
 
 export function SettingsBodyText({
   children,
@@ -17,9 +19,9 @@ export function SettingsBodyText({
     <Text
       style={[
         {
+          fontFamily: accent ? settingsFonts.semibold : settingsFonts.regular,
           fontSize: fs(14),
           lineHeight: fs(20),
-          fontWeight: accent ? '600' : '400',
           color: accent ? c.ink : c.inkSoft,
           flexShrink: 0,
         },

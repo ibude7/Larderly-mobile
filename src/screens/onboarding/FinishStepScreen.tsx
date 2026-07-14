@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { View, Text, Platform } from 'react-native';
-import { Sparkles } from 'lucide-react-native';
+import { Sparkles } from '../../components/ui/Glyph';
 import { OnboardingShell } from '../../components/onboarding/OnboardingShell';
 import { DepthCard } from '../../components/onboarding/OnboardingPrimitives';
 import { useOnboardingSession } from '../../contexts/OnboardingSessionContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { ONBOARDING_STEP_ACCENT_COLORS } from '../../navigation/onboardingSteps';
 
 export default function FinishStepScreen() {
   const { s, fs } = useScale();
+  const lc = useLandingColors();
   const { scanSkipped, addedToSync, scannedItem } = useOnboardingSession();
   const { updateUserPreferences } = useProfile();
   const { showToast } = useToast();
@@ -43,7 +45,7 @@ export default function FinishStepScreen() {
             backgroundColor: accent,
           }}
         >
-          <Sparkles size={fs(20)} color={landing.white} strokeWidth={2.1} />
+          <Sparkles size={fs(20)} color={'#FFFFFF'} strokeWidth={2.1} />
         </View>
         <Text
           style={{
@@ -51,7 +53,7 @@ export default function FinishStepScreen() {
             fontSize: fs(18),
             lineHeight: fs(24),
             fontFamily: SF.serif,
-            color: landing.ink,
+            color: lc.ink,
           }}
         >
           {scanSkipped ? "You're all set!" : 'Your pantry is ready'}
@@ -64,7 +66,7 @@ export default function FinishStepScreen() {
             fontFamily: SF.regular,
             fontWeight: Platform.OS === 'ios' ? '400' : undefined,
             color:
-              !scanSkipped && addedToSync && scannedItem ? landing.success : landing.body,
+              !scanSkipped && addedToSync && scannedItem ? lc.success : lc.body,
           }}
         >
           {!scanSkipped && addedToSync && scannedItem

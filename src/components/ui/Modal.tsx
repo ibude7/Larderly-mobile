@@ -14,12 +14,11 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { LiquidGlassView } from "@callstack/liquid-glass";
 import { Icon } from "./Icon";
 import { useAppColors } from "../../hooks/useAppColors";
 import { useTheme } from "../../hooks/useTheme";
 import { useScale } from "../../theme/scale";
-import { canUseLiquidGlass } from "../../lib/liquidGlass";
+import { GlassView, canUseLiquidGlass } from "../../lib/liquidGlass";
 
 interface ModalProps {
   isOpen: boolean;
@@ -53,12 +52,13 @@ export default function Modal({
   const { height, s, fs, fsLayout } = useScale();
   const sheetOffset = height * 0.4;
   const translateY = useSharedValue(sheetOffset);
-  const opacity = useSharedValue(0);
+  // Never start at 0 — opacity 0 kills liquid glass on iOS 26.1+.
+  const opacity = useSharedValue(0.02);
 
   useEffect(() => {
     if (isOpen) {
       translateY.value = sheetOffset;
-      opacity.value = 0;
+      opacity.value = 0.02;
       translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
       opacity.value = withSpring(1, { damping: 20, stiffness: 200 });
     }
@@ -82,11 +82,14 @@ export default function Modal({
           style={StyleSheet.absoluteFill}
           onPress={dismissable ? onClose : undefined}
         >
-          <LiquidGlassView
-            effect="regular"
-            colorScheme={theme}
+          <GlassView
+            glassEffectStyle="regular"
+            colorScheme={theme === "dark" ? "dark" : "light"}
             tintColor={theme === "dark" ? "rgba(10, 10, 12, 0.36)" : "rgba(255, 255, 255, 0.28)"}
-            style={[StyleSheet.absoluteFill, { backgroundColor: useNativeGlass ? "transparent" : "rgba(15, 18, 22, 0.22)" }]}
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: useNativeGlass ? "transparent" : "rgba(15, 18, 22, 0.22)" },
+            ]}
           />
         </Pressable>
 
@@ -95,9 +98,9 @@ export default function Modal({
           className="w-full"
         >
           <Animated.View style={sheetStyle}>
-            <LiquidGlassView
-              effect="regular"
-              colorScheme={theme}
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={theme === "dark" ? "dark" : "light"}
               tintColor={theme === "dark" ? "rgba(22, 22, 24, 0.72)" : "rgba(255, 255, 255, 0.72)"}
               style={{
                 borderTopLeftRadius: s(36),
@@ -160,7 +163,7 @@ export default function Modal({
               ) : (
                 children
               )}
-            </LiquidGlassView>
+            </GlassView>
           </Animated.View>
         </KeyboardAvoidingView>
       </View>

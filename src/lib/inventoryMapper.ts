@@ -52,14 +52,14 @@ export function defaultStorageLocations(userId: string): StorageLocation[] {
     Fridge: '#3b82f6',
     Freezer: '#06b6d4',
     Cabinet: '#8b5cf6',
-    Other: '#8b5cf6',
+    Other: '#f97316',
   };
   const icons: Record<string, string> = {
     Pantry: 'warehouse',
-    Fridge: 'thermometer',
-    Freezer: 'snowflake',
-    Cabinet: 'layout-grid',
-    Other: 'layout-grid',
+    Fridge: 'fridge',
+    Freezer: 'freezer',
+    Cabinet: 'grid',
+    Other: 'more',
   };
   return DEFAULT_STORAGE_LOCATIONS.map((loc) => ({
     id: `loc-${loc.name.toLowerCase()}`,
@@ -118,6 +118,14 @@ export function inventoryToPantryItem(
   };
 }
 
+function omitUndefined<T extends Record<string, unknown>>(obj: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return out as T;
+}
+
 export function pantryToInventoryPayload(
   item: Omit<PantryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
   locations: StorageLocation[],
@@ -128,24 +136,25 @@ export function pantryToInventoryPayload(
     name: shared.name,
     quantity: shared.quantity ?? 0,
     storageLocation: locationNameFromId(item.location_id, locations),
-    category: shared.category ?? item.category,
+    category: shared.category ?? item.category ?? 'other',
     pricePerUnit: shared.purchasePrice ?? item.purchase_price ?? 0,
-    unit: shared.unit ?? item.unit,
-    lowStockThreshold: shared.lowStockThreshold ?? item.low_stock_threshold,
+    unit: shared.unit ?? item.unit ?? 'ea',
+    lowStockThreshold: shared.lowStockThreshold ?? item.low_stock_threshold ?? 1,
     addedBy: userId,
-    locationId: item.location_id ?? undefined,
-    imageUrl: shared.imageUrl,
-    barcode: shared.barcode,
-    brand: shared.brand,
-    notes: shared.notes,
   };
+
+  if (item.location_id) payload.locationId = item.location_id;
+  if (shared.imageUrl) payload.imageUrl = shared.imageUrl;
+  if (shared.barcode) payload.barcode = shared.barcode;
+  if (shared.brand) payload.brand = shared.brand;
+  if (shared.notes) payload.notes = shared.notes;
 
   const expirationDate = shared.expirationDate ?? toExpirationMs(item.expiry_date);
   if (expirationDate !== undefined && expirationDate !== null) {
     payload.expirationDate = expirationDate;
   }
 
-  return payload;
+  return omitUndefined(payload);
 }
 
 export function mapInventoryDoc(id: string, data: Record<string, unknown>): InventoryItem {

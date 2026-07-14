@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
 import { Image } from 'expo-image';
-import { User } from 'lucide-react-native';
+import { User } from '../ui/Glyph';
+import { View, YStack } from 'tamagui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -12,10 +12,6 @@ import { SettingsActionButton } from './SettingsActionButton';
 import { SettingsBodyText } from './SettingsBodyText';
 import { SettingsSurface } from './SettingsSurface';
 import { SettingsTextField } from './SettingsTextField';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.account;
-
 export function ProfileSection() {
   const { s, fs } = useScale();
   const c = useSettingsTheme();
@@ -46,8 +42,8 @@ export function ProfileSection() {
   };
 
   return (
-    <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(14) }}>
-      <View style={{ alignItems: 'center', gap: s(10) }}>
+    <SettingsSurface contentStyle={{ padding: s(16), gap: s(14) }}>
+      <YStack style={{ alignItems: 'center', gap: s(10) }}>
         {photoUrl ? (
           <Image
             source={{ uri: photoUrl }}
@@ -72,7 +68,7 @@ export function ProfileSection() {
               justifyContent: 'center',
             }}
           >
-            <User size={fs(28)} color={c.muted} strokeWidth={2} />
+            <User size={fs(28)} color={c.ink} strokeWidth={2} />
           </View>
         )}
         <SettingsActionButton
@@ -101,7 +97,7 @@ export function ProfileSection() {
             })();
           }}
         />
-      </View>
+      </YStack>
 
       <SettingsBodyText>
         {isAnonymous ? 'Guest session — no email on file' : user?.email || 'Signed in'}

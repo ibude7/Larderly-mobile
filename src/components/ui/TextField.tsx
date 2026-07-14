@@ -8,7 +8,8 @@ import {
 import { Button as TamaguiButton, Text, View, XStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
 import { useAppColors } from '../../hooks/useAppColors';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { useLandingColors } from '../../hooks/useLandingColors';
+import { landingFonts as SF } from '../../theme/landing';
 import { useAccent } from '../../theme/accent';
 import { useScale } from '../../theme/scale';
 
@@ -40,6 +41,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   ref,
 ) {
   const c = useAppColors();
+  const lc = useLandingColors();
   const { s, fs } = useScale();
   const accent = useAccent();
   const isLanding = variant === 'landing';
@@ -47,13 +49,13 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
 
   if (isLanding) {
     const lineColor = error
-      ? landing.danger
+      ? lc.danger
       : success
-        ? landing.success
+        ? lc.success
         : focused
           ? accent
-          : landing.line;
-    const iconColor = focused && !error ? accent : landing.muted;
+          : lc.line;
+    const iconColor = focused && !error ? accent : lc.muted;
 
     return (
       <View>
@@ -65,7 +67,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
                 fontSize: fs(11),
                 letterSpacing: fs(1.2),
                 marginBottom: s(8),
-                color: landing.muted,
+                color: lc.muted,
               },
             ]}
           >
@@ -86,13 +88,13 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
           {icon ? <Icon name={icon} size={fs(18)} color={iconColor} /> : null}
           <TextInput
             ref={ref}
-            placeholderTextColor={landing.muted}
+            placeholderTextColor={lc.muted}
             style={[
               styles.landingInput,
               {
                 fontSize: fs(17),
                 lineHeight: fs(24),
-                color: landing.ink,
+                color: lc.ink,
                 fontFamily: SF.regular,
                 fontWeight: Platform.OS === 'ios' ? '400' : undefined,
               },
@@ -109,21 +111,21 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
           />
           {rightIcon ? (
             <TamaguiButton unstyled onPress={onRightIconPress} hitSlop={10} style={{ padding: s(2) }}>
-              <Icon name={rightIcon} size={fs(18)} color={landing.muted} />
+              <Icon name={rightIcon} size={fs(18)} color={lc.muted} />
             </TamaguiButton>
           ) : success && !error ? (
-            <Icon name="success" size={fs(16)} color={landing.success} />
+            <Icon name="success" size={fs(16)} color={lc.success} />
           ) : null}
         </XStack>
         {error ? (
-          <Text style={{ color: landing.danger, fontSize: fs(12), marginTop: s(6) }}>
+          <Text style={{ color: lc.danger, fontSize: fs(12), marginTop: s(6) }}>
             {error}
           </Text>
         ) : null}
         {hint && !error ? (
           <Text
             style={{
-              color: landing.muted,
+              color: lc.muted,
               fontSize: fs(12),
               marginTop: s(6),
               fontFamily: SF.regular,

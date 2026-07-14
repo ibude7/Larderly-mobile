@@ -3,15 +3,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { FrostedNavbarGlass } from '../landing/FrostedNavbarGlass';
 import { Icon, IconName } from '../ui/Icon';
+import { useAppColors } from '../../hooks/useAppColors';
 import { useScale } from '../../theme/scale';
-import { landing, landingFonts as SF } from '../../theme/landing';
+import { landingFonts as SF } from '../../theme/landing';
 
 const TAB_META: Record<string, { label: string; icon: IconName }> = {
   Dashboard: { label: 'Home', icon: 'dashboard' },
-  Pantry: { label: 'Pantry', icon: 'pantry' },
+  Pantry: { label: 'Inventory', icon: 'pantry' },
   Scanner: { label: 'Scan', icon: 'scanner' },
-  Shopping: { label: 'List', icon: 'cart' },
-  Meals: { label: 'Meals', icon: 'chef' },
+  Shopping: { label: 'Lists', icon: 'cart' },
+  Meals: { label: 'Recipes', icon: 'chef' },
 };
 
 interface TabItemProps {
@@ -24,6 +25,7 @@ interface TabItemProps {
 
 function TabItem({ label, icon, focused, onPress, onLongPress }: TabItemProps) {
   const { s, fs, fsLayout } = useScale();
+  const c = useAppColors();
   const iconSize = fs(20);
   const labelSize = fs(10);
 
@@ -43,13 +45,13 @@ function TabItem({ label, icon, focused, onPress, onLongPress }: TabItemProps) {
             paddingHorizontal: s(8),
             paddingVertical: s(6),
             borderRadius: s(16),
-            backgroundColor: focused ? `${landing.accent}18` : 'transparent',
+            backgroundColor: focused ? c.primaryGlow : 'transparent',
             borderWidth: focused ? StyleSheet.hairlineWidth * 1.5 : 0,
-            borderColor: focused ? `${landing.accent}40` : 'transparent',
+            borderColor: focused ? `${c.primary}40` : 'transparent',
           },
         ]}
       >
-        <Icon name={icon} size={iconSize} color={focused ? landing.accent : landing.muted} />
+        <Icon name={icon} size={iconSize} color={focused ? c.primary : c.muted} />
         <Text
           style={{
             marginTop: s(3),
@@ -57,7 +59,7 @@ function TabItem({ label, icon, focused, onPress, onLongPress }: TabItemProps) {
             lineHeight: fs(12),
             fontFamily: focused ? SF.semibold : SF.medium,
             fontWeight: Platform.OS === 'ios' ? (focused ? '600' : '500') : undefined,
-            color: focused ? landing.ink : landing.muted,
+            color: focused ? c.ink : c.muted,
           }}
           numberOfLines={1}
         >

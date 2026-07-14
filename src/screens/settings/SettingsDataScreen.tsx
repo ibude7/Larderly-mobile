@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { YStack } from 'tamagui';
 import { useGoBack } from '../../navigation/useGoBack';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
@@ -7,13 +7,10 @@ import { SettingsBodyText } from '../../components/settings/SettingsBodyText';
 import { StorageLocationsSection, deleteStorageLocation } from '../../components/settings/StorageLocationsSection';
 import { DataExportSection } from '../../components/settings/DataExportSection';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { SETTINGS_SECTION_COLORS } from '../../components/settings/settingsHelpers';
 import { useHousehold } from '../../contexts/HouseholdContext';
 import { useInventory } from '../../contexts/InventoryContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useScale } from '../../theme/scale';
-
-const ACCENT = SETTINGS_SECTION_COLORS.data;
 
 export default function SettingsDataScreen() {
   const goBack = useGoBack();
@@ -46,8 +43,8 @@ export default function SettingsDataScreen() {
 
   return (
     <SettingsPageShell title="Data & export" subtitle="Locations and backups" onBack={goBack}>
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Storage locations</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Storage locations</SettingsFieldLabel>
         {householdId ? (
           <StorageLocationsSection
             onRequestDelete={(location) => {
@@ -63,12 +60,12 @@ export default function SettingsDataScreen() {
             Join or create a household first — storage locations are shared with your household.
           </SettingsBodyText>
         )}
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={ACCENT}>Export</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Export</SettingsFieldLabel>
         <DataExportSection />
-      </View>
+      </YStack>
 
       <ConfirmDialog
         isOpen={!!pendingDelete}

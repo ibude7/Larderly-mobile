@@ -1,10 +1,9 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { LiquidGlassView } from '@callstack/liquid-glass';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'tamagui';
 import { useAppColors } from '../../hooks/useAppColors';
-import { canUseLiquidGlass } from '../../lib/liquidGlass';
+import { GlassView, canUseLiquidGlass } from '../../lib/liquidGlass';
 
 interface ScreenProps {
   children: ReactNode;
@@ -61,7 +60,7 @@ export function Surface({
     styles.surface,
     {
       backgroundColor,
-      borderColor: variant === 'glass' ? c.lineStrong : c.line,
+      borderColor: variant === 'glass' ? c.glassBorder : c.line,
       padding: padded ? 18 : 0,
       shadowColor: c.shadow,
     },
@@ -71,14 +70,14 @@ export function Surface({
   if (variant === 'glass') {
     if (useNativeGlass) {
       return (
-        <LiquidGlassView
-          effect="regular"
+        <GlassView
+          glassEffectStyle="regular"
           colorScheme={c.blurTint === 'dark' ? 'dark' : 'light'}
-          tintColor={c.blurTint === 'dark' ? 'rgba(30, 29, 25, 0.26)' : 'rgba(255, 253, 246, 0.34)'}
+          tintColor={c.glassUnderlay}
           style={[containerStyle, styles.nativeGlass]}
         >
           <View style={styles.glassContent}>{children}</View>
-        </LiquidGlassView>
+        </GlassView>
       );
     }
 

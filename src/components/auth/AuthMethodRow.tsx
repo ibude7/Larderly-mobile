@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '../ui/Glyph';
 import { landing, landingFonts as SF } from '../../theme/landing';
 import { useScale } from '../../theme/scale';
 

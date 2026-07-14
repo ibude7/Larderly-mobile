@@ -1,13 +1,8 @@
 /**
- * Food identification from image — client proxy.
- *
- * Delegates to the `ai_identifyFood` Cloud Function instead of calling the
- * Vertex AI Gemini API directly. The exported `IdentifiedFood` type and
- * `identifyFoodFromImage` signature are unchanged.
+ * Food identification from image — client proxy for `ai_identifyFood`.
  */
 
-import { httpsCallable } from '@react-native-firebase/functions';
-import { functions } from './firebase';
+import { callFunction, callable } from './callable';
 import { sanitizeAIProduct, sanitizeString } from './sanitize';
 
 export interface IdentifiedFood {
@@ -18,16 +13,13 @@ export interface IdentifiedFood {
   category: string;
 }
 
-const _identifyFood = httpsCallable<
-  { base64: string; mimeType: string },
-  IdentifiedFood
->(functions, 'ai_identifyFood');
+const _identifyFood = callable<{ base64: string; mimeType: string }, IdentifiedFood>('ai_identifyFood');
 
 export async function identifyFoodFromImage(base64: string, mimeType: string): Promise<IdentifiedFood> {
-  const result = await _identifyFood({ base64, mimeType });
-  const sanitized = sanitizeAIProduct(result.data);
+  const data = await callFunction(_identifyFood, { base64, mimeType });
+  const sanitized = sanitizeAIProduct(data);
   return {
     ...sanitized,
-    storageLocation: sanitizeString((result.data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
+    storageLocation: sanitizeString((data as { storageLocation?: unknown })?.storageLocation, 50) || 'Pantry',
   };
 }

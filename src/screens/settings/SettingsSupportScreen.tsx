@@ -1,4 +1,4 @@
-import { Linking, Platform, Text, View } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import {
   BookOpen,
   CloudOff,
@@ -7,12 +7,14 @@ import {
   Sparkles,
   TriangleAlert,
   Users,
-} from 'lucide-react-native';
+} from '../../components/ui/Glyph';
+import { Text, YStack } from 'tamagui';
 import { SettingsFieldLabel } from '../../components/settings/SettingsFieldLabel';
 import { SettingsPageShell } from '../../components/settings/SettingsPageShell';
 import { SettingsRow } from '../../components/settings/SettingsRow';
 import { SettingsRowGroup } from '../../components/settings/SettingsRowGroup';
 import { SettingsSurface } from '../../components/settings/SettingsSurface';
+import { settingsFonts } from '../../components/settings/settingsFonts';
 import { useToast } from '../../contexts/ToastContext';
 import { useGoBack } from '../../navigation/useGoBack';
 import {
@@ -21,7 +23,6 @@ import {
   SUPPORT_EMAIL_SUBJECT,
   SUPPORT_URLS,
 } from '../../lib/settingsSupport';
-import { landingFonts as SF } from '../../theme/landing';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
 
@@ -90,11 +91,11 @@ export default function SettingsSupportScreen() {
         }}
       >
         <TriangleAlert size={fs(19)} color={c.warning} strokeWidth={2.2} />
-        <View style={{ flex: 1, minWidth: 0 }}>
+        <YStack style={{ flex: 1, minWidth: 0 }}>
           <Text
             style={{
               color: c.warning,
-              fontFamily: SF.semibold,
+              fontFamily: settingsFonts.semibold,
               fontWeight: Platform.OS === 'ios' ? '600' : undefined,
               fontSize: fs(13),
               lineHeight: fs(18),
@@ -106,7 +107,7 @@ export default function SettingsSupportScreen() {
           <Text
             style={{
               color: c.inkSoft,
-              fontFamily: SF.regular,
+              fontFamily: settingsFonts.regular,
               fontSize: fs(12.5),
               lineHeight: fs(18),
               marginTop: s(2),
@@ -115,17 +116,16 @@ export default function SettingsSupportScreen() {
           >
             {SETTINGS_SUPPORT_PLACEHOLDER_NOTICE}
           </Text>
-        </View>
+        </YStack>
       </SettingsSurface>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.support}>Frequently asked questions</SettingsFieldLabel>
-        <SettingsRowGroup accent={c.section.support}>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Frequently asked questions</SettingsFieldLabel>
+        <SettingsRowGroup>
           {FAQ_ROWS.map(({ label, subtitle, icon, url }) => (
             <SettingsRow
               key={label}
               icon={icon}
-              iconColor={c.section.support}
               label={label}
               subtitle={subtitle}
               onPress={() => void openUrl(url, 'Could not open this help article')}
@@ -133,26 +133,24 @@ export default function SettingsSupportScreen() {
           ))}
           <SettingsRow
             icon={BookOpen}
-            iconColor={c.section.support}
             label="All help articles"
             subtitle="Open the placeholder help center."
             onPress={() => void openUrl(SUPPORT_URLS.helpCenter, 'Could not open the help center')}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
 
-      <View style={{ gap: s(8) }}>
-        <SettingsFieldLabel color={c.section.support}>Contact</SettingsFieldLabel>
+      <YStack style={{ gap: s(8) }}>
+        <SettingsFieldLabel>Contact</SettingsFieldLabel>
         <SettingsRowGroup>
           <SettingsRow
             icon={Mail}
-            iconColor={c.section.support}
             label="Email support"
             subtitle={SUPPORT_EMAIL}
             onPress={emailSupport}
           />
         </SettingsRowGroup>
-      </View>
+      </YStack>
     </SettingsPageShell>
   );
 }

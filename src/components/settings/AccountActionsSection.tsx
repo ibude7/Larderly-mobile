@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View } from 'react-native';
-import { LogOut, Trash2 } from 'lucide-react-native';
+import { YStack } from 'tamagui';
+import { LogOut, Trash2 } from '../ui/Glyph';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
@@ -9,10 +9,6 @@ import { useScale } from '../../theme/scale';
 import { SettingsActionButton } from './SettingsActionButton';
 import { SettingsFieldLabel } from './SettingsFieldLabel';
 import { SettingsSurface } from './SettingsSurface';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.account;
-
 export function AccountActionsSection() {
   const { s } = useScale();
   const { signOut, deleteAccount, isAnonymous } = useAuth();
@@ -65,8 +61,8 @@ export function AccountActionsSection() {
   };
 
   return (
-    <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
-      <SettingsFieldLabel color={ACCENT}>Session</SettingsFieldLabel>
+    <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
+      <SettingsFieldLabel>Session</SettingsFieldLabel>
       <SettingsActionButton
         label={signingOut ? 'Signing out…' : 'Sign out'}
         icon={LogOut}
@@ -76,7 +72,7 @@ export function AccountActionsSection() {
         accessibilityLabel={signingOut ? 'Signing out' : 'Sign out'}
       />
       {!isAnonymous ? (
-        <View style={{ gap: s(8) }}>
+        <YStack style={{ gap: s(8) }}>
           <SettingsActionButton
             label={deleting ? 'Deleting…' : 'Delete account'}
             icon={Trash2}
@@ -86,7 +82,7 @@ export function AccountActionsSection() {
             onPress={() => void handleDeleteAccount()}
             accessibilityLabel="Delete account"
           />
-        </View>
+        </YStack>
       ) : null}
     </SettingsSurface>
   );

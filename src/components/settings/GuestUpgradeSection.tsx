@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, XStack, YStack } from 'tamagui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useScale } from '../../theme/scale';
@@ -8,10 +8,6 @@ import { SettingsBodyText } from './SettingsBodyText';
 import { SettingsFieldLabel } from './SettingsFieldLabel';
 import { SettingsSurface } from './SettingsSurface';
 import { SettingsTextField } from './SettingsTextField';
-import { SETTINGS_SECTION_COLORS } from './settingsHelpers';
-
-const ACCENT = SETTINGS_SECTION_COLORS.account;
-
 interface GuestUpgradeSectionProps {
   fullName: string;
 }
@@ -57,8 +53,8 @@ export function GuestUpgradeSection({ fullName }: GuestUpgradeSectionProps) {
   };
 
   return (
-    <SettingsSurface accent={ACCENT} contentStyle={{ padding: s(16), gap: s(12) }}>
-      <SettingsFieldLabel color={ACCENT}>Create an account</SettingsFieldLabel>
+    <SettingsSurface contentStyle={{ padding: s(16), gap: s(12) }}>
+      <SettingsFieldLabel>Create an account</SettingsFieldLabel>
       <SettingsBodyText>
         Create an account to keep your items, meals, and shopping list backed up.
       </SettingsBodyText>
@@ -80,7 +76,7 @@ export function GuestUpgradeSection({ fullName }: GuestUpgradeSectionProps) {
           onPress={() => setUpgradeOpen(true)}
         />
       ) : (
-        <View style={{ gap: s(12) }}>
+        <YStack style={{ gap: s(12) }}>
           <SettingsTextField
             label="Email"
             value={upgradeEmail}
@@ -98,7 +94,7 @@ export function GuestUpgradeSection({ fullName }: GuestUpgradeSectionProps) {
             allowPasswordReveal
             placeholder="At least 6 characters"
           />
-          <View style={{ flexDirection: 'row', gap: s(10) }}>
+          <XStack style={{ gap: s(10) }}>
             <View style={{ flex: 1 }}>
               <SettingsActionButton
                 label={upgradeBusy ? 'Creating…' : 'Create account'}
@@ -118,8 +114,8 @@ export function GuestUpgradeSection({ fullName }: GuestUpgradeSectionProps) {
                 }}
               />
             </View>
-          </View>
-        </View>
+          </XStack>
+        </YStack>
       )}
     </SettingsSurface>
   );

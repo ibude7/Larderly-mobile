@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthTopBar } from './AuthTopBar';
 import { EditorialHeader } from '../landing/EditorialHeader';
 import { GlassButton } from '../landing/GlassButton';
+import { SettingsGlass } from '../settings/SettingsGlass';
+import { useLandingColors } from '../../hooks/useLandingColors';
 import { useScale } from '../../theme/scale';
 import { landing } from '../../theme/landing';
 import { AccentProvider } from '../../theme/accent';
@@ -33,7 +35,7 @@ interface AuthShellProps {
 }
 
 /**
- * Centered auth layout — logo top bar, editorial headline, scrollable form, fixed footer CTA.
+ * Centered auth layout — Settings-style canvas + frosted glass content card.
  */
 export function AuthShell({
   headline,
@@ -53,13 +55,14 @@ export function AuthShell({
 }: AuthShellProps) {
   const insets = useSafeAreaInsets();
   const { s, fsLayout } = useScale();
+  const lc = useLandingColors();
   const topChrome = fsLayout(72);
   const footerChrome = primaryLabel ? fsLayout(160) : fsLayout(48);
   const contentWidth = s(340);
 
   return (
     <AccentProvider color={accentColor}>
-      <View style={[styles.root, { backgroundColor: landing.canvas }]}>
+      <View style={[styles.root, { backgroundColor: lc.canvas }]}>
         <AuthTopBar onBack={onBack} backLabel={backLabel} rightSlot={rightSlot} floating />
 
         <KeyboardAvoidingView
@@ -71,14 +74,14 @@ export function AuthShell({
               flexGrow: 1,
               justifyContent: 'center',
               alignItems: 'center',
-              paddingHorizontal: s(28),
+              paddingHorizontal: s(20),
               paddingTop: insets.top + topChrome,
               paddingBottom: insets.bottom + footerChrome,
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ width: '100%', maxWidth: contentWidth, gap: s(24) }}>
+            <View style={{ width: '100%', maxWidth: contentWidth, gap: s(16) }}>
               <View style={styles.copyBlock}>
                 <EditorialHeader
                   eyebrow={eyebrow}
@@ -89,7 +92,18 @@ export function AuthShell({
                 />
               </View>
 
-              <View style={{ gap: s(16) }}>{children}</View>
+              <SettingsGlass
+                elevated
+                interactive={false}
+                radius={s(26)}
+                contentStyle={{
+                  paddingHorizontal: s(18),
+                  paddingVertical: s(18),
+                  gap: s(16),
+                }}
+              >
+                {children}
+              </SettingsGlass>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -107,8 +121,17 @@ export function AuthShell({
           >
             <View style={{ maxWidth: contentWidth, width: '100%', alignSelf: 'center' }}>
               {primaryLoading ? (
-                <View style={[styles.loadingBtn, { height: s(56), borderRadius: s(999) }]}>
-                  <ActivityIndicator color={landing.white} />
+                <View
+                  style={[
+                    styles.loadingBtn,
+                    {
+                      height: s(56),
+                      borderRadius: s(999),
+                      backgroundColor: lc.isDark ? lc.ink : '#101010',
+                    },
+                  ]}
+                >
+                  <ActivityIndicator color={lc.isDark ? '#101010' : '#FFFFFF'} />
                 </View>
               ) : (
                 <GlassButton
@@ -153,6 +176,5 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000000',
   },
 });
