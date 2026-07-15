@@ -21,15 +21,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { LandingLogoMark } from '../components/landing/LandingLogoMark';
+import { AppLogoMark } from '../components/ui/AppLogo';
 import { LandingScrollProgress } from '../components/landing/LandingProgress';
 import { GlassButton } from '../components/landing/GlassButton';
+import { SettingsGlass } from '../components/settings/SettingsGlass';
+import { SettingsIconWell } from '../components/settings/SettingsIconWell';
+import { Archive, ChefHat, ShoppingBag, type GlyphIcon } from '../components/ui/Glyph';
 import { landingFonts as SF } from '../theme/landing';
 import { fitHeroSize } from '../theme/heroFit';
 import { useHeroFloat } from '../hooks/useHeroFloat';
 import { useLandingColors } from '../hooks/useLandingColors';
 import { ForcedColorScheme } from '../theme/ForcedColorScheme';
-import { useScale } from '../theme/scale';
+import { fitScale, useScale } from '../theme/scale';
 import type { AuthStackNavigationProp } from '../navigation/types';
 import { StatusBar } from 'expo-status-bar';
 import { Theme } from 'tamagui';
@@ -38,55 +41,246 @@ const SLIDES = [
   {
     titleBase: 'Welcome to Larderly',
     titleAccent: '',
-    copy: 'Your digital pantry, reimagined. Track inventory, plan meals, and shop smarter.',
-    image: require('../../assets/onboarding-logo-liquid-v1.png'),
-    aspect: 818 / 916,
-    heroScale: 0.72,
+    copy: 'Track every ingredient, plan meals in seconds, and always know what you already have.',
+    image: require('../../assets/landing/welcome-pantry-hero.png'),
+    aspect: 390 / 370,
+    heroScale: 1.05,
     heroFirst: true,
+    welcomeHero: true,
   },
   {
     titleBase: 'Everything in your kitchen, ',
     titleAccent: 'organized.',
-    copy: 'See what you have, track expiry dates, and never run out of essentials.',
-    image: require('../../assets/onboarding-kitchen-3d-front-hard.png'),
-    aspect: 1176 / 975,
-    heroScale: 1.05,
+    copy: 'Larderly helps you see what you have, what\'s running low, and what\'s about to expire-so you can waste less and cook with confidence.',
+    image: require('../../assets/landing/slide2-kitchen-chart-glass-front.png'),
+    aspect: 1536 / 1024,
+    heroScale: 1.06,
+    heroFirst: true,
+    glassHero: true,
+    centerContent: true,
   },
   {
-    titleBase: 'Scan it. ',
-    titleAccent: 'Done.',
-    copy: 'Add groceries in seconds with barcode and receipt scanning.',
+    titleBase: 'Unpack once. ',
+    titleAccent: 'Everything\'s logged.',
+    copy: 'Scan barcodes as you put groceries away and Larderly builds your pantry for you.',
     image: require('../../assets/onboarding-card-2.png'),
     aspect: 623 / 788,
     heroScale: 0.82,
   },
   {
-    titleBase: 'Plan meals ',
-    titleAccent: 'in seconds.',
-    copy: 'Turn what you have into delicious meals your whole family will love.',
+    titleBase: 'Meals from ',
+    titleAccent: 'what you have.',
+    copy: 'Larderly suggests recipes from your pantry—so dinner starts with what\'s already home, not another grocery run.',
     image: require('../../assets/onboarding-meals-3d-clean-hard.png'),
     aspect: 1078 / 950,
     heroScale: 1.05,
+    centerContent: true,
   },
   {
-    titleBase: 'Shop smarter, ',
-    titleAccent: 'waste less.',
-    copy: 'Auto-generate shopping lists and reduce food waste every week.',
+    titleBase: 'Buy only ',
+    titleAccent: 'what you need.',
+    copy: 'When something runs low, Larderly adds it to your shopping list—so you stop buying doubles and forgetting the essentials.',
     image: require('../../assets/onboarding-shop-3d-clean-hard.png'),
     aspect: 1368 / 895,
     heroScale: 1.1,
+    centerContent: true,
   },
   {
-    titleBase: 'Keep the family ',
-    titleAccent: 'in sync.',
-    copy: 'Everyone sees the same pantry, lists, and updates — always up to date.',
-    image: require('../../assets/onboarding-sync-3d-clean-hard.png'),
-    aspect: 1093 / 874,
-    heroScale: 1.05,
+    titleBase: 'Share the kitchen, ',
+    titleAccent: 'not the confusion.',
+    copy: 'Pantry, shopping lists, and meal plans stay synced for everyone at home—so what one person updates, the whole household sees.',
+    image: require('../../assets/landing/slide6-household-sync-dual-v2.png'),
+    aspect: 1536 / 1024,
+    heroScale: 1.38,
+    heroFirst: true,
+    centerContent: true,
   },
 ];
 
 type SlideItem = (typeof SLIDES)[number];
+
+const WELCOME_FEATURES: ReadonlyArray<{
+  label: string;
+  Icon: GlyphIcon;
+}> = [
+  { label: 'Pantry Tracking', Icon: Archive },
+  { label: 'Meal Planning', Icon: ChefHat },
+  { label: 'Smart Shopping', Icon: ShoppingBag },
+];
+
+const WELCOME_ITEMS = [
+  { kind: 'emoji' as const, emoji: '🍅', label: 'Tomatoes', detail: '3 left', x: 0, rotation: '-3deg' },
+  {
+    kind: 'reference' as const,
+    image: require('../../assets/landing/welcome-basil-reference.png'),
+    label: 'Basil',
+    detail: 'Fresh',
+    x: 126,
+    rotation: '-1deg',
+  },
+  {
+    kind: 'reference' as const,
+    image: require('../../assets/landing/welcome-red-lentils-reference.png'),
+    label: 'Red Lentils',
+    detail: '1.2 kg',
+    x: 252,
+    rotation: '3deg',
+  },
+] as const;
+
+function WelcomeFeatures() {
+  const { s, fs } = useScale();
+  const lc = useLandingColors();
+
+  return (
+    <View style={[styles.welcomeFeatures, { gap: s(8), marginTop: s(20) }]}>
+      {WELCOME_FEATURES.map(({ label, Icon }) => (
+        <SettingsGlass
+          key={label}
+          interactive={false}
+          elevated
+          radius={s(18)}
+          style={styles.welcomeFeature}
+          contentStyle={{
+            minHeight: s(54),
+            paddingHorizontal: s(8),
+            paddingVertical: s(8),
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: s(7),
+          }}
+        >
+          <SettingsIconWell
+            icon={Icon}
+            color={lc.accent}
+            size={28}
+            iconSize={15}
+            shape="squircle"
+          />
+          <Text
+            style={[
+              styles.welcomeFeatureLabel,
+              {
+                color: lc.ink,
+                fontSize: fs(10.5),
+                lineHeight: fs(13),
+              },
+            ]}
+          >
+            {label}
+          </Text>
+        </SettingsGlass>
+      ))}
+    </View>
+  );
+}
+
+function WelcomeHeroArtwork({ width, height }: { width: number; height: number }) {
+  const scale = fitScale(width, height, 390, 370);
+  const artworkW = 390 * scale;
+  const artworkH = 370 * scale;
+  const radius = 28 * scale;
+
+  return (
+    <SettingsGlass
+      interactive={false}
+      elevated={false}
+      radius={radius}
+      style={{ width: artworkW, height: artworkH }}
+      contentStyle={{ width: artworkW, height: artworkH }}
+    >
+      <View style={{ width: artworkW, height: artworkH }}>
+        <Image
+          source={require('../../assets/landing/welcome-pantry-hero.png')}
+          style={[
+            styles.welcomePantry,
+            {
+              left: 15 * scale,
+              width: 360 * scale,
+              height: 360 * scale,
+            },
+          ]}
+          contentFit="contain"
+          transition={250}
+        />
+
+        {WELCOME_ITEMS.map((item) => (
+          <SettingsGlass
+            key={item.label}
+            interactive={false}
+            elevated={false}
+            radius={12 * scale}
+            style={{
+              position: 'absolute',
+              left: item.x * scale,
+              top: 302 * scale,
+              width: 138 * scale,
+              transform: [{ rotate: item.rotation }],
+            }}
+            contentStyle={{
+              minHeight: 55 * scale,
+              paddingHorizontal: 9 * scale,
+              paddingVertical: 8 * scale,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 7 * scale,
+            }}
+          >
+            <View
+              style={[
+                styles.inventoryIcon,
+                {
+                  width: 34 * scale,
+                  height: 34 * scale,
+                  borderRadius: 10 * scale,
+                },
+              ]}
+            >
+              {item.kind === 'reference' ? (
+                <Image
+                  source={item.image}
+                  style={{
+                    width: 34 * scale,
+                    height: 34 * scale,
+                    borderRadius: 10 * scale,
+                  }}
+                  contentFit="cover"
+                />
+              ) : (
+                <Text allowFontScaling={false} style={{ fontSize: 20 * scale }}>
+                  {item.emoji}
+                </Text>
+              )}
+            </View>
+            <View style={styles.inventoryCopy}>
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={[styles.inventoryLabel, { fontSize: 10.5 * scale }]}
+              >
+                {item.label}
+              </Text>
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={[
+                  styles.inventoryDetail,
+                  {
+                    fontSize: 9.5 * scale,
+                    color: item.detail === 'Fresh' ? '#64884E' : '#B96633',
+                  },
+                ]}
+              >
+                {item.detail}
+              </Text>
+            </View>
+          </SettingsGlass>
+        ))}
+      </View>
+    </SettingsGlass>
+  );
+}
 
 function Slide({
   item,
@@ -102,22 +296,38 @@ function Slide({
   screenW: number;
 }) {
   const insets = useSafeAreaInsets();
-  const { s, fs, fsLayout } = useScale();
+  const { s, fs, fsLayout, height: screenH } = useScale();
   const lc = useLandingColors();
   const [heroBox, setHeroBox] = useState({ width: 0, height: 0 });
   const inputRange = [(index - 1) * screenW, index * screenW, (index + 1) * screenW];
   const heroFirst = 'heroFirst' in item && item.heroFirst;
+  const centerContent = 'centerContent' in item && item.centerContent;
   const rounded = Boolean('rounded' in item && item.rounded);
   const hasHero = 'image' in item && 'aspect' in item;
+  const isWelcomeHero = 'welcomeHero' in item && item.welcomeHero;
+  const isGlassHero = 'glassHero' in item && item.glassHero;
   const heroScale = ('heroScale' in item ? item.heroScale : undefined) ?? 1;
   const topBarH = fsLayout(72);
   const footerH = fsLayout(168);
-  const maxHeroW = Math.min(screenW * 0.94, s(430)) * heroScale;
+  const slidePadX = centerContent ? s(4) : s(24);
   const floatMin = s(3);
   const floatMax = -s(5);
   const textSlide = s(16);
+  // Centered slides size the hero from the true remaining viewport —
+  // not the collapsed flex box (which made heroScale changes invisible).
+  const copyReserve = centerContent ? fsLayout(118) : 0;
+  const availW = screenW - slidePadX * 2;
+  const availH = Math.max(
+    s(180),
+    screenH - insets.top - topBarH - insets.bottom - footerH - copyReserve,
+  );
+  const maxHeroW = centerContent
+    ? availW
+    : Math.min(screenW * 0.94, s(430)) * heroScale;
+  const heroMeasureH = centerContent ? availH : heroBox.height;
+  const heroMeasureW = centerContent ? availW : heroBox.width;
   const fitted = hasHero
-    ? fitHeroSize(heroBox.width, heroBox.height, item.aspect, maxHeroW)
+    ? fitHeroSize(heroMeasureW, heroMeasureH, item.aspect, maxHeroW)
     : { width: 0, height: 0 };
 
   const imageStyle = useAnimatedStyle(() => {
@@ -155,6 +365,10 @@ function Slide({
           marginBottom: hasHero ? s(8) : 0,
         },
         heroFirst && { marginTop: s(20), marginBottom: 0 },
+        centerContent && {
+          marginTop: heroFirst ? s(14) : s(0),
+          marginBottom: heroFirst ? s(0) : s(16),
+        },
         textStyle,
       ]}
     >
@@ -187,12 +401,18 @@ function Slide({
       >
         {item.copy}
       </Text>
+      {isWelcomeHero ? <WelcomeFeatures /> : null}
     </Animated.View>
   );
 
   const hero = hasHero ? (
     <View
-      style={[styles.heroSection, heroFirst && styles.heroSectionFirst]}
+      style={[
+        styles.heroSection,
+        heroFirst && !centerContent && styles.heroSectionFirst,
+        centerContent && styles.heroSectionCentered,
+        centerContent && fitted.height > 0 && { height: fitted.height },
+      ]}
       onLayout={onHeroLayout}
     >
       {fitted.width > 0 ? (
@@ -206,12 +426,36 @@ function Slide({
             imageStyle,
           ]}
         >
-          <Image
-            source={item.image}
-            style={[styles.heroImage, rounded && { borderRadius: s(28) }]}
-            contentFit={rounded ? 'cover' : 'contain'}
-            transition={250}
-          />
+          {isWelcomeHero ? (
+            <WelcomeHeroArtwork width={fitted.width} height={fitted.height} />
+          ) : isGlassHero ? (
+            <SettingsGlass
+              interactive={false}
+              elevated={false}
+              radius={s(28)}
+              style={{ width: fitted.width, height: fitted.height }}
+              contentStyle={{
+                width: fitted.width,
+                height: fitted.height,
+                overflow: 'hidden',
+                borderRadius: s(28),
+              }}
+            >
+              <Image
+                source={item.image}
+                style={styles.heroImage}
+                contentFit="contain"
+                transition={250}
+              />
+            </SettingsGlass>
+          ) : (
+            <Image
+              source={item.image}
+              style={[styles.heroImage, rounded && { borderRadius: s(28) }]}
+              contentFit={rounded ? 'cover' : 'contain'}
+              transition={250}
+            />
+          )}
         </Animated.View>
       ) : null}
     </View>
@@ -222,15 +466,30 @@ function Slide({
       style={[
         styles.slide,
         !hasHero && styles.slideNoHero,
+        centerContent && styles.slideCentered,
         {
           width: screenW,
-          paddingHorizontal: s(24),
+          paddingHorizontal: slidePadX,
           paddingTop: insets.top + topBarH,
           paddingBottom: insets.bottom + footerH,
         },
       ]}
     >
-      {heroFirst ? (
+      {centerContent ? (
+        <View style={styles.centerCluster}>
+          {heroFirst ? (
+            <>
+              {hero}
+              {copy}
+            </>
+          ) : (
+            <>
+              {copy}
+              {hero}
+            </>
+          )}
+        </View>
+      ) : heroFirst ? (
         <>
           {hero}
           {copy}
@@ -316,7 +575,7 @@ function LandingScreenContent() {
           </Text>
         </View>
 
-        <LandingLogoMark size="lg" />
+        <AppLogoMark size="sm" />
 
         <Pressable
           onPress={onGetStarted}
@@ -433,6 +692,14 @@ const styles = StyleSheet.create({
   slideNoHero: {
     justifyContent: 'center',
   },
+  slideCentered: {
+    justifyContent: 'center',
+  },
+  centerCluster: {
+    width: '100%',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
   copyBlock: {
     alignItems: 'center',
     width: '100%',
@@ -465,9 +732,52 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     justifyContent: 'flex-end',
   },
+  heroSectionCentered: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flex: 0,
+    justifyContent: 'center',
+  },
   heroImage: {
     width: '100%',
     height: '100%',
+  },
+  welcomePantry: {
+    position: 'absolute',
+    top: 0,
+  },
+  inventoryIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F7F1E7',
+    overflow: 'hidden',
+  },
+  inventoryCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  inventoryLabel: {
+    color: '#3D2A20',
+    fontFamily: SF.semibold,
+    fontWeight: Platform.OS === 'ios' ? '600' : undefined,
+  },
+  inventoryDetail: {
+    marginTop: 2,
+    fontFamily: SF.medium,
+    fontWeight: Platform.OS === 'ios' ? '500' : undefined,
+  },
+  welcomeFeatures: {
+    width: '100%',
+    flexDirection: 'row',
+  },
+  welcomeFeature: {
+    flex: 1,
+    minWidth: 0,
+  },
+  welcomeFeatureLabel: {
+    flexShrink: 1,
+    fontFamily: SF.medium,
+    fontWeight: Platform.OS === 'ios' ? '500' : undefined,
   },
   footer: {
     position: 'absolute',
