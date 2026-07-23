@@ -16,13 +16,6 @@
 - Uses **npm** (package-lock.json), not yarn.
 - Screens live in `/app/src/screens/` (20 screens); design tokens in `/app/src/theme.ts` + `tailwind.config.js`; semantic icons in `/app/src/components/ui/Icon.tsx`.
 
-## Design System: "Orchard OS" (from /app/design_guidelines.json)
-- Colors: radish pink `#FF3366` primary, yuzu yellow `#FFB800/#FFD600`, fresh green/teal `#00C896`; light `#F5F4F0` canvas / dark `#0F1410` botanical dark. Full light+dark tokens in theme.ts.
-- Typography: **Fraunces** (display headings, class `font-display`) + **Outfit** (body; `font-sans/medium/semibold/bold/black` mapped to Outfit weights in tailwind config).
-- Icons: **lucide-react-native**, strokeWidth 2.5, swapped app-wide via Icon.tsx (google/apple logos remain Ionicons).
-- Motion: reanimated springs (damping 14, stiffness 120), FadeInUp staggered entrances.
-- Logo: RETAINED as-is (orange AppLogo mark) per user request.
-
 ## What's Been Implemented (2026-06)
 1. **Global re-skin**: new theme.ts + tailwind.config tokens (both modes); replaced all 515 hardcoded `dark:[#hex]` classes with token classes; heading typography sweep to Fraunces; splash bg updated in app.config.js.
 2. **Fonts**: @expo-google-fonts/outfit + fraunces installed & loaded in src/App.tsx.
@@ -49,7 +42,7 @@ Verified: tsc clean, eslint clean, jest 34/34, Metro iOS bundle 3861 modules OK.
 Pre-existing features confirmed present (not rebuilt): expiry tracking + notifications, dashboard stats (useDashboardStats), barcode scanner w/ animated scan line, AI recipes (recipeGen via Firebase AI), voice add, receipt scan, shopping templates/budget, households, achievements, analytics.
 
 ## Backlog / Next Tasks
-- P2: Scanner glass overlay refinement per guidelines; staggered pantry list entrances.
+- P2: Scanner glass overlay refinement; staggered pantry list entrances.
 - P2: Keep-screen-awake during cook mode (expo-keep-awake not installed yet).
 - P2: Unused lottie assets (household/pantry/shopping/scan.json) still shipped — only meal-planner one used now.
 - Note: user must build via `npm run ios/android` on their machine to see results; Firebase native config files are gitignored.

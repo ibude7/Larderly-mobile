@@ -13,7 +13,7 @@ function renderWithTamagui(children: React.ReactElement) {
   );
 }
 
-describe('Orchard OS redesigned UI components', () => {
+describe('UI components', () => {
   it('renders Badge variants with vivid palette', async () => {
     const { getByText } = await renderWithTamagui(
       <>

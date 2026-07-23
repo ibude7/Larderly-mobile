@@ -87,7 +87,7 @@ import { useAppColors } from '../../hooks/useAppColors';
 
 /**
  * Semantic icon names used across Larderly, mapped to Hugeicons glyphs
- * (bold 2.5 stroke — Orchard OS design system).
+ * (bold 2.5 stroke).
  */
 export type IconName =
   | 'dashboard'
