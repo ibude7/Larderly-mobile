@@ -13,6 +13,7 @@ import {
   type GlyphIcon,
 } from '../ui/Glyph';
 import { landingFonts as SF } from '../../theme/landing';
+import { brandBlue, brandGreen, brandOrange, brandPurple, brandRose } from '../../theme/brand';
 import { fitScale } from '../../theme/scale';
 import { useLandingColors } from '../../hooks/useLandingColors';
 
@@ -25,10 +26,10 @@ const METRICS: ReadonlyArray<{
   color: string;
   Icon: GlyphIcon;
 }> = [
-  { label: 'Items', value: '128', color: '#6E8B5A', Icon: Package },
-  { label: 'Expiring', value: '18', color: '#C2662D', Icon: Calendar },
-  { label: 'Low stock', value: '7', color: '#C79A3D', Icon: ShoppingBasket },
-  { label: 'Favorites', value: '42', color: '#8B6B9E', Icon: Heart },
+  { label: 'Items', value: '128', color: brandGreen.DEFAULT, Icon: Package },
+  { label: 'Expiring', value: '18', color: brandOrange.DEFAULT, Icon: Calendar },
+  { label: 'Low stock', value: '7', color: brandOrange.light, Icon: ShoppingBasket },
+  { label: 'Favorites', value: '42', color: brandPurple.DEFAULT, Icon: Heart },
 ];
 
 const BARS: ReadonlyArray<{
@@ -38,10 +39,10 @@ const BARS: ReadonlyArray<{
   color: string;
   Icon: GlyphIcon;
 }> = [
-  { label: 'Produce', value: '32 / 50', ratio: 0.64, color: '#6E8B5A', Icon: Leaf },
-  { label: 'Pantry', value: '46 / 70', ratio: 0.66, color: '#C79A3D', Icon: Wheat },
-  { label: 'Protein', value: '18 / 30', ratio: 0.6, color: '#B5573F', Icon: Beef },
-  { label: 'Dairy', value: '12 / 20', ratio: 0.6, color: '#8B6B9E', Icon: Milk },
+  { label: 'Produce', value: '32 / 50', ratio: 0.64, color: brandGreen.DEFAULT, Icon: Leaf },
+  { label: 'Pantry', value: '46 / 70', ratio: 0.66, color: brandOrange.light, Icon: Wheat },
+  { label: 'Protein', value: '18 / 30', ratio: 0.6, color: brandRose.DEFAULT, Icon: Beef },
+  { label: 'Dairy', value: '12 / 20', ratio: 0.6, color: brandBlue.DEFAULT, Icon: Milk },
 ];
 
 /** Forward-facing frosted glass kitchen overview chart for landing slide 2. */

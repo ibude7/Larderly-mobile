@@ -3,7 +3,12 @@ import { Text, XStack, YStack } from 'tamagui';
 import { settingsType } from '../settings/settingsFonts';
 import { useAppColors } from '../../hooks/useAppColors';
 import { useScale } from '../../theme/scale';
-import type { WeeklyBucket } from '../../lib/homeOverview';
+
+export type WeeklyBucket = {
+  dayStart: number;
+  label: string;
+  count: number;
+};
 
 export function HomeWeeklyBars({
   buckets,

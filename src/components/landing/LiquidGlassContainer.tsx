@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GlassView, canUseLiquidGlass } from '../../lib/liquidGlass';
+import { GlassView, canUseRealGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
 import { landing } from '../../theme/landing';
 
@@ -24,7 +24,7 @@ export function LiquidGlassContainer({
   tintColor = landing.accent,
 }: LiquidGlassContainerProps) {
   const { s } = useScale();
-  const useNativeGlass = canUseLiquidGlass();
+  const useRealGlass = canUseRealGlass();
   const radius = s(28);
 
   return (
@@ -49,7 +49,7 @@ export function LiquidGlassContainer({
             borderRadius: radius,
             borderWidth: StyleSheet.hairlineWidth * 1.5,
             borderColor: 'rgba(255,255,255,0.55)',
-            backgroundColor: useNativeGlass ? 'transparent' : 'rgba(255, 253, 246, 0.62)',
+            backgroundColor: useRealGlass ? 'transparent' : 'rgba(255, 255, 255, 0.62)',
             overflow: 'hidden',
           },
         ]}

@@ -113,7 +113,7 @@ function PantryGlyph({ size, color = "white" }: { size: number; color?: string }
   );
 }
 
-const PLAIN_ORANGE = "#ea580c";
+import { brandOrange } from '../../theme/brand';
 
 export function AppLogoMark({
   size = "md",
@@ -136,7 +136,7 @@ export function AppLogoMark({
   const floatOffset = s(4);
   const gradId = useId().replace(/:/g, "");
   const floatY = useSharedValue(0);
-  const glyphColor = color ?? (plain ? PLAIN_ORANGE : "white");
+  const glyphColor = color ?? (plain ? brandOrange.dark : "white");
 
   useEffect(() => {
     if (!animated) return;
@@ -201,9 +201,9 @@ export function AppLogoMark({
         >
           <Defs>
             <LinearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#fb923c" />
-              <Stop offset="0.5" stopColor="#f97316" />
-              <Stop offset="1" stopColor="#ea580c" />
+              <Stop offset="0" stopColor={brandOrange.gradient[0]} />
+              <Stop offset="0.5" stopColor={brandOrange.gradient[1]} />
+              <Stop offset="1" stopColor={brandOrange.gradient[2]} />
             </LinearGradient>
           </Defs>
           <Rect width="48" height="48" rx="11" fill={`url(#${gradId})`} />
@@ -301,13 +301,13 @@ const styles = StyleSheet.create({
   },
   halo: {
     position: "absolute",
-    backgroundColor: "rgba(249, 115, 22, 0.25)",
+    backgroundColor: brandOrange.halo,
     opacity: 0.6,
   },
   mark: {
     overflow: "hidden",
-    borderColor: "rgba(251, 146, 60, 0.6)",
-    backgroundColor: "#ea580c",
+    borderColor: brandOrange.border,
+    backgroundColor: brandOrange.dark,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,

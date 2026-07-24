@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { GlassView, canUseLiquidGlass } from '../../lib/liquidGlass';
+import { GlassView, canUseRealGlass } from '../../lib/liquidGlass';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
-import { landing } from '../../theme/landing';
 
-export { canUseLiquidGlass as canUseSettingsNativeGlass };
+export { canUseRealGlass as canUseSettingsNativeGlass };
 
 interface SettingsGlassProps {
   children: ReactNode;
@@ -35,37 +34,34 @@ export function SettingsGlass({
 }: SettingsGlassProps) {
   const { s } = useScale();
   const c = useSettingsTheme();
-  const useNativeGlass = canUseLiquidGlass();
+  const useRealGlass = canUseRealGlass();
   const borderRadius = radius ?? s(28);
   const isClear = glassStyle === 'clear';
 
-  const glassCanvas = c.isDark ? c.canvas : landing.canvas;
-
-  const canvasTint = isClear
+  const glassTint = isClear
     ? undefined
     : accent
-      ? c.tint(accent, c.isDark ? 0.3 : 0.2)
-      : `${glassCanvas}94`;
-  const canvasUnderlay = isClear
+      ? c.tint(accent, c.isDark ? 0.24 : 0.14)
+      : c.glassUnderlay;
+
+  const fallbackFill = isClear
     ? 'transparent'
     : accent
       ? c.tint(accent, c.isDark ? 0.18 : 0.1)
-      : `${glassCanvas}47`;
-  // Light theme → light edge; dark theme → dark edge.
+      : c.glassFill;
+
   const borderColor = isClear
     ? 'transparent'
     : accent
       ? c.tint(accent, c.isDark ? 0.35 : 0.28)
-      : c.isDark
-        ? 'rgba(0,0,0,0.45)'
-        : 'rgba(255,255,255,0.72)';
+      : c.glassBorder;
   const rimColor = isClear
     ? 'transparent'
     : accent
       ? c.tint(accent, c.isDark ? 0.18 : 0.16)
       : c.isDark
-        ? 'rgba(0,0,0,0.28)'
-        : 'rgba(255,255,255,0.55)';
+        ? 'rgba(255, 253, 246, 0.12)'
+        : 'rgba(255, 255, 255, 0.72)';
 
   return (
     <View
@@ -73,12 +69,12 @@ export function SettingsGlass({
         styles.shell,
         {
           borderRadius,
-          backgroundColor: canvasUnderlay,
-          shadowColor: c.isDark ? '#000000' : accent ?? landing.ink,
-          shadowRadius: elevated ? s(20) : 0,
-          shadowOffset: { width: 0, height: elevated ? s(8) : 0 },
-          shadowOpacity: elevated ? (c.isDark ? 0.55 : accent ? 0.2 : 0.8) : 0,
-          elevation: elevated ? 12 : 0,
+          backgroundColor: useRealGlass ? 'transparent' : fallbackFill,
+          shadowColor: c.isDark ? '#000000' : accent ?? c.ink,
+          shadowRadius: elevated ? s(16) : 0,
+          shadowOffset: { width: 0, height: elevated ? s(6) : 0 },
+          shadowOpacity: elevated ? (c.isDark ? 0.45 : accent ? 0.16 : 0.12) : 0,
+          elevation: elevated ? 8 : 0,
         },
         style,
       ]}
@@ -87,18 +83,14 @@ export function SettingsGlass({
         glassEffectStyle={glassStyle}
         colorScheme={c.isDark ? 'dark' : 'light'}
         isInteractive={interactive}
-        tintColor={canvasTint}
+        tintColor={useRealGlass ? glassTint : undefined}
         style={[
           StyleSheet.absoluteFill,
           {
             borderRadius,
             borderWidth: isClear ? 0 : StyleSheet.hairlineWidth * 1.5,
             borderColor,
-            backgroundColor: useNativeGlass
-              ? 'transparent'
-              : isClear
-                ? 'transparent'
-                : canvasTint,
+            backgroundColor: useRealGlass ? 'transparent' : fallbackFill,
           },
         ]}
       />

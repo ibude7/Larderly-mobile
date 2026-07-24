@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'tamagui';
 import { useAppColors } from '../../hooks/useAppColors';
-import { GlassView, canUseLiquidGlass } from '../../lib/liquidGlass';
+import { GlassView, canUseRealGlass } from '../../lib/liquidGlass';
 
 interface ScreenProps {
   children: ReactNode;
@@ -46,13 +46,13 @@ export function Surface({
   style,
 }: SurfaceProps) {
   const c = useAppColors();
-  const useNativeGlass = variant === 'glass' && canUseLiquidGlass();
+  const useRealGlass = variant === 'glass' && canUseRealGlass();
   const backgroundColor =
     variant === 'muted'
       ? c.surfaceMuted
       : variant === 'elevated'
         ? c.surfaceElevated
-        : variant === 'glass' && !useNativeGlass
+        : variant === 'glass' && !useRealGlass
           ? c.surfaceGlass
           : c.surface;
 
@@ -68,7 +68,7 @@ export function Surface({
   ];
 
   if (variant === 'glass') {
-    if (useNativeGlass) {
+    if (useRealGlass) {
       return (
         <GlassView
           glassEffectStyle="regular"

@@ -31,6 +31,7 @@ import type { Currency } from '../../lib/format';
 import { usePreferenceFormatters } from '../../hooks/usePreferenceFormatters';
 import { useScale } from '../../theme/scale';
 import { useSettingsTheme } from '../../theme/settings';
+import { THEME_COLOR_TOKENS } from '../../theme/accent';
 
 const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR'];
 const LANGUAGES: { id: Language; name: string }[] = [
@@ -44,11 +45,11 @@ const FONT_SCALES: { id: FontScale; label: string }[] = [
   { id: 'lg', label: 'Large' },
 ];
 const THEME_COLOR_HEX: Record<ThemeColor, string> = {
-  orange: '#C2662D',
-  blue: '#5B7B93',
-  green: '#6E8B5A',
-  purple: '#8B6B9E',
-  rose: '#B5573F',
+  orange: THEME_COLOR_TOKENS.orange.primary,
+  blue: THEME_COLOR_TOKENS.blue.primary,
+  green: THEME_COLOR_TOKENS.green.primary,
+  purple: THEME_COLOR_TOKENS.purple.primary,
+  rose: THEME_COLOR_TOKENS.rose.primary,
 };
 const THEME_COLORS: { id: ThemeColor; label: string; color: string }[] = (
   Object.keys(THEME_COLOR_HEX) as ThemeColor[]

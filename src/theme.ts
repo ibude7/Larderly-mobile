@@ -1,4 +1,5 @@
 import { settingsDark, settingsLight, type SettingsPalette } from './theme/palette';
+import { brandOrange, brandOrangeDark } from './theme/brand';
 
 export interface ColorTokens {
   readonly primary: string;
@@ -87,10 +88,10 @@ function fromSettings(
 }
 
 export const lightColors: ColorTokens = fromSettings(settingsLight, {
-  primary: '#C2662D',
-  primaryDark: '#9A4E20',
-  primaryGlow: 'rgba(194, 102, 45, 0.14)',
-  amber: '#C79A3D',
+  primary: brandOrange.DEFAULT,
+  primaryDark: brandOrange.dark,
+  primaryGlow: brandOrange.glow,
+  amber: brandOrange.light,
   tealGlow: 'rgba(79, 139, 133, 0.12)',
   dangerGlow: 'rgba(181, 74, 58, 0.12)',
   violetGlow: 'rgba(139, 107, 158, 0.12)',
@@ -99,10 +100,10 @@ export const lightColors: ColorTokens = fromSettings(settingsLight, {
 });
 
 export const darkColors: ColorTokens = fromSettings(settingsDark, {
-  primary: '#E08A5A',
-  primaryDark: '#C2662D',
-  primaryGlow: 'rgba(224, 138, 90, 0.18)',
-  amber: '#E0B85C',
+  primary: brandOrangeDark.primary,
+  primaryDark: brandOrangeDark.primaryDark,
+  primaryGlow: brandOrangeDark.glow,
+  amber: brandOrange.light,
   tealGlow: 'rgba(107, 168, 161, 0.14)',
   dangerGlow: 'rgba(224, 122, 106, 0.16)',
   violetGlow: 'rgba(184, 150, 201, 0.14)',

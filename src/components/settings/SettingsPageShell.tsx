@@ -59,7 +59,7 @@ export function SettingsPageShell({
 
   return (
     <SettingsThemeScope>
-      <YStack flex={1} style={{ backgroundColor: c.canvas }}>
+      <YStack flex={1} style={{ backgroundColor: c.surfaceElevated }}>
         {isHub ? (
           <YStack
             style={{

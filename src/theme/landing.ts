@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { brandBlue, brandGreen, brandOrange, brandPurple, brandRose, brandTeal } from './brand';
 import { settingsLight } from './palette';
 
 /**
@@ -20,13 +21,13 @@ export const landing = {
 
 /** Editorial accent palette — distinct hues for auth/onboarding steps. */
 export const accentPalette = {
-  terracotta: '#C2662D',
-  sage: '#6E8B5A',
-  dustyBlue: '#5B7B93',
-  plum: '#8B6B9E',
-  ochre: '#C79A3D',
-  clay: '#B5573F',
-  teal: '#4F8B85',
+  terracotta: brandOrange.DEFAULT,
+  sage: brandGreen.DEFAULT,
+  dustyBlue: brandBlue.DEFAULT,
+  plum: brandPurple.DEFAULT,
+  ochre: brandOrange.light,
+  clay: brandRose.DEFAULT,
+  teal: brandTeal.DEFAULT,
 } as const;
 
 export type AccentColor = (typeof accentPalette)[keyof typeof accentPalette];

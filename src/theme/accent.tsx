@@ -1,5 +1,12 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { landing } from './landing';
+import {
+  brandBlue,
+  brandGreen,
+  brandOrange,
+  brandPurple,
+  brandRose,
+} from './brand';
 import { usePreferenceValues } from '../contexts/PreferenceValueContext';
 import type { ThemeColor } from '../contexts/preferencesSchema';
 
@@ -28,11 +35,31 @@ export interface AccentTokens {
 
 /** Maps the user's `themeColor` preference to concrete accent tokens. */
 export const THEME_COLOR_TOKENS: Readonly<Record<ThemeColor, AccentTokens>> = {
-  orange: { primary: '#C2662D', primaryDark: '#9A4E20', primaryGlow: 'rgba(194, 102, 45, 0.14)' },
-  blue: { primary: '#5B7B93', primaryDark: '#3F5A6E', primaryGlow: 'rgba(91, 123, 147, 0.16)' },
-  green: { primary: '#6E8B5A', primaryDark: '#516B3F', primaryGlow: 'rgba(110, 139, 90, 0.16)' },
-  purple: { primary: '#8B6B9E', primaryDark: '#6B4F7D', primaryGlow: 'rgba(139, 107, 158, 0.16)' },
-  rose: { primary: '#B5573F', primaryDark: '#8E402C', primaryGlow: 'rgba(181, 87, 63, 0.16)' },
+  orange: {
+    primary: brandOrange.DEFAULT,
+    primaryDark: brandOrange.dark,
+    primaryGlow: brandOrange.glow,
+  },
+  blue: {
+    primary: brandBlue.DEFAULT,
+    primaryDark: brandBlue.dark,
+    primaryGlow: brandBlue.glow,
+  },
+  green: {
+    primary: brandGreen.DEFAULT,
+    primaryDark: brandGreen.dark,
+    primaryGlow: brandGreen.glow,
+  },
+  purple: {
+    primary: brandPurple.DEFAULT,
+    primaryDark: brandPurple.dark,
+    primaryGlow: brandPurple.glow,
+  },
+  rose: {
+    primary: brandRose.DEFAULT,
+    primaryDark: brandRose.dark,
+    primaryGlow: brandRose.glow,
+  },
 };
 
 /**
